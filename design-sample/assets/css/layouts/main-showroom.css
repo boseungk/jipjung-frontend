@@ -1,0 +1,593 @@
+/* ================================================
+   SSAFYHome - Main Showroom Layout
+   Crystal Ball Showroom with Day/Night Modes
+   ================================================ */
+
+/* ================================================
+   1. 기본 Body 스타일
+   ================================================ */
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ================================================
+   2. 배경 효과 (Background Atmosphere)
+   ================================================ */
+
+/* Winter Gradient - 배경 그라디언트 */
+.winter-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 40%, rgba(30, 41, 59, 0.3) 0%, transparent 90%);
+  z-index: var(--z-background);
+  transition: opacity var(--transition-normal) ease;
+}
+
+html[data-theme="night"] .winter-gradient {
+  background: radial-gradient(circle at 50% 40%, #1e293b 0%, #020617 90%);
+  opacity: 1;
+}
+
+/* Global Uplight Container - 하단 조명 효과 */
+.rising-light-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50vh;
+  pointer-events: none;
+  z-index: var(--z-background);
+  opacity: 1;
+  transition: opacity var(--transition-slow) ease;
+  animation: uplight-breathe 8s ease-in-out infinite;
+}
+
+/* Day Mode - Soft Warm Floor Reflection */
+html[data-theme="day"] .rising-light-container {
+  background: linear-gradient(to top,
+      rgba(255, 245, 235, 0.6) 0%,
+      rgba(255, 245, 235, 0.2) 40%,
+      transparent 100%);
+  mix-blend-mode: overlay;
+}
+
+/* Night Mode - Cozy Lantern Glow */
+html[data-theme="night"] .rising-light-container {
+  background: linear-gradient(to top,
+      rgba(255, 180, 100, 0.25) 0%,
+      rgba(255, 160, 80, 0.1) 50%,
+      transparent 100%);
+  mix-blend-mode: screen;
+}
+
+/* Caustic Light Effect (Day Mode) */
+html[data-theme="day"] .caustic-light {
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.6) 0%, transparent 25%),
+    radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 25%),
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 60%),
+    conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.1) 20deg, transparent 40deg);
+  filter: blur(8px) contrast(1.5);
+  mix-blend-mode: overlay;
+}
+
+/* Frost Overlay - 노이즈 텍스처 */
+.frost-overlay {
+  position: fixed;
+  inset: 0;
+  background: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity var(--transition-normal) ease;
+}
+
+html[data-theme="night"] .frost-overlay {
+  opacity: 0.04;
+}
+
+/* Snow Canvas - 눈 효과 캔버스 */
+#snow-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ================================================
+   3. Header Section
+   ================================================ */
+
+.header {
+  padding: var(--spacing-lg);
+  text-align: center;
+  position: relative;
+  z-index: var(--z-overlay);
+}
+
+.header h1 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-hero);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-xs);
+  letter-spacing: -0.02em;
+  transition: color var(--transition-normal) ease;
+}
+
+html[data-theme="day"] .header h1 {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .header h1 {
+  color: var(--minimal-text-night);
+}
+
+.header p {
+  font-size: var(--font-size-body-large);
+  line-height: 1.6;
+  opacity: var(--opacity-medium);
+  letter-spacing: 0.01em;
+  transition: color var(--transition-normal) ease;
+}
+
+html[data-theme="day"] .header p {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .header p {
+  color: var(--minimal-text-night);
+}
+
+/* ================================================
+   4. Main Container
+   ================================================ */
+
+.main-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg) var(--spacing-2xl);
+}
+
+/* ================================================
+   5. Crystal Ball / Room Display Section
+   ================================================ */
+
+.room-display {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+/* The Floating Crystal Sphere (Main Object) */
+.room-container {
+  position: relative;
+  width: var(--crystal-ball-size);
+  height: var(--crystal-ball-size);
+  max-width: 90vw;
+  z-index: var(--z-overlay);
+  perspective: 1000px;
+}
+
+/* Maximized 3D Glass Effect */
+.crystal-ball {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-full);
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  transform-style: preserve-3d;
+}
+
+/* Day Mode - Realistic Glass */
+html[data-theme="day"] .crystal-ball {
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 40%,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(255, 255, 255, 0.02) 100%);
+  box-shadow:
+    /* Sharp inner reflection */
+    inset -10px -10px 20px rgba(255, 255, 255, 0.1),
+    /* Soft inner glow */
+    inset 0 0 30px rgba(255, 255, 255, 0.2),
+    /* Deep volume shadow */
+    inset 10px 10px 40px rgba(0, 0, 0, 0.05),
+    /* Outer definition */
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(1px);
+  animation: glass-shimmer-day 8s infinite alternate ease-in-out;
+}
+
+/* Night Mode - Dramatic Glass */
+html[data-theme="night"] .crystal-ball {
+  background: #000;
+  box-shadow:
+    inset -20px -20px 60px rgba(0, 0, 0, 0.9),
+    inset 10px 10px 40px rgba(255, 214, 170, 0.4),
+    inset 5px 5px 20px rgba(200, 230, 255, 0.3),
+    inset 0 40px 30px rgba(255, 255, 255, 0.1),
+    0 0 30px rgba(255, 214, 170, 0.2),
+    0 20px 50px rgba(0, 0, 0, 0.6);
+  animation: glass-shimmer-night 6s infinite alternate ease-in-out;
+}
+
+/* Specular Glare - Sharper & Brighter */
+.highlight-glare {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 35%;
+  height: 20%;
+  border-radius: var(--border-radius-full);
+  background: radial-gradient(ellipse at center,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.4) 40%,
+      transparent 70%);
+  transform: rotate(-45deg);
+  pointer-events: none;
+  filter: blur(1px);
+  z-index: 20;
+  opacity: 0.9;
+  transition: opacity var(--transition-normal) ease;
+}
+
+html[data-theme="day"] .highlight-glare {
+  opacity: 0.8;
+  background: radial-gradient(ellipse at center,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.6) 40%,
+      transparent 70%);
+  filter: blur(2px);
+}
+
+/* Secondary Highlight (Rim) */
+.highlight-rim {
+  position: absolute;
+  bottom: 10%;
+  right: 10%;
+  width: 20%;
+  height: 10%;
+  border-radius: var(--border-radius-full);
+  background: radial-gradient(ellipse at center,
+      rgba(255, 214, 170, 0.8) 0%,
+      transparent 70%);
+  transform: rotate(-45deg);
+  pointer-events: none;
+  filter: blur(4px);
+  z-index: 20;
+  opacity: 0;
+  transition: opacity var(--transition-normal) ease;
+}
+
+html[data-theme="night"] .highlight-rim {
+  opacity: var(--opacity-subtle);
+}
+
+/* Day Mode Rim Light - Prismatic Fresnel Effect */
+html[data-theme="day"] .highlight-rim {
+  opacity: 0.5;
+  background: radial-gradient(ellipse at center,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(200, 230, 255, 0.5) 40%,
+      rgba(255, 200, 200, 0.3) 60%,
+      transparent 70%);
+  bottom: 10%;
+  right: 10%;
+  filter: blur(4px);
+  mix-blend-mode: overlay;
+}
+
+/* Ground Shadow */
+.ground-shadow {
+  position: absolute;
+  bottom: -3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10rem;
+  height: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  filter: blur(1rem);
+  border-radius: var(--border-radius-full);
+  transition: opacity var(--transition-normal) ease;
+}
+
+html[data-theme="night"] .ground-shadow {
+  background: rgba(0, 0, 0, 0.5);
+  filter: blur(1.5rem);
+}
+
+/* ================================================
+   6. SVG Furniture Content
+   ================================================ */
+
+/* Inner Content Wrapper */
+#furniture-svg-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1.1);
+}
+
+#furniture-svg-wrapper svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hide background rects in SVG */
+#furniture-svg-wrapper svg>rect:not([id]),
+#furniture-svg-wrapper svg g>rect:not([id]) {
+  display: none !important;
+}
+
+/* Initial state for furniture layers */
+#furniture-svg-wrapper [id^="background"],
+#furniture-svg-wrapper [id^="sofa"],
+#furniture-svg-wrapper [id^="tables"],
+#furniture-svg-wrapper [id^="lamp"],
+#furniture-svg-wrapper [id^="reze"] {
+  opacity: 1;
+}
+
+/* Night layer - initially hidden */
+#furniture-svg-wrapper [id^="night"] {
+  opacity: 0;
+  transition: opacity var(--transition-slow) ease-in-out;
+}
+
+/* Day/Night mode transitions */
+html[data-theme="night"] #furniture-svg-wrapper [id^="background"],
+html[data-theme="night"] #furniture-svg-wrapper [id^="sofa"],
+html[data-theme="night"] #furniture-svg-wrapper [id^="tables"],
+html[data-theme="night"] #furniture-svg-wrapper [id^="lamp"],
+html[data-theme="night"] #furniture-svg-wrapper [id^="reze"] {
+  opacity: 0;
+  transition: opacity var(--transition-slow) ease-in-out;
+}
+
+html[data-theme="night"] #furniture-svg-wrapper [id^="night"] {
+  opacity: 1;
+}
+
+/* ================================================
+   7. Description Panel - Minimalist Design
+   ================================================ */
+
+.description-panel {
+  max-width: var(--panel-max-width);
+  margin: 0 auto;
+  padding: 2.5rem;
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  transition: all var(--transition-normal) var(--easing-smooth);
+}
+
+html[data-theme="day"] .description-panel {
+  background: var(--minimal-bg-day);
+  border: none;
+  box-shadow: var(--shadow-md-day);
+}
+
+html[data-theme="night"] .description-panel {
+  background: var(--minimal-bg-night);
+  border: none;
+  box-shadow: var(--shadow-md-night);
+}
+
+.description-panel h2 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme="day"] .description-panel h2 {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .description-panel h2 {
+  color: var(--minimal-text-night);
+}
+
+.description-panel p {
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+  opacity: var(--opacity-high);
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="day"] .description-panel p {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .description-panel p {
+  color: var(--minimal-text-night);
+}
+
+.description-panel .emoji {
+  font-size: 2rem;
+  margin-top: var(--spacing-sm);
+  opacity: 0.8;
+}
+
+/* ================================================
+   8. Features List - Minimalist Design
+   ================================================ */
+
+.features-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+}
+
+.feature-card {
+  padding: 1.75rem;
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+  transition: all 0.4s var(--easing-smooth);
+}
+
+html[data-theme="day"] .feature-card {
+  background: var(--minimal-bg-day);
+  border: none;
+  box-shadow: var(--shadow-sm-day);
+}
+
+html[data-theme="night"] .feature-card {
+  background: var(--minimal-bg-night);
+  border: none;
+  box-shadow: var(--shadow-sm-night);
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+}
+
+html[data-theme="day"] .feature-card:hover {
+  box-shadow: var(--shadow-lg-day);
+}
+
+html[data-theme="night"] .feature-card:hover {
+  box-shadow: var(--shadow-lg-night);
+}
+
+.feature-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: var(--opacity-high);
+}
+
+.feature-card h3 {
+  font-size: var(--font-size-body-large);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme="day"] .feature-card h3 {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .feature-card h3 {
+  color: var(--minimal-text-night);
+}
+
+.feature-card p {
+  font-size: var(--font-size-body-small);
+  line-height: 1.6;
+  opacity: var(--opacity-medium);
+  letter-spacing: 0.005em;
+}
+
+html[data-theme="day"] .feature-card p {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .feature-card p {
+  color: var(--minimal-text-night);
+}
+
+/* ================================================
+   9. Loading State
+   ================================================ */
+
+.loading {
+  text-align: center;
+  padding: var(--spacing-xl);
+  opacity: var(--opacity-subtle);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(129, 199, 132, 0.2);
+  border-top-color: #81c784;
+  border-radius: var(--border-radius-full);
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--spacing-sm);
+}
+
+/* ================================================
+   10. Utility Classes (인라인 스타일 대체)
+   ================================================ */
+
+/* Concept Title Section */
+.concept-title-section {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.concept-title {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  transition: color var(--transition-normal) ease;
+}
+
+html[data-theme="day"] .concept-title {
+  color: var(--minimal-text-day);
+}
+
+html[data-theme="night"] .concept-title {
+  color: var(--minimal-text-night);
+}
+
+/* Showroom Samples Container */
+.showroom-samples {
+  max-width: var(--samples-max-width);
+  margin: var(--spacing-xl) auto 0;
+}
+
+/* Centered Container */
+.centered-container {
+  text-align: center;
+}
+
+/* ================================================
+   11. Responsive Design
+   ================================================ */
+
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .header p {
+    font-size: var(--font-size-body);
+  }
+
+  .room-container {
+    width: var(--crystal-ball-size-mobile);
+    height: var(--crystal-ball-size-mobile);
+  }
+
+  .description-panel {
+    padding: var(--spacing-md);
+  }
+
+  .description-panel h2 {
+    font-size: var(--font-size-subtitle);
+  }
+
+  .features-list {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+}

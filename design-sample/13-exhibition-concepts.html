@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="day">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>라이프스타일 쇼룸 | SSAFYHome</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./assets/css/clay-design-system.css" />
+  <link rel="stylesheet" href="./assets/css/concept-2-showroom.css" id="concept-2-css" />
+
+  <!-- GSAP Animation Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    :root {
+      --cursor-size: 30px;
+      --glass-surface: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --warm-glow-start: rgba(255, 180, 100, 0.0);
+      --warm-glow-mid: rgba(255, 200, 120, 0.3);
+      --warm-glow-end: rgba(255, 220, 150, 0.0);
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* --- Background Atmosphere --- */
+    .winter-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 40%, rgba(30, 41, 59, 0.3) 0%, transparent 90%);
+      z-index: -2;
+      transition: opacity 0.5s ease;
+    }
+
+    html[data-theme="night"] .winter-gradient {
+      background: radial-gradient(circle at 50% 40%, #1e293b 0%, #020617 90%);
+      opacity: 1;
+    }
+
+    /* Global Uplight Container */
+    .rising-light-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50vh;
+      /* Half screen height as requested */
+      pointer-events: none;
+      z-index: -2;
+      opacity: 1;
+      transition: opacity 0.8s ease;
+    }
+
+    /* Day Mode - Soft Warm Floor Reflection */
+    html[data-theme="day"] .rising-light-container {
+      background: linear-gradient(to top,
+          rgba(255, 245, 235, 0.6) 0%,
+          rgba(255, 245, 235, 0.2) 40%,
+          transparent 100%);
+      mix-blend-mode: overlay;
+    }
+
+    /* Night Mode - Cozy Lantern Glow */
+    html[data-theme="night"] .rising-light-container {
+      background: linear-gradient(to top,
+          rgba(255, 180, 100, 0.25) 0%,
+          rgba(255, 160, 80, 0.1) 50%,
+          transparent 100%);
+      mix-blend-mode: screen;
+    }
+
+    /* Gentle Breathing Animation */
+    .rising-light-container {
+      animation: uplight-breathe 8s ease-in-out infinite;
+    }
+
+    @keyframes uplight-breathe {
+
+      0%,
+      100% {
+        opacity: 0.8;
+        transform: scaleY(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scaleY(1.05);
+      }
+    }
+
+    html[data-theme="day"] .caustic-light {
+      opacity: 0.5;
+      /* More complex caustic pattern */
+      background:
+        radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.6) 0%, transparent 25%),
+        radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 25%),
+        radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 60%),
+        conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.1) 20deg, transparent 40deg);
+      filter: blur(8px) contrast(1.5);
+      mix-blend-mode: overlay;
+    }
+
+    @keyframes rise-up {
+      0% {
+        bottom: -30%;
+        opacity: 0;
+        transform: translateX(-50%) scale(0.8);
+      }
+
+      20% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+
+      100% {
+        bottom: 100%;
+        opacity: 0;
+        transform: translateX(-50%) scale(1.2);
+      }
+    }
+
+    .frost-overlay {
+      position: fixed;
+      inset: 0;
+      background: url("https://grainy-gradients.vercel.app/noise.svg");
+      opacity: 0.02;
+      pointer-events: none;
+      z-index: -1;
+      transition: opacity 0.5s ease;
+    }
+
+    html[data-theme="night"] .frost-overlay {
+      opacity: 0.04;
+    }
+
+    #snow-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Header - Minimalist */
+    .header {
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .header h1 {
+      font-family: "Fredoka", sans-serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+      transition: color 0.5s ease;
+    }
+
+    html[data-theme="day"] .header h1 {
+      color: var(--minimal-text-day);
+    }
+
+    html[data-theme="night"] .header h1 {
+      color: var(--minimal-text-night);
+    }
+
+    .header p {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      opacity: 0.75;
+      letter-spacing: 0.01em;
+      transition: color 0.5s ease;
+    }
+
+    html[data-theme="day"] .header p {
+      color: var(--minimal-text-day);
+    }
+
+    html[data-theme="night"] .header p {
+      color: var(--minimal-text-night);
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+
+    /* Room Display Section - Modified for Glass Sphere */
+    .room-display {
+      margin-bottom: 3rem;
+      display: flex;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    /* --- The Floating Crystal Sphere (Main Object) --- */
+    .room-container {
+      position: relative;
+      width: 500px;
+      height: 500px;
+      max-width: 90vw;
+      z-index: 10;
+      perspective: 1000px;
+    }
+
+    /* Maximized 3D Glass Effect */
+    .crystal-ball {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      background: transparent;
+      transform-style: preserve-3d;
+    }
+
+    /* Day Mode - Realistic Glass */
+    html[data-theme="day"] .crystal-ball {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.02) 100%);
+      box-shadow:
+        /* Sharp inner reflection */
+        inset -10px -10px 20px rgba(255, 255, 255, 0.1),
+        /* Soft inner glow */
+        inset 0 0 30px rgba(255, 255, 255, 0.2),
+        /* Deep volume shadow */
+        inset 10px 10px 40px rgba(0, 0, 0, 0.05),
+        /* Outer definition */
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(1px);
+      animation: glass-shimmer-day 8s infinite alternate ease-in-out;
+    }
+
+    /* Night Mode - Dramatic Glass */
+    html[data-theme="night"] .crystal-ball {
+      background: #000;
+      box-shadow:
+        inset -20px -20px 60px rgba(0, 0, 0, 0.9),
+        inset 10px 10px 40px rgba(255, 214, 170, 0.4),
+        inset 5px 5px 20px rgba(200, 230, 255, 0.3),
+        inset 0 40px 30px rgba(255, 255, 255, 0.1),
+        0 0 30px rgba(255, 214, 170, 0.2),
+        0 20px 50px rgba(0, 0, 0, 0.6);
+      animation: glass-shimmer-night 6s infinite alternate ease-in-out;
+    }
+
+    @keyframes glass-shimmer-day {
+      0% {
+        box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.15), inset 10px 10px 30px rgba(255, 255, 255, 0.8), 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      100% {
+        box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.2), inset 15px 15px 40px rgba(255, 255, 255, 0.9), 0 25px 50px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    @keyframes glass-shimmer-night {
+      0% {
+        box-shadow: inset -20px -20px 60px rgba(0, 0, 0, 0.9), inset 10px 10px 40px rgba(255, 214, 170, 0.3), 0 0 30px rgba(255, 214, 170, 0.1);
+      }
+
+      100% {
+        box-shadow: inset -20px -20px 60px rgba(0, 0, 0, 0.9), inset 12px 12px 50px rgba(255, 214, 170, 0.5), 0 0 40px rgba(255, 214, 170, 0.3);
+      }
+    }
+
+    /* Specular Glare - Sharper & Brighter */
+    .highlight-glare {
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      width: 35%;
+      height: 20%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+          rgba(255, 255, 255, 1) 0%,
+          rgba(255, 255, 255, 0.4) 40%,
+          transparent 70%);
+      transform: rotate(-45deg);
+      pointer-events: none;
+      filter: blur(1px);
+      z-index: 20;
+      opacity: 0.9;
+      transition: opacity 0.5s ease;
+    }
+
+    html[data-theme="day"] .highlight-glare {
+      opacity: 0.8;
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.6) 40%, transparent 70%);
+      filter: blur(2px);
+    }
+
+    /* Secondary Highlight (Rim) */
+    .highlight-rim {
+      position: absolute;
+      bottom: 10%;
+      right: 10%;
+      width: 20%;
+      height: 10%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+          rgba(255, 214, 170, 0.8) 0%,
+          transparent 70%);
+      transform: rotate(-45deg);
+      pointer-events: none;
+      filter: blur(4px);
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    html[data-theme="night"] .highlight-rim {
+      opacity: 0.6;
+    }
+
+    /* Day Mode Rim Light - Prismatic Fresnel Effect */
+    html[data-theme="day"] .highlight-rim {
+      opacity: 0.5;
+      background: radial-gradient(ellipse at center,
+          rgba(255, 255, 255, 0.8) 0%,
+          rgba(200, 230, 255, 0.5) 40%,
+          rgba(255, 200, 200, 0.3) 60%,
+          transparent 70%);
+      bottom: 10%;
+      right: 10%;
+      filter: blur(4px);
+      mix-blend-mode: overlay;
+    }
+
+    /* Ground Shadow */
+    .ground-shadow {
+      position: absolute;
+      bottom: -3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10rem;
+      height: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      filter: blur(1rem);
+      border-radius: 50%;
+      transition: opacity 0.5s ease;
+    }
+
+    html[data-theme="night"] .ground-shadow {
+      background: rgba(0, 0, 0, 0.5);
+      filter: blur(1.5rem);
+    }
+
+    /* Inner Content Wrapper */
+    #furniture-svg-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: scale(1.1);
+    }
+
+    #furniture-svg-wrapper svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Hide background rects in SVG */
+    #furniture-svg-wrapper svg>rect:not([id]),
+    #furniture-svg-wrapper svg g>rect:not([id]) {
+      display: none !important;
+    }
+
+    /* Initial state for furniture layers */
+    #furniture-svg-wrapper [id^="background"],
+    #furniture-svg-wrapper [id^="sofa"],
+    #furniture-svg-wrapper [id^="tables"],
+    #furniture-svg-wrapper [id^="lamp"],
+    #furniture-svg-wrapper [id^="reze"] {
+      opacity: 1;
+    }
+
+    /* Night layer - initially hidden */
+    #furniture-svg-wrapper [id^="night"] {
+      opacity: 0;
+      transition: opacity 0.8s ease-in-out;
+    }
+
+    /* Day/Night mode transitions */
+    html[data-theme="night"] #furniture-svg-wrapper [id^="background"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="sofa"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="tables"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="lamp"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="reze"] {
+      opacity: 0;
+      transition: opacity 0.8s ease-in-out;
+    }
+
+    html[data-theme="night"] #furniture-svg-wrapper [id^="night"] {
+      opacity: 1;
+    }
+
+    /* Description Panel - Minimalist Design for Readability */
+    .description-panel {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2.5rem;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html[data-theme="day"] .description-panel {
+      background: var(--minimal-bg-day);
+      border: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    html[data-theme="night"] .description-panel {
+      background: var(--minimal-bg-night);
+      border: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .description-panel h2 {
+      font-family: "Fredoka", sans-serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    html[data-theme="day"] .description-panel h2 {
+      color: var(--minimal-text-day);
+    }
+
+    html[data-theme="night"] .description-panel h2 {
+      color: var(--minimal-text-night);
+    }
+
+    .description-panel p {
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 0.5rem;
+      opacity: 0.85;
+      letter-spacing: 0.01em;
+    }
+
+    html[data-theme="day"] .description-panel p {
+      color: var(--minimal-text-day);
+    }
+
+    html[data-theme="night"] .description-panel p {
+      color: var(--minimal-text-night);
+    }
+
+    .description-panel .emoji {
+      font-size: 2rem;
+      margin-top: 1rem;
+      opacity: 0.8;
+    }
+
+    /* Features List - Minimalist Design */
+    .features-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .feature-card {
+      padding: 1.75rem;
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html[data-theme="day"] .feature-card {
+      background: var(--minimal-bg-day);
+      border: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    html[data-theme="night"] .feature-card {
+      background: var(--minimal-bg-night);
+      border: none;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+    }
+
+    html[data-theme="day"] .feature-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    html[data-theme="night"] .feature-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .feature-card h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    html[data-theme="day"] .feature-card h3 {
+      color: var(--minimal-text-day);
+    }
+
+    html[data-theme="night"] .feature-card h3 {
+      color: var(--minimal-text-night);
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      opacity: 0.75;
+      letter-spacing: 0.005em;
+    }
+
+    html[data-theme="day"] .feature-card p {
+      color: var(--minimal-text-day);
+    }
+
+    html[data-theme="night"] .feature-card p {
+      color: var(--minimal-text-night);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .header p {
+        font-size: 1rem;
+      }
+
+      .concept-tabs {
+        gap: 0.75rem;
+      }
+
+      .concept-tab {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.875rem;
+      }
+
+      .room-container {
+        width: 350px;
+        height: 350px;
+      }
+
+      .description-panel {
+        padding: 1.5rem;
+      }
+
+      .description-panel h2 {
+        font-size: 1.5rem;
+      }
+
+      .features-list {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      opacity: 0.6;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(129, 199, 132, 0.2);
+      border-top-color: #81c784;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Environment -->
+  <div class="winter-gradient"></div>
+
+  <!-- Mouse Responsive Light Effect (Global) -->
+  <div class="mouse-light-effect"></div>
+
+  <!-- Rising Warm Lights (Global Uplight) -->
+  <div class="rising-light-container"></div>
+
+  <div class="frost-overlay"></div>
+  <canvas id="snow-canvas"></canvas>
+
+  <!-- Header -->
+  <header class="header">
+    <h1>🏠 라이프스타일 쇼룸</h1>
+    <p>당신의 저축을 아름다운 공간으로 전시하세요</p>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <!-- Concept Title -->
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <h2
+        style="font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; margin: 0; transition: color 0.5s ease;">
+        🏠 라이프스타일 쇼룸
+      </h2>
+    </div>
+
+    <!-- Room Display Section -->
+    <div class="room-display">
+      <!-- The Glass Sphere Container -->
+      <div class="room-container">
+        <div class="crystal-ball">
+          <!-- Specular Glare -->
+          <div class="highlight-glare"></div>
+          <div class="highlight-rim"></div>
+
+          <!-- SVG Container (Inner Scene) -->
+          <div id="furniture-svg-wrapper">
+            <div class="loading">
+              <div class="loading-spinner"></div>
+              <p>3D 룸 로딩 중...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ground Shadow -->
+        <div class="ground-shadow"></div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const body = document.body;
+
+        document.addEventListener('mousemove', (e) => {
+          const x = (e.clientX / window.innerWidth) * 100;
+          const y = (e.clientY / window.innerHeight) * 100;
+
+          body.style.setProperty('--mouse-x', `${x}%`);
+          body.style.setProperty('--mouse-y', `${y}%`);
+        });
+
+        // Initialize center position
+        body.style.setProperty('--mouse-x', '50%');
+        body.style.setProperty('--mouse-y', '50%');
+      });
+    </script>
+
+    <!-- Description Panel -->
+    <div class="description-panel">
+      <h2>🏠 라이프스타일 쇼룸</h2>
+      <p><strong>살고 싶은 공간, 만들어가는 꿈</strong></p>
+      <p>진짜 Neumorphism 디자인이 적용되었어요!</p>
+      <p>
+        좌측 상단에서 색상 테마를 선택하고, Day/Night 버튼으로 조명 효과를
+        확인하세요.
+      </p>
+      <div class="emoji">☕</div>
+    </div>
+
+    <!-- Neumorphic Sample Cards -->
+    <div class="showroom-samples" style="max-width: 700px; margin: 3rem auto 0">
+      <!-- Price Card -->
+      <div class="showroom-price">
+        <div>
+          <div class="amount">₩500만</div>
+          <div class="label">목표 저축 금액</div>
+        </div>
+      </div>
+
+      <!-- Info Cards -->
+      <div class="showroom-info">
+        <div class="showroom-info-item">
+          <div class="icon">🏠</div>
+          <div class="value">85%</div>
+          <div class="label">달성률</div>
+        </div>
+        <div class="showroom-info-item">
+          <div class="icon">📅</div>
+          <div class="value">127일</div>
+          <div class="label">진행 기간</div>
+        </div>
+        <div class="showroom-info-item">
+          <div class="icon">💰</div>
+          <div class="value">₩425만</div>
+          <div class="label">현재 저축액</div>
+        </div>
+        <div class="showroom-info-item">
+          <div class="icon">🎯</div>
+          <div class="value">₩75만</div>
+          <div class="label">남은 금액</div>
+        </div>
+      </div>
+
+      <!-- Experience Button -->
+      <div style="text-align: center">
+        <button class="showroom-experience-btn">
+          <span>💫</span>
+          <span>체험하기</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Features List -->
+    <div class="features-list">
+      <div class="feature-card">
+        <div class="icon">🌙</div>
+        <h3>Day/Night 모드</h3>
+        <p>낮에는 밝게, 밤에는 조명 효과와 함께 감상하세요</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon">💡</div>
+        <h3>프리미엄 조명</h3>
+        <p>스포트라이트, 글로우, 반짝이는 파티클 효과</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon">🎯</div>
+        <h3>마일스톤 시각화</h3>
+        <p>저축 목표 달성 시 가구 하나씩 해금</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon">🔄</div>
+        <h3>회전 디스플레이</h3>
+        <p>마우스를 올려 3D 효과를 경험하세요</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="./assets/js/lighting-effects.js"></script>
+  <script src="./assets/js/theme-toggle.js"></script>
+  <script src="./assets/js/color-theme-manager.js"></script>
+
+  <script>
+    // ============================================
+    // Global Variables
+    // ============================================
+    let lightingEffects = null;
+    // Using showroom concept only
+
+    // ============================================
+    // Load SVG
+    // ============================================
+    function loadFurnitureSVG() {
+      fetch("../../figure.svg")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`SVG file not found: ${response.status}`);
+          }
+          return response.text();
+        })
+        .then((svgContent) => {
+          const wrapper = document.getElementById("furniture-svg-wrapper");
+          if (!wrapper) return;
+
+          // Insert SVG content
+          wrapper.innerHTML = svgContent;
+
+          // Configure SVG
+          const svg = wrapper.querySelector("svg");
+          if (svg) {
+            svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+            svg.removeAttribute("width");
+            svg.removeAttribute("height");
+          }
+
+          // Initialize lighting effects
+          initLightingEffects();
+
+          // Show all furniture immediately (no scroll animation)
+          showAllFurniture();
+        })
+        .catch((error) => {
+          console.error("Error loading SVG:", error);
+          const wrapper = document.getElementById("furniture-svg-wrapper");
+          if (wrapper) {
+            wrapper.innerHTML = `
+                            <div class="loading" style="opacity: 1;">
+                                <p style="color: #d97979;">⚠️ SVG 파일을 불러올 수 없습니다</p>
+                                <p style="font-size: 0.875rem; opacity: 0.7; margin-top: 0.5rem;">
+                                    figure.svg 파일이 올바른 위치에 있는지 확인해주세요
+                                </p>
+                            </div>
+                        `;
+          }
+        });
+    }
+
+    // ============================================
+    // Show All Furniture (No Animation)
+    // ============================================
+    function showAllFurniture() {
+      const furnitureLayers = document.querySelectorAll(
+        '[id^="background"], [id^="sofa"], [id^="tables"], [id^="lamp"], [id^="reze"]'
+      );
+
+      furnitureLayers.forEach((layer) => {
+        if (typeof gsap !== "undefined") {
+          gsap.to(layer, {
+            opacity: 1,
+            duration: 0.8,
+            ease: "power2.out",
+          });
+        } else {
+          layer.style.opacity = "1";
+        }
+      });
+    }
+
+    // ============================================
+    // Initialize Lighting Effects (Showroom Only)
+    // ============================================
+    function initLightingEffects() {
+      const container = document.querySelector(".room-container");
+      if (!container) return;
+
+      // Showroom lighting effects (simplified)
+      // Lighting is primarily handled by CSS in concept-2-showroom.css
+    }
+
+    // ============================================
+    // Initialize Theme Toggle
+    // ============================================
+    function initThemeToggle() {
+      const themeToggle = new ThemeToggle({
+        autoMode: false,
+        defaultTheme: "day",
+        position: "top-right",
+        showTooltip: true,
+      });
+
+      // Listen for theme changes
+      window.addEventListener("themechange", (e) => {
+        if (lightingEffects) {
+          lightingEffects.toggle(e.detail.isNight);
+        }
+      });
+    }
+
+    // ============================================
+    // Initialize Color Theme Manager
+    // ============================================
+    function initColorTheme() {
+      const colorTheme = new ColorThemeManager({
+        defaultTheme: "warm-beige",
+        position: "top-left",
+        showLabels: true,
+      });
+
+      // Listen for color theme changes
+      window.addEventListener("colorthemechange", (e) => {
+        console.log(`Color theme changed to: ${e.detail.themeName}`);
+      });
+
+      return colorTheme;
+    }
+
+    // ============================================
+    // Add Showroom Elements
+    // ============================================
+    function addShowroomElements(container) {
+      // Add showroom-specific lighting elements
+      const ambientLight = document.createElement("div");
+      ambientLight.className = "showroom-ambient-light";
+      container.appendChild(ambientLight);
+
+      const windowLight = document.createElement("div");
+      windowLight.className = "showroom-window";
+      container.appendChild(windowLight);
+
+      const lampGlow = document.createElement("div");
+      lampGlow.className = "showroom-lamp-glow";
+      container.appendChild(lampGlow);
+    }
+
+    // ============================================
+    // Snow Effect Logic
+    // ============================================
+    const canvas = document.getElementById("snow-canvas");
+    const ctx = canvas.getContext("2d");
+    let snowflakes = [];
+    let mouse = { x: null, y: null };
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Track mouse for physics
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    class Snowflake {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height; // Start above
+        this.size = Math.random() * 3 + 0.5;
+        this.speed = Math.random() * 1 + 0.5;
+        this.sway = Math.random() * 0.5;
+        this.swayOffset = Math.random() * Math.PI * 2;
+        this.opacity = Math.random() * 0.5 + 0.1;
+      }
+
+      update() {
+        // Gravity
+        this.y += this.speed;
+
+        // Sway motion
+        this.x += Math.sin(this.y * 0.01 + this.swayOffset) * this.sway;
+
+        // Mouse Interaction (Repel)
+        if (mouse.x != null) {
+          let dx = this.x - mouse.x;
+          let dy = this.y - mouse.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          const interactionRadius = 150;
+
+          if (distance < interactionRadius) {
+            const forceDirectionX = dx / distance;
+            const forceDirectionY = dy / distance;
+            const force = (interactionRadius - distance) / interactionRadius;
+            const strength = 2; // How strong the wind is
+
+            this.x += forceDirectionX * force * strength;
+            this.y += forceDirectionY * force * strength;
+          }
+        }
+
+        // Reset loop
+        if (this.y > canvas.height) {
+          this.reset();
+          this.y = -10; // Reset to top
+        }
+      }
+
+      draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initSnow() {
+      snowflakes = [];
+      for (let i = 0; i < 150; i++) {
+        snowflakes.push(new Snowflake());
+      }
+    }
+    initSnow();
+
+    function animateSnow() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      snowflakes.forEach((f) => {
+        f.update();
+        f.draw();
+      });
+      requestAnimationFrame(animateSnow);
+    }
+    animateSnow();
+
+    // ============================================
+    // Initialize on DOM ready
+    // ============================================
+    function initPage() {
+      loadFurnitureSVG();
+      initThemeToggle();
+      initColorTheme();
+
+      // Initialize showroom concept (only concept)
+      const container = document.querySelector(".room-container");
+      if (container) {
+        container.classList.add("showroom-stand");
+        addShowroomElements(container);
+      }
+      document.documentElement.classList.add("concept-showroom");
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initPage);
+    } else {
+      initPage();
+    }
+  </script>
+</body>
+
+</html>
