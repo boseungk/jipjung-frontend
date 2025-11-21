@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solid Drop House Loader</title>
+    <style>
+      :root {
+        /* 이미지 참고 색상 팔레트 */
+        --bg-color: #f0f0f0; /* 배경: 연한 회색 */
+        --roof-color: #ffab91; /* 지붕: 살구색/복숭아색 */
+        --wall-color: #ffffff; /* 벽: 흰색 */
+        --window-color: #b2ebf2; /* 창문: 연한 하늘색 */
+        --door-color: #8d6e63; /* 문: 갈색 */
+        --ground-color: #d7ccc8; /* 땅: 연한 갈색 그림자 */
+
+        --house-width: 140px;
+        --floor-height: 70px;
+        --anim-duration: 2.2s; /* 층이 줄어서 전체 주기 약간 단축 */
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        background-color: var(--bg-color);
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+      }
+
+      .scene {
+        position: relative;
+        width: 400px;
+        height: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 80px;
+      }
+
+      /* === 땅 (Ground) === */
+      .ground {
+        position: absolute;
+        bottom: 80px;
+        width: 180px; /* 집 너비에 맞춰 조정 */
+        height: 8px;
+        background-color: var(--ground-color);
+        border-radius: 4px;
+        z-index: 5;
+      }
+
+      /* === 집 컨테이너 === */
+      .house-wrapper {
+        position: relative;
+        width: var(--house-width);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 8px; /* 땅 위에 살짝 뜨게 */
+      }
+
+      /* === 공통 블록 스타일 (테두리 제거, 플랫 스타일) === */
+      .block {
+        width: var(--house-width);
+        height: var(--floor-height);
+        background: var(--wall-color);
+        box-sizing: border-box;
+        position: relative;
+        opacity: 0;
+        /* 층 구분을 위한 미세한 그림자 */
+        box-shadow: 0 -2px 0 rgba(0, 0, 0, 0.03) inset;
+      }
+
+      /* === 지붕 === */
+      .roof {
+        width: 0;
+        height: 0;
+        /* 테두리 이용한 삼각형 */
+        border-left: 85px solid transparent;
+        border-right: 85px solid transparent;
+        border-bottom: 70px solid var(--roof-color); /* 지붕 높이/색상 */
+        position: relative;
+        z-index: 40;
+        opacity: 0;
+        margin-bottom: 0;
+        /* 지붕 아래 그림자 */
+        filter: drop-shadow(0 4px 2px rgba(0, 0, 0, 0.05));
+      }
+
+      /* === 각 층 스타일 === */
+      .floor-2 {
+        z-index: 20;
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+      }
+
+      .floor-1 {
+        z-index: 10;
+        /* 1층 하단 둥글게 (이미지 참고) */
+        border-bottom-left-radius: 25px;
+        border-bottom-right-radius: 25px;
+      }
+
+      /* === 창문 === */
+      .window-wrap {
+        position: absolute;
+        top: 15px;
+        width: 34px;
+        height: 34px;
+        background: var(--window-color);
+        border-radius: 8px; /* 둥근 사각형 창문 */
+        box-shadow: inset 0 0 0 2px #fff, inset 0 0 5px rgba(0, 0, 0, 0.05); /* 창틀 효과 */
+      }
+      /* 창문 격자 무늬 제거 */
+      /* .window-wrap::after { ... } */
+      /* .window-wrap::before { ... } */
+
+      .w-left {
+        left: 25px;
+      }
+      .w-right {
+        right: 25px;
+      }
+
+      /* === 문 === */
+      .door {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 44px;
+        height: 55px;
+        background: var(--door-color);
+        border-top-left-radius: 22px; /* 둥근 아치형 문 */
+        border-top-right-radius: 22px;
+      }
+      /* 문 위 장식 (이미지의 살구색 바) */
+      .door-top-deco {
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 6px;
+        background: var(--roof-color);
+        border-radius: 3px;
+      }
+
+      /* =========================================
+          애니메이션 (Solid Drop)
+         ========================================= */
+      @keyframes solidDrop {
+        0% {
+          transform: translateY(-300px);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        30% {
+          transform: translateY(0);
+        }
+        35% {
+          transform: translateY(-5px);
+        }
+        40% {
+          transform: translateY(0);
+        }
+        85% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        90% {
+          transform: translateY(10px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(-300px);
+          opacity: 0;
+        }
+      }
+
+      /* 먼지 효과 (색상 조정) */
+      .dust {
+        position: absolute;
+        width: 8px;
+        height: 4px;
+        background: #ddd; /* 먼지 색 연하게 */
+        border-radius: 50%;
+        opacity: 0;
+      }
+      .d-left {
+        left: -10px;
+        bottom: 0;
+      }
+      .d-right {
+        right: -10px;
+        bottom: 0;
+      }
+
+      @keyframes dustPuff {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        30% {
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1.5) translateY(-10px);
+          opacity: 0;
+        }
+      }
+
+      /* === 타이밍 적용 (1층 -> 2층 -> 지붕) === */
+
+      /* 1층 (Base) */
+      .floor-1 {
+        animation: solidDrop var(--anim-duration) ease-in-out infinite;
+      }
+      /* 1층 먼지 효과 제거 */
+      /* .floor-1 .dust { ... } */
+
+      /* 2층 (Top floor) */
+      .floor-2 {
+        animation: solidDrop var(--anim-duration) ease-in-out infinite;
+        animation-delay: 0.2s;
+      }
+      .floor-2 .dust {
+        animation: dustPuff var(--anim-duration) ease-out infinite;
+        animation-delay: 0.95s;
+      }
+
+      /* 지붕 (Roof) */
+      .roof {
+        animation: solidDrop var(--anim-duration) ease-in-out infinite;
+        animation-delay: 0.4s;
+      }
+      .roof .dust {
+        animation: dustPuff var(--anim-duration) ease-out infinite;
+        animation-delay: 1.15s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene">
+      <div class="house-wrapper">
+        <!-- 지붕 (창문 제거됨) -->
+        <div class="roof">
+          <div class="dust d-left"></div>
+          <div class="dust d-right"></div>
+        </div>
+
+        <!-- 2층 (기존 3층 제거, 2층이 최상단) -->
+        <div class="block floor-2">
+          <div class="window-wrap w-left"></div>
+          <div class="window-wrap w-right"></div>
+          <div class="dust d-left"></div>
+          <div class="dust d-right"></div>
+        </div>
+
+        <!-- 1층 -->
+        <div class="block floor-1">
+          <div class="door"></div>
+          <!-- 1층 먼지 제거 -->
+        </div>
+      </div>
+      <div class="ground"></div>
+    </div>
+  </body>
+</html>

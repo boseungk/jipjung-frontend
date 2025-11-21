@@ -1,0 +1,220 @@
+/* ================================================
+   SSAFYHome - Animations (통합 애니메이션)
+   ================================================ */
+
+/* ================================================
+   1. 조명 효과 애니메이션
+   ================================================ */
+
+/* Uplight Breathing Effect - 하단 조명 숨쉬기 효과 */
+@keyframes uplight-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scaleY(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleY(1.05);
+  }
+}
+
+/* Rise Up Effect - 조명 입자 상승 효과 */
+@keyframes rise-up {
+  0% {
+    bottom: -30%;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+  }
+
+  20% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  100% {
+    bottom: 100%;
+    opacity: 0;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+/* ================================================
+   2. Glass/Crystal 효과 애니메이션
+   ================================================ */
+
+/* Glass Shimmer - Day Mode */
+@keyframes glass-shimmer-day {
+  0% {
+    box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.15),
+      inset 10px 10px 30px rgba(255, 255, 255, 0.8),
+      0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  100% {
+    box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.2),
+      inset 15px 15px 40px rgba(255, 255, 255, 0.9),
+      0 25px 50px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Glass Shimmer - Night Mode */
+@keyframes glass-shimmer-night {
+  0% {
+    box-shadow: inset -20px -20px 60px rgba(0, 0, 0, 0.9),
+      inset 10px 10px 40px rgba(255, 214, 170, 0.3),
+      0 0 30px rgba(255, 214, 170, 0.1);
+  }
+
+  100% {
+    box-shadow: inset -20px -20px 60px rgba(0, 0, 0, 0.9),
+      inset 12px 12px 50px rgba(255, 214, 170, 0.5),
+      0 0 40px rgba(255, 214, 170, 0.3);
+  }
+}
+
+/* ================================================
+   3. 로딩 애니메이션
+   ================================================ */
+
+/* Spin - 회전 애니메이션 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================================================
+   4. 페이드 애니메이션 (공통)
+   ================================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ================================================
+   5. 슬라이드 애니메이션
+   ================================================ */
+
+@keyframes slide-in-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ================================================
+   6. 스케일 애니메이션
+   ================================================ */
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Pulse - 맥박 효과 */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* ================================================
+   7. Shimmer/Shine 효과
+   ================================================ */
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Glow - 빛나는 효과 */
+@keyframes glow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}

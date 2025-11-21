@@ -1,0 +1,944 @@
+/* ================================================
+   Concept 2: Neumorphic Lifestyle Showroom
+   SSAFYHome - "살고 싶은 공간, 만들어가는 꿈"
+
+   TRUE NEUMORPHISM DESIGN
+   - Dual shadows (light + dark)
+   - Soft, elevated elements
+   - Pressed effect on active
+   - Multiple color themes
+   ================================================ */
+
+/* ================================================
+   1. Color Theme Variables
+   ================================================ */
+
+/* Theme 1: Warm Beige (따뜻한 베이지) - Default */
+:root[data-color-theme="warm-beige"] {
+  /* Day Mode */
+  --showroom-bg-day: #E8E0D5;
+  --showroom-card-bg-day: #F5EDE3;
+  --showroom-shadow-light-day: #FFFFFF;
+  --showroom-shadow-dark-day: #D4C8BD;
+  --showroom-accent-day: #D4A574;
+  --showroom-text-day: #5D4037;
+
+  /* Night Mode */
+  --showroom-bg-night: #3a3530;
+  --showroom-card-bg-night: #4a4540;
+  --showroom-shadow-light-night: #4f4a45;
+  --showroom-shadow-dark-night: #2a2520;
+  --showroom-accent-night: #D4A574;
+  --showroom-text-night: #F5EDE3;
+  --showroom-glow-night: rgba(212, 165, 116, 0.4);
+
+  /* Neumorphism Specific */
+  --neu-shadow-light-day: #FFFFFF;
+  --neu-shadow-dark-day: #C8BDB2;
+  --neu-shadow-light-night: #5a5550;
+  --neu-shadow-dark-night: #1a1510;
+
+  /* Glassmorphism Specific */
+  --glass-bg-day: rgba(255, 255, 255, 0.75);
+  --glass-border-day: rgba(255, 255, 255, 0.4);
+  --glass-bg-night: rgba(58, 53, 48, 0.75);
+  --glass-border-night: rgba(212, 165, 116, 0.4);
+  --glass-glow-night: rgba(212, 165, 116, 0.5);
+
+  /* Minimal Text */
+  --minimal-bg-day: rgba(255, 255, 255, 0.5);
+  --minimal-text-day: #5D4037;
+  --minimal-bg-night: rgba(30, 30, 30, 0.4);
+  --minimal-text-night: #F5EDE3;
+
+  /* Lighting Effects */
+  --light-warm-glow: rgba(255, 200, 120, 0.6);
+  --light-ambient: rgba(212, 165, 116, 0.3);
+  --light-spotlight: rgba(255, 255, 255, 0.8);
+}
+
+/* Theme 2: Olive Green (차분한 올리브) - Clay Style */
+:root[data-color-theme="olive-green"] {
+  /* Day Mode */
+  --showroom-bg-day: #d2dcc8;
+  --showroom-card-bg-day: #fcfbf8;
+  --showroom-shadow-light-day: #ffffff;
+  --showroom-shadow-dark-day: #aab99e;
+  --showroom-accent-day: #81C784;
+  --showroom-text-day: #3d3d3d;
+
+  /* Night Mode */
+  --showroom-bg-night: #2d3a2d;
+  --showroom-card-bg-night: #3d4a3d;
+  --showroom-shadow-light-night: #4a5a4a;
+  --showroom-shadow-dark-night: #1d2a1d;
+  --showroom-accent-night: #81C784;
+  --showroom-text-night: #e8f0e8;
+  --showroom-glow-night: rgba(129, 199, 132, 0.4);
+
+  /* Neumorphism Specific */
+  --neu-shadow-light-day: #ffffff;
+  --neu-shadow-dark-day: #9fae94;
+  --neu-shadow-light-night: #5a6a5a;
+  --neu-shadow-dark-night: #1d2a1d;
+
+  /* Glassmorphism Specific */
+  --glass-bg-day: rgba(252, 251, 248, 0.75);
+  --glass-border-day: rgba(255, 255, 255, 0.5);
+  --glass-bg-night: rgba(45, 58, 45, 0.75);
+  --glass-border-night: rgba(129, 199, 132, 0.4);
+  --glass-glow-night: rgba(129, 199, 132, 0.5);
+
+  /* Minimal Text */
+  --minimal-bg-day: rgba(255, 255, 255, 0.5);
+  --minimal-text-day: #3d3d3d;
+  --minimal-bg-night: rgba(30, 35, 30, 0.4);
+  --minimal-text-night: #e8f0e8;
+
+  /* Lighting Effects */
+  --light-warm-glow: rgba(129, 199, 132, 0.6);
+  --light-ambient: rgba(129, 199, 132, 0.3);
+  --light-spotlight: rgba(255, 255, 255, 0.8);
+}
+
+/* Theme 3: Cool Gray (세련된 그레이) */
+:root[data-color-theme="cool-gray"] {
+  /* Day Mode */
+  --showroom-bg-day: #E8EAED;
+  --showroom-card-bg-day: #F5F6F8;
+  --showroom-shadow-light-day: #FFFFFF;
+  --showroom-shadow-dark-day: #D1D5DB;
+  --showroom-accent-day: #6B7280;
+  --showroom-text-day: #1F2937;
+
+  /* Night Mode */
+  --showroom-bg-night: #2d3238;
+  --showroom-card-bg-night: #3d4248;
+  --showroom-shadow-light-night: #4a5058;
+  --showroom-shadow-dark-night: #1d2228;
+  --showroom-accent-night: #9CA3AF;
+  --showroom-text-night: #F3F4F6;
+  --showroom-glow-night: rgba(156, 163, 175, 0.4);
+
+  /* Neumorphism Specific */
+  --neu-shadow-light-day: #FFFFFF;
+  --neu-shadow-dark-day: #C6CAD1;
+  --neu-shadow-light-night: #5a6068;
+  --neu-shadow-dark-night: #1d2228;
+
+  /* Glassmorphism Specific */
+  --glass-bg-day: rgba(245, 246, 248, 0.75);
+  --glass-border-day: rgba(255, 255, 255, 0.5);
+  --glass-bg-night: rgba(45, 50, 56, 0.75);
+  --glass-border-night: rgba(156, 163, 175, 0.4);
+  --glass-glow-night: rgba(156, 163, 175, 0.5);
+
+  /* Minimal Text */
+  --minimal-bg-day: rgba(255, 255, 255, 0.5);
+  --minimal-text-day: #1F2937;
+  --minimal-bg-night: rgba(30, 32, 35, 0.4);
+  --minimal-text-night: #F3F4F6;
+
+  /* Lighting Effects */
+  --light-warm-glow: rgba(156, 163, 175, 0.6);
+  --light-ambient: rgba(156, 163, 175, 0.3);
+  --light-spotlight: rgba(255, 255, 255, 0.8);
+}
+
+/* Theme 4: Sky Blue (모던 블루) */
+:root[data-color-theme="sky-blue"] {
+  /* Day Mode */
+  --showroom-bg-day: #E0F2FE;
+  --showroom-card-bg-day: #F0F9FF;
+  --showroom-shadow-light-day: #FFFFFF;
+  --showroom-shadow-dark-day: #BAE6FD;
+  --showroom-accent-day: #0EA5E9;
+  --showroom-text-day: #0C4A6E;
+
+  /* Night Mode */
+  --showroom-bg-night: #0c4a6e;
+  --showroom-card-bg-night: #075985;
+  --showroom-shadow-light-night: #0e7490;
+  --showroom-shadow-dark-night: #082f49;
+  --showroom-accent-night: #38BDF8;
+  --showroom-text-night: #E0F2FE;
+  --showroom-glow-night: rgba(56, 189, 248, 0.4);
+
+  /* Neumorphism Specific */
+  --neu-shadow-light-day: #FFFFFF;
+  --neu-shadow-dark-day: #AFDCFD;
+  --neu-shadow-light-night: #1e8ab0;
+  --neu-shadow-dark-night: #082f49;
+
+  /* Glassmorphism Specific */
+  --glass-bg-day: rgba(240, 249, 255, 0.75);
+  --glass-border-day: rgba(255, 255, 255, 0.5);
+  --glass-bg-night: rgba(12, 74, 110, 0.75);
+  --glass-border-night: rgba(56, 189, 248, 0.4);
+  --glass-glow-night: rgba(56, 189, 248, 0.5);
+
+  /* Minimal Text */
+  --minimal-bg-day: rgba(255, 255, 255, 0.5);
+  --minimal-text-day: #0C4A6E;
+  --minimal-bg-night: rgba(10, 35, 50, 0.4);
+  --minimal-text-night: #E0F2FE;
+
+  /* Lighting Effects */
+  --light-warm-glow: rgba(56, 189, 248, 0.6);
+  --light-ambient: rgba(56, 189, 248, 0.3);
+  --light-spotlight: rgba(255, 255, 255, 0.8);
+}
+
+/* Default theme if not specified */
+:root {
+  --showroom-bg-day: #E8E0D5;
+  --showroom-card-bg-day: #F5EDE3;
+  --showroom-shadow-light-day: #FFFFFF;
+  --showroom-shadow-dark-day: #D4C8BD;
+  --showroom-accent-day: #D4A574;
+  --showroom-text-day: #5D4037;
+
+  --showroom-bg-night: #3a3530;
+  --showroom-card-bg-night: #4a4540;
+  --showroom-shadow-light-night: #4f4a45;
+  --showroom-shadow-dark-night: #2a2520;
+  --showroom-accent-night: #D4A574;
+  --showroom-text-night: #F5EDE3;
+  --showroom-glow-night: rgba(212, 165, 116, 0.4);
+
+  /* Neumorphism Specific */
+  --neu-shadow-light-day: #FFFFFF;
+  --neu-shadow-dark-day: #C8BDB2;
+  --neu-shadow-light-night: #5a5550;
+  --neu-shadow-dark-night: #1a1510;
+
+  /* Glassmorphism Specific */
+  --glass-bg-day: rgba(255, 255, 255, 0.75);
+  --glass-border-day: rgba(255, 255, 255, 0.4);
+  --glass-bg-night: rgba(58, 53, 48, 0.75);
+  --glass-border-night: rgba(212, 165, 116, 0.4);
+  --glass-glow-night: rgba(212, 165, 116, 0.5);
+
+  /* Minimal Text */
+  --minimal-bg-day: rgba(255, 255, 255, 0.5);
+  --minimal-text-day: #5D4037;
+  --minimal-bg-night: rgba(30, 30, 30, 0.4);
+  --minimal-text-night: #F5EDE3;
+
+  /* Lighting Effects */
+  --light-warm-glow: rgba(255, 200, 120, 0.6);
+  --light-ambient: rgba(212, 165, 116, 0.3);
+  --light-spotlight: rgba(255, 255, 255, 0.8);
+}
+
+/* ================================================
+   2. Base Body Styles
+   ================================================ */
+html[data-theme="day"].concept-showroom body {
+  background: var(--showroom-bg-day);
+  color: var(--showroom-text-day);
+  transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-theme="night"].concept-showroom body {
+  background: var(--showroom-bg-night);
+  color: var(--showroom-text-night);
+  transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================================================
+   3. Showroom Stand (Removed - Clean Glass Sphere Only)
+   ================================================ */
+.showroom-stand {
+  position: relative;
+  padding: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: none;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.showroom-stand::before {
+  display: none;
+}
+
+html[data-theme="day"] .showroom-stand {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+html[data-theme="day"] .showroom-stand::before {
+  opacity: 0;
+}
+
+html[data-theme="day"] .showroom-stand:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-theme="night"] .showroom-stand {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: none;
+}
+
+html[data-theme="night"] .showroom-stand::before {
+  opacity: 0;
+}
+
+html[data-theme="night"] .showroom-stand:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Removed pulsing glow animation */
+@keyframes glass-pulse {
+
+  0%,
+  100% {
+    box-shadow: none;
+  }
+
+  50% {
+    box-shadow: none;
+  }
+}
+
+/* ================================================
+   4. Enhanced Neumorphic Price Card
+   ================================================ */
+.showroom-price {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+html[data-theme="day"] .showroom-price {
+  background: linear-gradient(145deg,
+      var(--showroom-card-bg-day) 0%,
+      rgba(255, 255, 255, 0.95) 100%);
+  box-shadow:
+    /* Stronger dual shadows */
+    8px 8px 16px var(--neu-shadow-dark-day),
+    -8px -8px 16px var(--neu-shadow-light-day),
+    /* Inner depth */
+    inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .showroom-price {
+  /* Tactile Glass: Floating State */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.showroom-price .amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--showroom-accent-day);
+}
+
+html[data-theme="night"] .showroom-price .amount {
+  color: var(--showroom-accent-night);
+}
+
+.showroom-price .label {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* ================================================
+   5. Enhanced Neumorphic Info Cards
+   ================================================ */
+.showroom-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.showroom-info-item {
+  padding: 1.25rem;
+  border-radius: 18px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+html[data-theme="day"] .showroom-info-item {
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      var(--showroom-card-bg-day) 100%);
+  box-shadow:
+    /* Enhanced dual shadows */
+    8px 8px 16px var(--neu-shadow-dark-day),
+    -8px -8px 16px var(--neu-shadow-light-day),
+    /* Soft inner highlight */
+    inset 1px 1px 2px rgba(255, 255, 255, 0.7),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="day"] .showroom-info-item:hover {
+  box-shadow:
+    /* Stronger lift effect */
+    10px 10px 20px var(--neu-shadow-dark-day),
+    -10px -10px 20px var(--neu-shadow-light-day),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+}
+
+html[data-theme="day"] .showroom-info-item:active {
+  box-shadow:
+    /* Clear pressed effect */
+    inset 6px 6px 12px var(--neu-shadow-dark-day),
+    inset -6px -6px 12px var(--neu-shadow-light-day),
+    inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(0.97);
+}
+
+html[data-theme="night"] .showroom-info-item {
+  /* Tactile Glass: Floating State */
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+html[data-theme="night"] .showroom-info-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.4),
+    0 6px 14px rgba(0, 0, 0, 0.3),
+    0 0 25px var(--showroom-glow-night);
+  transform: translateY(-4px);
+}
+
+html[data-theme="night"] .showroom-info-item:active {
+  /* Tactile Glass: Pressed/Inset State */
+  background: rgba(0, 0, 0, 0.2);
+  border-top-color: rgba(0, 0, 0, 0.1);
+  box-shadow:
+    inset 4px 4px 12px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 8px rgba(255, 255, 255, 0.03);
+  transform: translateY(2px) scale(0.98);
+}
+
+.showroom-info-item .icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.showroom-info-item .value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.showroom-info-item .label {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+/* ================================================
+   6. Enhanced Neumorphic Button
+   ================================================ */
+.showroom-experience-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  border: none;
+  border-radius: 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer effect on button */
+.showroom-experience-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.showroom-experience-btn:hover::before {
+  animation: shimmer 1.5s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translate(-100%, -100%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(100%, 100%);
+    opacity: 0;
+  }
+}
+
+html[data-theme="day"] .showroom-experience-btn {
+  background: linear-gradient(145deg,
+      var(--showroom-accent-day) 0%,
+      color-mix(in srgb, var(--showroom-accent-day) 85%, black) 100%);
+  color: white;
+  box-shadow:
+    /* Strong neumorphic lift */
+    10px 10px 20px var(--neu-shadow-dark-day),
+    -10px -10px 20px var(--neu-shadow-light-day);
+}
+
+html[data-theme="day"] .showroom-experience-btn:hover {
+  box-shadow:
+    /* Enhanced lift */
+    12px 12px 24px var(--neu-shadow-dark-day),
+    -12px -12px 24px var(--neu-shadow-light-day);
+  transform: translateY(-4px) scale(1.02);
+}
+
+html[data-theme="day"] .showroom-experience-btn:active {
+  box-shadow:
+    /* Deep pressed effect */
+    inset 8px 8px 16px rgba(0, 0, 0, 0.25),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.2),
+    inset 2px 2px 6px rgba(0, 0, 0, 0.3);
+  transform: scale(0.96);
+}
+
+html[data-theme="night"] .showroom-experience-btn {
+  /* Tactile Glass: Accent Button Floating */
+  background: linear-gradient(135deg,
+      rgba(212, 165, 116, 0.25) 0%,
+      rgba(212, 165, 116, 0.15) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.2);
+  border-left-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.4),
+    0 5px 14px rgba(0, 0, 0, 0.25),
+    0 0 35px var(--showroom-glow-night);
+}
+
+html[data-theme="night"] .showroom-experience-btn:hover {
+  background: linear-gradient(135deg,
+      rgba(212, 165, 116, 0.3) 0%,
+      rgba(212, 165, 116, 0.2) 100%);
+  border-top-color: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    0 7px 18px rgba(0, 0, 0, 0.3),
+    0 0 50px var(--showroom-glow-night),
+    0 0 30px var(--light-warm-glow);
+  transform: translateY(-4px) scale(1.02);
+}
+
+html[data-theme="night"] .showroom-experience-btn:active {
+  /* Tactile Glass: Accent Button Pressed */
+  background: linear-gradient(135deg,
+      rgba(212, 165, 116, 0.1) 0%,
+      rgba(0, 0, 0, 0.3) 100%);
+  border-top-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    inset 6px 6px 16px rgba(0, 0, 0, 0.6),
+    inset -3px -3px 10px rgba(255, 255, 255, 0.04);
+  transform: translateY(2px) scale(0.98);
+}
+
+/* ================================================
+   7. Room Tag (Neumorphic Badge)
+   ================================================ */
+.showroom-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-theme="day"] .showroom-tag {
+  background: var(--showroom-card-bg-day);
+  color: var(--showroom-accent-day);
+  box-shadow:
+    4px 4px 8px var(--showroom-shadow-dark-day),
+    -4px -4px 8px var(--showroom-shadow-light-day);
+}
+
+html[data-theme="night"] .showroom-tag {
+  background: var(--showroom-card-bg-night);
+  color: var(--showroom-accent-night);
+  box-shadow:
+    4px 4px 8px var(--showroom-shadow-dark-night),
+    -4px -4px 8px var(--showroom-shadow-light-night),
+    0 0 15px var(--showroom-glow-night);
+}
+
+.showroom-tag .icon {
+  font-size: 1.125rem;
+}
+
+/* ================================================
+   8. Showroom Grid
+   ================================================ */
+.showroom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 3rem;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .showroom-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 1rem;
+  }
+}
+
+/* ================================================
+   9. Enhanced Ambient Lighting (Night Only)
+   ================================================ */
+.showroom-ambient-light {
+  position: absolute;
+  top: -25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 130%;
+  background: radial-gradient(ellipse at top,
+      var(--light-warm-glow) 0%,
+      var(--showroom-glow-night) 30%,
+      transparent 70%);
+  opacity: 0;
+  filter: blur(70px);
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  animation: ambient-breathe 6s ease-in-out infinite;
+}
+
+html[data-theme="night"] .showroom-ambient-light {
+  opacity: 0.7;
+}
+
+@keyframes ambient-breathe {
+
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: translateX(-50%) scale(1.05);
+  }
+}
+
+/* Window Light Effect */
+.showroom-window {
+  position: absolute;
+  top: 10%;
+  right: -10%;
+  width: 40%;
+  height: 60%;
+  background: radial-gradient(ellipse at center,
+      rgba(255, 240, 200, 0.15) 0%,
+      rgba(255, 200, 120, 0.08) 40%,
+      transparent 70%);
+  opacity: 0;
+  filter: blur(50px);
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+html[data-theme="night"] .showroom-window {
+  opacity: 0.5;
+}
+
+/* Lamp Glow Effect */
+.showroom-lamp-glow {
+  position: absolute;
+  bottom: 20%;
+  left: 15%;
+  width: 25%;
+  height: 25%;
+  background: radial-gradient(circle at center,
+      var(--light-warm-glow) 0%,
+      var(--light-ambient) 30%,
+      transparent 60%);
+  opacity: 0;
+  filter: blur(40px);
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 3;
+  animation: lamp-flicker 4s ease-in-out infinite;
+}
+
+html[data-theme="night"] .showroom-lamp-glow {
+  opacity: 0.8;
+}
+
+@keyframes lamp-flicker {
+
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+
+  75% {
+    opacity: 0.85;
+  }
+}
+
+/* Spotlight from top */
+.showroom-spotlight {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 80%;
+  background: radial-gradient(ellipse at 50% 0%,
+      var(--light-spotlight) 0%,
+      var(--light-ambient) 20%,
+      transparent 50%);
+  opacity: 0;
+  filter: blur(45px);
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 4;
+}
+
+html[data-theme="night"] .showroom-spotlight {
+  opacity: 0.4;
+}
+
+/* Floor Reflection Glow */
+.showroom-floor-glow {
+  position: absolute;
+  bottom: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  height: 30%;
+  background: radial-gradient(ellipse at center,
+      var(--showroom-glow-night) 0%,
+      transparent 60%);
+  opacity: 0;
+  filter: blur(50px);
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+html[data-theme="night"] .showroom-floor-glow {
+  opacity: 0.5;
+}
+
+/* ================================================
+   10. Mouse Responsive Lighting & Ambient Mood (Global)
+   ================================================ */
+.mouse-light-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  /* Behind content */
+  background: radial-gradient(circle 600px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.05) 30%,
+      transparent 70%);
+  mix-blend-mode: overlay;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  animation: ambient-pulse 6s infinite ease-in-out;
+}
+
+/* Ambient Breathing Animation */
+@keyframes ambient-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+}
+
+html[data-theme="night"] .mouse-light-effect {
+  background: radial-gradient(circle 800px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 180, 100, 0.15) 0%,
+      rgba(255, 160, 80, 0.05) 40%,
+      transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.8;
+}
+
+/* Rim Light (Edge lighting) */
+.showroom-rim-light {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 32px;
+  border: 1px solid transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+
+html[data-theme="night"] .showroom-rim-light {
+  border-color: var(--glass-border-night);
+  box-shadow:
+    inset 0 0 30px var(--light-ambient),
+    inset 0 0 20px rgba(255, 255, 255, 0.03);
+  opacity: 0.6;
+}
+
+/* Cozy Badge for Showroom */
+.showroom-cozy-badge {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+
+html[data-theme="day"] .showroom-cozy-badge {
+  background: linear-gradient(135deg, var(--showroom-accent-day), color-mix(in srgb, var(--showroom-accent-day) 80%, black));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0.9;
+}
+
+html[data-theme="night"] .showroom-cozy-badge {
+  background: linear-gradient(135deg, var(--showroom-accent-night), color-mix(in srgb, var(--showroom-accent-night) 80%, black));
+  color: white;
+  box-shadow:
+    0 0 20px var(--showroom-glow-night),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 1;
+  animation: badge-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes badge-glow-pulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px var(--showroom-glow-night),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  50% {
+    box-shadow:
+      0 0 30px var(--showroom-glow-night),
+      0 0 15px var(--light-warm-glow),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ================================================
+   10. Accessibility & Performance
+   ================================================ */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* GPU acceleration */
+.showroom-stand,
+.showroom-price,
+.showroom-info-item,
+.showroom-experience-btn,
+.showroom-ambient-light {
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
