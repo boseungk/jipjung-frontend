@@ -54,7 +54,7 @@ const toggleExpand = () => {
 
 <style scoped>
 .dream-home-panel {
-  max-width: 1100px;
+  max-width: 800px;
   margin: 0 auto 2rem;
   padding: 0 2rem;
   overflow: hidden;

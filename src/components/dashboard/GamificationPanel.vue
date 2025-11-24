@@ -56,8 +56,8 @@ const {
 
 <style scoped>
 .gamification-panel {
-  padding: 3rem 2rem;
-  max-width: 1200px;
+  padding: 2.5rem 2rem;
+  max-width: 800px;
   margin: 0 auto;
   text-align: center;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);

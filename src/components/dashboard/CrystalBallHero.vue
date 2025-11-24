@@ -50,8 +50,9 @@ html[data-theme="night"] .hero-title {
 
 .crystal-ball-container {
   width: 100%;
-  max-width: 500px;
-  height: 500px;
+  max-width: var(--crystal-ball-size);
+  height: var(--crystal-ball-size);
+  aspect-ratio: 1 / 1;
   margin: 0 auto;
 }
 
@@ -75,8 +76,8 @@ html[data-theme="night"] .hero-message {
   }
   
   .crystal-ball-container {
-    max-width: 400px;
-    height: 400px;
+    max-width: var(--crystal-ball-size-tablet);
+    height: var(--crystal-ball-size-tablet);
   }
   
   .hero-title {
@@ -91,8 +92,8 @@ html[data-theme="night"] .hero-message {
   }
   
   .crystal-ball-container {
-    max-width: 300px;
-    height: 300px;
+    max-width: var(--crystal-ball-size-mobile);
+    height: var(--crystal-ball-size-mobile);
   }
   
   .hero-title {

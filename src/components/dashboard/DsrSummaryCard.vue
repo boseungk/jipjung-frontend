@@ -48,8 +48,8 @@ const {
 
 <style scoped>
 .dsr-summary-card {
-  padding: 3rem 2rem;
-  max-width: 1200px;
+  padding: 2.5rem 2rem;
+  max-width: 100%;
   margin: 0 auto;
   text-align: center;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -89,7 +89,7 @@ html[data-theme="night"] .card-title {
 }
 
 .dsr-value {
-  font-size: 5rem;
+  font-size: 3rem;
   font-weight: 800;
   color: var(--showroom-accent-day, #D4A574);
   letter-spacing: -0.02em;

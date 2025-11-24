@@ -41,8 +41,9 @@
    --samples-max-width: 700px;
 
    /* 크리스탈 볼 / Room Display */
-   --crystal-ball-size: 500px;
-   --crystal-ball-size-mobile: 350px;
+   --crystal-ball-size: 350px;
+   --crystal-ball-size-tablet: 280px;
+   --crystal-ball-size-mobile: 250px;
 
    /* Border Radius */
    --border-radius-sm: 16px;

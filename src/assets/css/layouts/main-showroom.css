@@ -173,6 +173,7 @@ html[data-theme="night"] .header p {
   position: relative;
   width: var(--crystal-ball-size);
   height: var(--crystal-ball-size);
+  aspect-ratio: 1 / 1;
   max-width: 90vw;
   z-index: var(--z-overlay);
   perspective: 1000px;

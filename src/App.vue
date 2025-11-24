@@ -94,7 +94,7 @@ const handleChangeDreamHome = () => {
   gap: 2rem;
   margin-bottom: 0; /* Handled by section spacing */
   padding: 0 2rem;
-  max-width: 1200px;
+  max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
 }
