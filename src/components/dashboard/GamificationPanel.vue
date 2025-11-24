@@ -39,76 +39,44 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../stores/gamificationStore'
 
 const gamificationStore = useGamificationStore()
-
-const props = defineProps({
-  currentLevel: {
-    type: Number,
-    required: true
-  },
-  levelTitle: {
-    type: String,
-    required: true
-  },
-  experiencePoints: {
-    type: Number,
-    required: true
-  },
-  nextLevelExp: {
-    type: Number,
-    required: true
-  },
-  expProgress: {
-    type: [String, Number],
-    required: true
-  },
-  currentStreak: {
-    type: Number,
-    required: true
-  },
-  longestStreak: {
-    type: Number,
-    required: true
-  }
-})
+const { 
+  currentLevel, 
+  levelTitle, 
+  experiencePoints, 
+  nextLevelExp, 
+  expProgress, 
+  currentStreak, 
+  longestStreak 
+} = storeToRefs(gamificationStore)
 </script>
 
 <style scoped>
 .gamification-panel {
-  padding: 2rem;
-  border-radius: 20px;
-  margin-bottom: 2rem;
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Day Mode */
+/* Remove card background - clean stream layout */
 html[data-theme="day"] .gamification-panel {
-  background: var(--showroom-card-bg-day);
-  box-shadow:
-    8px 8px 16px var(--showroom-shadow-dark-day),
-    -8px -8px 16px var(--showroom-shadow-light-day);
+  background: transparent;
 }
 
-/* Night Mode */
 html[data-theme="night"] .gamification-panel {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.1);
-  border-left-color: rgba(255, 255, 255, 0.05);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.35),
-    0 4px 12px rgba(0, 0, 0, 0.25);
+  background: transparent;
 }
 
 /* Level Section */
 .level-section {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -161,10 +129,11 @@ html[data-theme="night"] .level-title {
 .exp-container {
   position: relative;
   width: 100%;
-  height: 24px;
+  max-width: 600px;
+  height: 16px;
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 0.5rem;
+  margin: 0 auto 0.75rem;
 }
 
 html[data-theme="day"] .exp-container {
@@ -208,17 +177,17 @@ html[data-theme="night"] .exp-text {
 .streak-section {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 12px;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
 }
 
 html[data-theme="day"] .streak-section {
-  background: rgba(255, 152, 0, 0.1);
+  background: transparent;
 }
 
 html[data-theme="night"] .streak-section {
-  background: rgba(255, 152, 0, 0.15);
+  background: transparent;
 }
 
 .streak-icon {

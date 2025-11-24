@@ -18,25 +18,12 @@
       
       <!-- Achievement Section - SECONDARY HERO -->
       <AchievementSection
-        :achievement-rate="dreamHome.achievementRate"
-        :current-amount="dreamHome.currentAmount"
-        :target-amount="dreamHome.targetAmount"
-        :days-remaining="dreamHome.daysRemaining"
-        :target-date="dreamHome.targetDate"
         @saving="handleSaving"
         @change-dream-home="handleChangeDreamHome"
       />
       
       <!-- Gamification Panel -->
-      <GamificationPanel
-        :current-level="gamification.currentLevel"
-        :level-title="gamification.levelTitle"
-        :experience-points="gamification.experiencePoints"
-        :next-level-exp="gamification.nextLevelExp"
-        :exp-progress="gamification.expProgress"
-        :current-streak="gamification.currentStreak"
-        :longest-streak="gamification.longestStreak"
-      />
+      <GamificationPanel />
       
       <!-- Two Column Layout: Chart + DSR -->
       <div class="two-column-layout">
@@ -52,22 +39,12 @@
       </div>
       
       <!-- Dream Home Panel -->
-      <DreamHomePanel
-        :property-name="dreamHome.propertyName"
-        :location="dreamHome.location"
-        :price="dreamHome.price"
-        :target-amount="dreamHome.targetAmount"
-      />
+      <DreamHomePanel />
     </main>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useDreamHomeStore } from './stores/dreamHomeStore'
-import { useGamificationStore } from './stores/gamificationStore'
-import { useUserStore } from './stores/userStore'
-
 // Components
 import BackgroundEffects from './components/BackgroundEffects.vue'
 import SnowCanvas from './components/SnowCanvas.vue'
@@ -80,19 +57,10 @@ import GamificationPanel from './components/dashboard/GamificationPanel.vue'
 import DsrSummaryCard from './components/dashboard/DsrSummaryCard.vue'
 import DreamHomePanel from './components/dashboard/DreamHomePanel.vue'
 
-// Stores
-const dreamHomeStore = useDreamHomeStore()
-const gamificationStore = useGamificationStore()
-const userStore = useUserStore()
-
-// Computed
-const dreamHome = computed(() => dreamHomeStore.dreamHomeInfo)
-const gamification = computed(() => gamificationStore.gamificationInfo)
-
 // Handlers
 const handleSaving = () => {
   // TODO: Open saving modal
-  console. log('저축하기 클릭')
+  console.log('저축하기 클릭')
   alert('저축하기 기능은 향후 구현 예정입니다!')
 }
 
@@ -104,11 +72,19 @@ const handleChangeDreamHome = () => {
 </script>
 
 <style>
-/* Main container */
+/* Main container - Full-width stream layout */
 .dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem 4rem;
+  width: 100%;
+  padding: 0;
+}
+
+/* Section spacing */
+.dashboard-container > * {
+  margin-bottom: 5rem; /* 80px vertical spacing */
+}
+
+.dashboard-container > *:last-child {
+  margin-bottom: 4rem;
 }
 
 /* Two Column Layout */
@@ -116,65 +92,50 @@ const handleChangeDreamHome = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0; /* Handled by section spacing */
+  padding: 0 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Placeholder for Chart */
 .placeholder-card {
   padding: 3rem 2rem;
-  border-radius: 20px;
   text-align: center;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-html[data-theme="day"] .placeholder-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.06);
-}
-
-html[data-theme="night"] .placeholder-card {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.1);
-  border-left-color: rgba(255, 255, 255, 0.05);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.35),
-    0 4px 12px rgba(0, 0, 0, 0.25);
+  background: transparent;
 }
 
 .placeholder-card h3 {
-  font-size: 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
   margin-bottom: 1rem;
-  color: var(--showroom-text-day, #5D4037);
+  color: #4E342E;
 }
 
 html[data-theme="night"] .placeholder-card h3 {
-  color: var(--showroom-text-night, #F5EDE3);
+  color: #FFFFFF;
 }
 
 .placeholder-card p {
-  color: var(--showroom-text-secondary-day, #8D6E63);
-  margin: 0.5rem 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #6D4C41;
+  margin-bottom: 0.5rem;
 }
 
 html[data-theme="night"] .placeholder-card p {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
+  color: #EFEBE9;
 }
 
 .placeholder-note {
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--showroom-accent-day, #D4A574) !important;
-  margin-top: 1rem !important;
+  color: var(--showroom-accent-day, #D4A574);
 }
 
 html[data-theme="night"] .placeholder-note {
-  color: var(--showroom-accent-night, #D4A574) !important;
+  color: var(--showroom-accent-night, #D4A574);
 }
 
 /* Responsive */

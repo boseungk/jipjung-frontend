@@ -1,4 +1,4 @@
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 /**
  * Composable for managing theme state (day/night mode)
@@ -6,15 +6,6 @@ import { ref, watch, onMounted } from 'vue'
 export function useTheme() {
     const theme = ref('day')
     const isNight = ref(false)
-
-    // Load theme from localStorage or default to 'day'
-    const loadTheme = () => {
-        const savedTheme = localStorage.getItem('showroom-theme')
-        if (savedTheme) {
-            theme.value = savedTheme
-            isNight.value = savedTheme === 'night'
-        }
-    }
 
     // Apply theme to document
     const applyTheme = (newTheme) => {
@@ -42,15 +33,10 @@ export function useTheme() {
         }
     }
 
-    // Watch for theme changes
-    watch(theme, (newTheme) => {
-        applyTheme(newTheme)
-    })
-
     // Initialize on mount
     onMounted(() => {
-        loadTheme()
-        applyTheme(theme.value)
+        const savedTheme = localStorage.getItem('showroom-theme') || 'day'
+        applyTheme(savedTheme)
     })
 
     return {

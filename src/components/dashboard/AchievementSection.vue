@@ -58,39 +58,20 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '../../stores/dreamHomeStore'
+import { formatNumber } from '../../utils/formatters'
 
 const dreamHomeStore = useDreamHomeStore()
-
-const props = defineProps({
-  achievementRate: {
-    type: [String, Number],
-    required: true
-  },
-  currentAmount: {
-    type: Number,
-    required: true
-  },
-  targetAmount: {
-    type: Number,
-    required: true
-  },
-  daysRemaining: {
-    type: Number,
-    required: true
-  },
-  targetDate: {
-    type: String,
-    required: true
-  }
-})
+const { 
+  achievementRate, 
+  currentAmount, 
+  targetAmount, 
+  daysRemaining, 
+  targetDate 
+} = storeToRefs(dreamHomeStore)
 
 const emit = defineEmits(['saving', 'changeDreamHome'])
-
-const formatNumber = (num) => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-}
 
 const onSaving = () => {
   emit('saving')
@@ -103,34 +84,19 @@ const onChangeDreamHome = () => {
 
 <style scoped>
 .achievement-section {
-  padding: 3rem;
-  border-radius: 24px;
-  margin-bottom: 2rem;
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Glassmorphism for both modes - this is info display */
+/* Remove card background - clean stream layout */
 html[data-theme="day"] .achievement-section {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+  background: transparent;
 }
 
-/* Night Mode - Glassmorphism */
 html[data-theme="night"] .achievement-section {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.12);
-  border-left-color: rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.4),
-    0 0 40px var(--showroom-glow-night, rgba(212, 165, 116, 0.4));
+  background: transparent;
 }
 
 /* Header */
@@ -145,7 +111,7 @@ html[data-theme="night"] .achievement-section {
 }
 
 .achievement-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--showroom-text-day, #5D4037);
@@ -156,21 +122,22 @@ html[data-theme="night"] .achievement-title {
 }
 
 .achievement-rate {
-  font-size: 4rem;
-  font-weight: 700;
+  font-size: 4.5rem;
+  font-weight: 800;
   color: var(--showroom-accent-day, #D4A574);
+  letter-spacing: -0.02em;
 }
 
 html[data-theme="night"] .achievement-rate {
   color: var(--showroom-accent-night, #D4A574);
 }
 
-/* Progress Bar */
+/* Progress Bar - Glassmorphism */
 .progress-container {
   position: relative;
   width: 100%;
   height: 40px;
-  border-radius: 20px;
+  border-radius: 24px;
   overflow: hidden;
   margin-bottom: 2rem;
 }
@@ -190,9 +157,11 @@ html[data-theme="night"] .progress-container {
 .progress-bar {
   position: relative;
   height: 100%;
-  border-radius: 20px;
+  border-radius: 24px;
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  /* Edge lighting effect */
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 html[data-theme="day"] .progress-bar {
@@ -233,32 +202,6 @@ html[data-theme="night"] .progress-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--showroom-text-secondary-day, #8D6E63);
-}
-
-html[data-theme="night"] .stat-label {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--showroom-accent-day, #D4A574);
-}
-
-html[data-theme="night"] .stat-value {
-  color: var(--showroom-accent-night, #D4A574);
-}
-
-.stat-divider {
-  font-size: 1.5rem;
-  color: var(--showroom-text-secondary-day, #8D6E63);
-  opacity: 0.5;
 }
 
 html[data-theme="night"] .stat-divider {
@@ -315,20 +258,20 @@ html[data-theme="night"] .dday-text {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Day Mode Buttons */
+/* Day Mode Buttons - Enhanced Neumorphism */
 html[data-theme="day"] .cta-primary {
   background: var(--showroom-accent-day, #D4A574);
   color: white;
   box-shadow:
-    4px 4px 12px var(--showroom-shadow-dark-day),
-    -2px -2px 8px var(--showroom-shadow-light-day);
+    6px 6px 16px var(--showroom-shadow-dark-day),
+    -3px -3px 10px var(--showroom-shadow-light-day);
 }
 
 html[data-theme="day"] .cta-primary:hover {
   transform: translateY(-4px);
   box-shadow:
-    6px 6px 16px var(--showroom-shadow-dark-day),
-    -3px -3px 10px var(--showroom-shadow-light-day);
+    8px 8px 20px var(--showroom-shadow-dark-day),
+    -4px -4px 12px var(--showroom-shadow-light-day);
 }
 
 html[data-theme="day"] .cta-primary:active {
@@ -342,15 +285,15 @@ html[data-theme="day"] .cta-secondary {
   background: var(--showroom-card-bg-day);
   color: var(--showroom-text-day);
   box-shadow:
-    4px 4px 8px var(--showroom-shadow-dark-day),
-    -4px -4px 8px var(--showroom-shadow-light-day);
+    5px 5px 10px var(--showroom-shadow-dark-day),
+    -5px -5px 10px var(--showroom-shadow-light-day);
 }
 
 html[data-theme="day"] .cta-secondary:hover {
   transform: translateY(-2px);
   box-shadow:
-    6px 6px 12px var(--showroom-shadow-dark-day),
-    -6px -6px 12px var(--showroom-shadow-light-day);
+    7px 7px 14px var(--showroom-shadow-dark-day),
+    -7px -7px 14px var(--showroom-shadow-light-day);
 }
 
 html[data-theme="day"] .cta-secondary:active {
@@ -360,58 +303,62 @@ html[data-theme="day"] .cta-secondary:active {
     inset -3px -3px 8px var(--showroom-shadow-light-day);
 }
 
-/* Night Mode Buttons */
+/* Night Mode Buttons - Enhanced Glassmorphism with Tactile Feedback */
 html[data-theme="night"] .cta-primary {
   background: rgba(212, 165, 116, 0.2);
   color: var(--showroom-text-night);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.3);
+  border-left-color: rgba(255, 255, 255, 0.15);
   box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(212, 165, 116, 0.4);
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    0 0 25px rgba(212, 165, 116, 0.4);
 }
 
 html[data-theme="night"] .cta-primary:hover {
   background: rgba(212, 165, 116, 0.25);
   transform: translateY(-4px);
+  border-top-color: rgba(255, 255, 255, 0.4);
   box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.35),
-    0 0 30px rgba(212, 165, 116, 0.5);
+    0 12px 28px rgba(0, 0, 0, 0.4),
+    0 0 35px rgba(212, 165, 116, 0.5);
 }
 
 html[data-theme="night"] .cta-primary:active {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   transform: translateY(2px) scale(0.98);
   box-shadow:
-    inset 4px 4px 12px rgba(0, 0, 0, 0.5),
+    inset 4px 4px 12px rgba(0, 0, 0, 0.6),
     inset -2px -2px 8px rgba(255, 255, 255, 0.03);
 }
 
 html[data-theme="night"] .cta-secondary {
   background: rgba(255, 255, 255, 0.06);
   color: var(--showroom-text-night);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.06);
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.25);
+    0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 html[data-theme="night"] .cta-secondary:hover {
   background: rgba(255, 255, 255, 0.08);
   transform: translateY(-2px);
+  border-top-color: rgba(255, 255, 255, 0.15);
   box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.3);
+    0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 html[data-theme="night"] .cta-secondary:active {
   background: rgba(0, 0, 0, 0.15);
   transform: translateY(2px) scale(0.98);
   box-shadow:
-    inset 3px 3px 10px rgba(0, 0, 0, 0.4);
+    inset 3px 3px 10px rgba(0, 0, 0, 0.5);
 }
 
 .btn-icon {

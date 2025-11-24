@@ -5,77 +5,73 @@
       나의 구매력
     </h3>
     
-    <div class="summary-grid">
-      <!-- DSR 비율 -->
-      <div class="summary-item highlight">
-        <div class="item-label">DSR 비율</div>
-        <div class="item-value dsr-value">35%</div>
-        <div class="item-badge safe">안전</div>
+    <!-- Hero Data: DSR Ratio -->
+    <div class="dsr-hero">
+      <div class="dsr-value">{{ dsrRatio }}%</div>
+      <div class="dsr-badge" :class="dsrStatus.class">{{ dsrStatus.label }}</div>
+    </div>
+    
+    <!-- Sub Data: Horizontal Layout -->
+    <div class="info-row">
+      <div class="info-item">
+        <div class="info-label">월 상환 가능액</div>
+        <div class="info-value">₩{{ formatNumber(monthlyRepaymentCapacity) }}만</div>
       </div>
-      
-      <!-- 월 상환 가능액 -->
-      <div class="summary-item">
-        <div class="item-label">월 상환 가능액</div>
-        <div class="item-value">₩150만</div>
+      <div class="info-divider">|</div>
+      <div class="info-item">
+        <div class="info-label">최대 대출</div>
+        <div class="info-value">{{ formatKoreanCurrency(maxLoanAmount) }}</div>
       </div>
-      
-      <!-- 최대 대출 -->
-      <div class="summary-item">
-        <div class="item-label">최대 대출</div>
-        <div class="item-value">₩4.2억</div>
-      </div>
-      
-      <!-- 필요 자기자본 -->
-      <div class="summary-item">
-        <div class="item-label">필요 자기자본</div>
-        <div class="item-value">₩1.3억</div>
+      <div class="info-divider">|</div>
+      <div class="info-item">
+        <div class="info-label">필요 자기자본</div>
+        <div class="info-value">{{ formatKoreanCurrency(requiredEquity) }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// Mock data - will be replaced with real store data later
+import { storeToRefs } from 'pinia'
+import { useDsrStore } from '../../stores/dsrStore'
+import { formatNumber, formatKoreanCurrency } from '../../utils/formatters'
+
+const dsrStore = useDsrStore()
+const { 
+  dsrRatio, 
+  dsrStatus, 
+  monthlyRepaymentCapacity, 
+  maxLoanAmount, 
+  requiredEquity 
+} = storeToRefs(dsrStore)
 </script>
 
 <style scoped>
 .dsr-summary-card {
-  padding: 2rem;
-  border-radius: 20px;
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Day Mode - Glassmorphism (info display) */
+/* Remove card background - clean stream layout */
 html[data-theme="day"] .dsr-summary-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.06),
-    0 3px 10px rgba(0, 0, 0, 0.03);
+  background: transparent;
 }
 
-/* Night Mode */
 html[data-theme="night"] .dsr-summary-card {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.1);
-  border-left-color: rgba(255, 255, 255, 0.05);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.35),
-    0 4px 12px rgba(0, 0, 0, 0.25);
+  background: transparent;
 }
 
 .card-title {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   font-size: 1.125rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   color: var(--showroom-text-day, #5D4037);
 }
 
@@ -87,136 +83,123 @@ html[data-theme="night"] .card-title {
   font-size: 1.5rem;
 }
 
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-}
-
-.summary-item {
-  padding: 1.25rem;
-  border-radius: 16px;
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-/* Day Mode Items - Glassmorphism */
-html[data-theme="day"] .summary-item {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="day"] .summary-item.highlight {
-  background: rgba(212, 165, 116, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(212, 165, 116, 0.4);
-  box-shadow:
-    0 6px 16px rgba(212, 165, 116, 0.2);
-}
-
-/* Night Mode Items */
-html[data-theme="night"] .summary-item {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
-html[data-theme="night"] .summary-item.highlight {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: rgba(212, 165, 116, 0.3);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(212, 165, 116, 0.3);
-}
-
-.item-label {
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-  color: var(--showroom-text-secondary-day, #8D6E63);
-}
-
-html[data-theme="night"] .item-label {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
-}
-
-html[data-theme="day"] .summary-item.highlight .item-label {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-html[data-theme="night"] .summary-item.highlight .item-label {
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.item-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--showroom-text-day, #5D4037);
-  margin-bottom: 0.5rem;
-}
-
-html[data-theme="night"] .item-value {
-  color: var(--showroom-text-night, #F5EDE3);
-}
-
-html[data-theme="day"] .summary-item.highlight .item-value {
-  color: white;
-}
-
-html[data-theme="night"] .summary-item.highlight .item-value {
-  color: white;
+/* DSR Hero Section */
+.dsr-hero {
+  margin-bottom: 3rem;
 }
 
 .dsr-value {
-  font-size: 2rem;
+  font-size: 5rem;
+  font-weight: 800;
+  color: var(--showroom-accent-day, #D4A574);
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
 }
 
-.item-badge {
+html[data-theme="night"] .dsr-value {
+  color: var(--showroom-accent-night, #D4A574);
+}
+
+.dsr-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 24px;
+  font-size: 0.9375rem;
+  font-weight: 700;
 }
 
-.item-badge.safe {
+.dsr-badge.safe {
   background: rgba(129, 199, 132, 0.2);
-  color: #66BB6A;
+  color: #43A047;
 }
 
-html[data-theme="night"] .item-badge.safe {
+html[data-theme="night"] .dsr-badge.safe {
   background: rgba(129, 199, 132, 0.25);
   color: #81C784;
+}
+
+.dsr-badge.warning {
+  background: rgba(255, 152, 0, 0.2);
+  color: #F57C00;
+}
+
+html[data-theme="night"] .dsr-badge.warning {
+  background: rgba(255, 152, 0, 0.25);
+  color: #FFB74D;
+}
+
+.dsr-badge.danger {
+  background: rgba(244, 67, 54, 0.2);
+  color: #D32F2F;
+}
+
+html[data-theme="night"] .dsr-badge.danger {
+  background: rgba(244, 67, 54, 0.25);
+  color: #EF5350;
+}
+
+/* Info Row: Horizontal Layout */
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6D4C41;
+}
+
+html[data-theme="night"] .info-label {
+  color: #EFEBE9;
+}
+
+.info-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #4E342E;
+}
+
+html[data-theme="night"] .info-value {
+  color: #FFFFFF;
+}
+
+.info-divider {
+  font-size: 1.25rem;
+  color: var(--showroom-text-secondary-day, #8D6E63);
+  opacity: 0.3;
+}
+
+html[data-theme="night"] .info-divider {
+  color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
 /* Responsive */
 @media (max-width: 767px) {
   .dsr-summary-card {
-    padding: 1.5rem;
-  }
-  
-  .summary-grid {
-    gap: 1rem;
-  }
-  
-  .summary-item {
-    padding: 1rem;
-  }
-  
-  .item-value {
-    font-size: 1.25rem;
+    padding: 2rem 1.5rem;
   }
   
   .dsr-value {
-    font-size: 1.75rem;
+    font-size: 3.5rem;
+  }
+  
+  .info-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .info-divider {
+    display: none;
   }
 }
 </style>

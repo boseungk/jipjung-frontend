@@ -38,66 +38,39 @@
 
 <script setup>
 import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useDreamHomeStore } from '../../stores/dreamHomeStore'
+import { formatNumber } from '../../utils/formatters'
 
-const props = defineProps({
-  propertyName: {
-    type: String,
-    required: true
-  },
-  location: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
-  targetAmount: {
-    type: Number,
-    required: true
-  }
-})
+const dreamHomeStore = useDreamHomeStore()
+const { propertyName, location, price, targetAmount } = storeToRefs(dreamHomeStore)
 
 const isExpanded = ref(false)
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value
 }
-
-const formatNumber = (num) => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-}
 </script>
 
 <style scoped>
 .dream-home-panel {
-  border-radius: 20px;
+  max-width: 1100px;
+  margin: 0 auto 2rem;
+  padding: 0 2rem;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Day Mode */
+/* Remove outer box - clean layout */
 html[data-theme="day"] .dream-home-panel {
-  background: var(--showroom-card-bg-day);
-  box-shadow:
-    6px 6px 12px var(--showroom-shadow-dark-day),
-    -6px -6px 12px var(--showroom-shadow-light-day);
+  background: transparent;
 }
 
-/* Night Mode */
 html[data-theme="night"] .dream-home-panel {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.08);
-  border-left-color: rgba(255, 255, 255, 0.04);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.3),
-    0 3px 8px rgba(0, 0, 0, 0.2);
+  background: transparent;
 }
 
-/* Panel Header */
+/* Panel Header - Enhanced Glassmorphism with Floating Dock Style */
 .panel-header {
   width: 100%;
   display: flex;
@@ -109,6 +82,27 @@ html[data-theme="night"] .dream-home-panel {
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: left;
+  border-radius: 32px;
+}
+
+html[data-theme="day"] .panel-header {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="night"] .panel-header {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.12);
+  border-left-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 30px var(--showroom-glow-night, rgba(212, 165, 116, 0.3));
 }
 
 .panel-header:hover {
