@@ -1,0 +1,106 @@
+<template>
+  <div class="crystal-ball-hero">
+    <!-- Top Message -->
+    <h1 class="hero-title">🔮 나만의 꿈의 쇼룸 🔮</h1>
+    
+    <!-- Crystal Ball Container -->
+    <div class="crystal-ball-container">
+      <CrystalBall />
+    </div>
+    
+    <!-- Bottom Message -->
+    <p class="hero-message">{{ dreamHome.propertyName }}이 완성되어가고 있습니다</p>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import CrystalBall from '../CrystalBall.vue'
+import { useDreamHomeStore } from '../../stores/dreamHomeStore'
+
+const dreamHomeStore = useDreamHomeStore()
+const dreamHome = computed(() => dreamHomeStore.dreamHomeInfo)
+</script>
+
+<style scoped>
+.crystal-ball-hero {
+  width: 100%;
+  min-height: 600px;
+  padding: 3rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  background: transparent;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* No background - just Crystal Ball */
+
+.hero-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: var(--showroom-text-day, #5D4037);
+  transition: color 0.5s ease;
+}
+
+html[data-theme="night"] .hero-title {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.crystal-ball-container {
+  width: 100%;
+  max-width: 500px;
+  height: 500px;
+  margin: 0 auto;
+}
+
+.hero-message {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.125rem;
+  margin-top: 2rem;
+  color: var(--showroom-text-secondary-day, #8D6E63);
+  transition: color 0.5s ease;
+}
+
+html[data-theme="night"] .hero-message {
+  color: var(--showroom-text-secondary-night, #D7CCC8);
+}
+
+/* Responsive */
+@media (max-width: 1023px) {
+  .crystal-ball-hero {
+    min-height: 500px;
+    padding: 2rem;
+  }
+  
+  .crystal-ball-container {
+    max-width: 400px;
+    height: 400px;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .crystal-ball-hero {
+    min-height: 400px;
+    padding: 1.5rem;
+  }
+  
+  .crystal-ball-container {
+    max-width: 300px;
+    height: 300px;
+  }
+  
+  .hero-title {
+    font-size: 1.75rem;
+  }
+  
+  .hero-message {
+    font-size: 1rem;
+  }
+}
+</style>

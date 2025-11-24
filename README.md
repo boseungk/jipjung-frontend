@@ -1,9 +1,12 @@
-# Vue 3 쇼룸 프로젝트 설치 및 실행 가이드
+# Vue Jip-joong Dashboard 완성! 🎉
 
-## 🚀 빠른 시작
+design-sample을 Vue 3 + Vite + Pinia로 완전히 리팩토링한 **감성 우선(Emotional-First) 대시보드**입니다!
+
+## ⚡ 빠른 시작
 
 ### 1. PowerShell 실행 정책 설정 (필요시)
-PowerShell을 **관리자 권한**으로 실행 후:
+
+PowerShell 권한 문제가 있다면, PowerShell을 **관리자 권한**으로 실행 후:
 ```powershell
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
@@ -19,13 +22,152 @@ npm install
 npm run dev
 ```
 
-브라우저가 자동으로 열리며, http://localhost:5173 에서 확인할 수 있습니다.
+브라우저가 자동으로 `http://localhost:5173`을 엽니다.
 
-### 4. 프로덕션 빌드 (선택사항)
-```bash
-npm run build
-npm run preview
+---
+
+## 🎨 감성 우선(Emotional-First) 디자인
+
+### 정보 우선순위
 ```
+1순위: Crystal Ball (꿈의 시각화) ← 감성 ⭐⭐⭐
+2순위: 달성률 (Achievement) ← 동기 ⭐⭐
+3순위: 게이미피케이션 ← 재미 ⭐
+4순위: 데이터 (통계, DSR) ← 이성
+5순위: 드림홈 상세 ← 정보
+```
+
+### 사용자 여정
+```
+방문 → "와, 예쁜 쇼룸이다!" (Crystal Ball)
+     → "28.3%나 모았네!" (Achievement)
+     → "레벨 3, 7일 연속!" (Gamification)
+     → [저축하기] 클릭!
+```
+
+---
+
+## 📁 프로젝트 구조
+
+```
+jipjung-frontend/
+├── src/
+│   ├── stores/              # Pinia stores (상태 관리)
+│   │   ├── userStore.js
+│   │   ├── dreamHomeStore.js
+│   │   └── gamificationStore.js
+│   ├── components/
+│   │   ├── dashboard/       # 대시보드 전용 컴포넌트
+│   │   │   ├── CrystalBallHero.vue ⭐
+│   │   │   ├── AchievementSection.vue ⭐
+│   │   │   ├── GamificationPanel.vue
+│   │   │   ├── DsrSummaryCard.vue
+│   │   │   └── DreamHomePanel.vue
+│   │   ├── BackgroundEffects.vue
+│   │   ├── SnowCanvas.vue
+│   │   ├── ColorThemeManager.vue
+│   │   ├── ThemeToggle.vue
+│   │   ├── ShowroomHeader.vue
+│   │   └── CrystalBall.vue
+│   ├── composables/
+│   │   ├── useTheme.js
+│   │   └── useMousePosition.js
+│   ├── assets/
+│   │   ├── css/             # design-sample CSS
+│   │   └── styles/
+│   │       └── main.css
+│   ├── App.vue              # 메인 대시보드
+│   └── main.js
+└── public/
+    └── figure.svg
+```
+
+---
+
+## ✨ 구현된 기능
+
+### 감성적 요소 (Emotional)
+- ✅ **Crystal Ball Full Hero** - 최상단, 100% 크기
+- ✅ "나만의 꿈의 쇼룸" 메시지
+- ✅ 눈 내리는 효과 (마우스 반응)
+- ✅ Day/Night 조명 시스템
+
+### 동기 부여 (Motivation)
+- ✅ **큰 달성률 표시** (28.3%)
+- ✅ 애니메이션 Progress Bar
+- ✅ D-Day 카운터
+- ✅ **CTA 버튼** (저축하기, 드림홈 변경)
+
+### 게이미피케이션 (Gamification)
+- ✅ 레벨 시스템 (Level 3: 꾸준한 실천가)
+- ✅ 경험치 프로그레스바
+- ✅ 🔥 연속 저축 스트릭 (7일)
+
+### 데이터 (Information)
+- ✅ DSR 계산 요약 (2x2 그리드)
+- ✅ 드림홈 정보 (접기/펴기)
+- ⏳ 저축 통계 차트 (placeholder - Chart.js 설치 후 구현)
+
+### 디자인 시스템
+- ✅ Neumorphism (Day 모드)
+- ✅ Glassmorphism (Night 모드)
+- ✅ 4가지 컬러 테마
+- ✅ 완벽한 반응형 레이아웃
+
+---
+
+## 🔧 기술 스택
+
+- **Vue 3.4**: Composition API, `<script setup>`
+- **Pinia 2.1**: 상태 관리 (stores)
+- **Vite 5**: 빌드 도구
+- **Tailwind CSS 3.4**: UI 프레임워크
+- **GSAP 3.12**: 애니메이션
+- **Chart.js 4.4** (설치됨, 구현 대기)
+
+---
+
+## 📊 Mock 데이터
+
+현재는 하드코딩된 Mock 데이터로 동작합니다:
+
+- **드림홈**: 래미안 아파트, ₩5억, 목표 ₩1.5억
+- **달성률**: 28.3% (₩425만 / ₩1,500만)
+- **레벨**: 3 (꾸준한 실천가, 320/500 EXP)
+- **연속 저축**: 7일 (최장 15일)
+
+---
+
+## 🎯 다음 단계
+
+### 즉시 가능
+1. ✅ `npm install` (의존성 설치)
+2. ✅ `npm run dev` (개발 서버 실행)
+3. ✅ 브라우저에서 확인
+
+### 향후 작업
+- [ ] Chart.js 월별 저축 통계 차트 구현
+- [ ] 저축하기 모달 구현
+- [ ] 드림홈 변경 모달 구현
+- [ ] API 연동 (백엔드 준비 후)
+
+---
+
+## 💡 사용 팁
+
+### 테마 변경
+- 좌측 상단: 컬러 테마 선택 (🏠🌿🌫️☁️)
+- 우측 상단: Day/Night 모드 토글
+
+### Mock 데이터 수정
+- `src/stores/*.js` 파일의 ref() 값 수정
+
+### 컴포넌트 커스터마이징
+- `src/components/dashboard/*.vue` 파일 편집
+
+---
+
+**감성이 먼저, 기능은 그 다음!** ❤️
 
 ---
 
