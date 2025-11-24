@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================================
+   SSAFYHome - Tailwind CSS Custom Styles
+   ================================================ */
+
+/* ================================================
+   1. CSS Variables (Color Themes)
+   ================================================ */
+@layer base {
+
+    /* Theme 1: Warm Beige (기본) */
+    :root,
+    :root[data-color-theme="warm-beige"] {
+        /* Day Mode */
+        --showroom-bg-day: #E8E0D5;
+        --showroom-card-bg-day: #F5EDE3;
+        --showroom-shadow-light-day: #FFFFFF;
+        --showroom-shadow-dark-day: #D4C8BD;
+        --showroom-accent-day: #D4A574;
+        --showroom-text-day: #5D4037;
+
+        /* Night Mode */
+        --showroom-bg-night: #3a3530;
+        --showroom-card-bg-night: #4a4540;
+        --showroom-shadow-light-night: #4f4a45;
+        --showroom-shadow-dark-night: #2a2520;
+        --showroom-accent-night: #D4A574;
+        --showroom-text-night: #F5EDE3;
+        --showroom-glow-night: rgba(212, 165, 116, 0.4);
+
+        /* Neumorphism Specific */
+        --neu-shadow-light-day: #FFFFFF;
+        --neu-shadow-dark-day: #C8BDB2;
+        --neu-shadow-light-night: #5a5550;
+        --neu-shadow-dark-night: #1a1510;
+
+        /* Glassmorphism Specific */
+        --glass-bg-day: rgba(255, 255, 255, 0.75);
+        --glass-border-day: rgba(255, 255, 255, 0.4);
+        --glass-bg-night: rgba(58, 53, 48, 0.75);
+        --glass-border-night: rgba(212, 165, 116, 0.4);
+        --glass-glow-night: rgba(212, 165, 116, 0.5);
+
+        /* Minimal Text */
+        --minimal-bg-day: rgba(255, 255, 255, 0.5);
+        --minimal-text-day: #5D4037;
+        --minimal-bg-night: rgba(30, 30, 30, 0.4);
+        --minimal-text-night: #F5EDE3;
+
+        /* Lighting Effects */
+        --light-warm-glow: rgba(255, 200, 120, 0.6);
+        --light-ambient: rgba(212, 165, 116, 0.3);
+        --light-spotlight: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Theme 2: Olive Green */
+    :root[data-color-theme="olive-green"] {
+        --showroom-bg-day: #d2dcc8;
+        --showroom-card-bg-day: #fcfbf8;
+        --showroom-shadow-light-day: #ffffff;
+        --showroom-shadow-dark-day: #aab99e;
+        --showroom-accent-day: #81C784;
+        --showroom-text-day: #3d3d3d;
+
+        --showroom-bg-night: #2d3a2d;
+        --showroom-card-bg-night: #3d4a3d;
+        --showroom-shadow-light-night: #4a5a4a;
+        --showroom-shadow-dark-night: #1d2a1d;
+        --showroom-accent-night: #81C784;
+        --showroom-text-night: #e8f0e8;
+        --showroom-glow-night: rgba(129, 199, 132, 0.4);
+
+        --neu-shadow-light-day: #ffffff;
+        --neu-shadow-dark-day: #9fae94;
+        --neu-shadow-light-night: #5a6a5a;
+        --neu-shadow-dark-night: #1d2a1d;
+
+        --glass-bg-day: rgba(252, 251, 248, 0.75);
+        --glass-border-day: rgba(255, 255, 255, 0.5);
+        --glass-bg-night: rgba(45, 58, 45, 0.75);
+        --glass-border-night: rgba(129, 199, 132, 0.4);
+        --glass-glow-night: rgba(129, 199, 132, 0.5);
+
+        --minimal-bg-day: rgba(255, 255, 255, 0.5);
+        --minimal-text-day: #3d3d3d;
+        --minimal-bg-night: rgba(30, 35, 30, 0.4);
+        --minimal-text-night: #e8f0e8;
+
+        --light-warm-glow: rgba(129, 199, 132, 0.6);
+        --light-ambient: rgba(129, 199, 132, 0.3);
+        --light-spotlight: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Theme 3: Cool Gray */
+    :root[data-color-theme="cool-gray"] {
+        --showroom-bg-day: #E8EAED;
+        --showroom-card-bg-day: #F5F6F8;
+        --showroom-shadow-light-day: #FFFFFF;
+        --showroom-shadow-dark-day: #D1D5DB;
+        --showroom-accent-day: #6B7280;
+        --showroom-text-day: #1F2937;
+
+        --showroom-bg-night: #2d3238;
+        --showroom-card-bg-night: #3d4248;
+        --showroom-shadow-light-night: #4a5058;
+        --showroom-shadow-dark-night: #1d2228;
+        --showroom-accent-night: #9CA3AF;
+        --showroom-text-night: #F3F4F6;
+        --showroom-glow-night: rgba(156, 163, 175, 0.4);
+
+        --neu-shadow-light-day: #FFFFFF;
+        --neu-shadow-dark-day: #C6CAD1;
+        --neu-shadow-light-night: #5a6068;
+        --neu-shadow-dark-night: #1d2228;
+
+        --glass-bg-day: rgba(245, 246, 248, 0.75);
+        --glass-border-day: rgba(255, 255, 255, 0.5);
+        --glass-bg-night: rgba(45, 50, 56, 0.75);
+        --glass-border-night: rgba(156, 163, 175, 0.4);
+        --glass-glow-night: rgba(156, 163, 175, 0.5);
+
+        --minimal-bg-day: rgba(255, 255, 255, 0.5);
+        --minimal-text-day: #1F2937;
+        --minimal-bg-night: rgba(30, 32, 35, 0.4);
+        --minimal-text-night: #F3F4F6;
+
+        --light-warm-glow: rgba(156, 163, 175, 0.6);
+        --light-ambient: rgba(156, 163, 175, 0.3);
+        --light-spotlight: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Theme 4: Sky Blue */
+    :root[data-color-theme="sky-blue"] {
+        --showroom-bg-day: #E0F2FE;
+        --showroom-card-bg-day: #F0F9FF;
+        --showroom-shadow-light-day: #FFFFFF;
+        --showroom-shadow-dark-day: #BAE6FD;
+        --showroom-accent-day: #0EA5E9;
+        --showroom-text-day: #0C4A6E;
+
+        --showroom-bg-night: #0c4a6e;
+        --showroom-card-bg-night: #075985;
+        --showroom-shadow-light-night: #0e7490;
+        --showroom-shadow-dark-night: #082f49;
+        --showroom-accent-night: #38BDF8;
+        --showroom-text-night: #E0F2FE;
+        --showroom-glow-night: rgba(56, 189, 248, 0.4);
+
+        --neu-shadow-light-day: #FFFFFF;
+        --neu-shadow-dark-day: #AFDCFD;
+        --neu-shadow-light-night: #1e8ab0;
+        --neu-shadow-dark-night: #082f49;
+
+        --glass-bg-day: rgba(240, 249, 255, 0.75);
+        --glass-border-day: rgba(255, 255, 255, 0.5);
+        --glass-bg-night: rgba(12, 74, 110, 0.75);
+        --glass-border-night: rgba(56, 189, 248, 0.4);
+        --glass-glow-night: rgba(56, 189, 248, 0.5);
+
+        --minimal-bg-day: rgba(255, 255, 255, 0.5);
+        --minimal-text-day: #0C4A6E;
+        --minimal-bg-night: rgba(10, 35, 50, 0.4);
+        --minimal-text-night: #E0F2FE;
+
+        --light-warm-glow: rgba(56, 189, 248, 0.6);
+        --light-ambient: rgba(56, 189, 248, 0.3);
+        --light-spotlight: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Global Variables */
+    :root {
+        --cursor-size: 30px;
+        --mouse-x: 50%;
+        --mouse-y: 50%;
+    }
+
+    /* Body Styles */
+    html[data-theme="day"] body {
+        background-color: var(--showroom-bg-day);
+        color: var(--showroom-text-day);
+        transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+            color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html[data-theme="night"] body {
+        background-color: var(--showroom-bg-night);
+        color: var(--showroom-text-night);
+        transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+            color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* ================================================
+   2. Custom Components
+   ================================================ */
+@layer components {
+
+    /* SVG-specific styles that can't be expressed in utilities */
+    #furniture-svg-wrapper svg>rect:not([id]),
+    #furniture-svg-wrapper svg g>rect:not([id]) {
+        display: none;
+    }
+
+    /* SVG layer transitions */
+    #furniture-svg-wrapper [id^="background"],
+    #furniture-svg-wrapper [id^="sofa"],
+    #furniture-svg-wrapper [id^="tables"],
+    #furniture-svg-wrapper [id^="lamp"],
+    #furniture-svg-wrapper [id^="reze"] {
+        opacity: 1;
+    }
+
+    #furniture-svg-wrapper [id^="night"] {
+        opacity: 0;
+        transition-property: opacity;
+        transition-duration: 800ms;
+    }
+
+    html[data-theme="night"] #furniture-svg-wrapper [id^="background"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="sofa"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="tables"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="lamp"],
+    html[data-theme="night"] #furniture-svg-wrapper [id^="reze"] {
+        opacity: 0;
+        transition-property: opacity;
+        transition-duration: 800ms;
+    }
+
+    html[data-theme="night"] #furniture-svg-wrapper [id^="night"] {
+        opacity: 1;
+    }
+
+    /* Mouse Tracking Light Effect */
+    .mouse-light-effect {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 1;
+        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html[data-theme="day"] .mouse-light-effect {
+        background: radial-gradient(circle 600px at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.15) 0%,
+                transparent 70%);
+        mix-blend-mode: overlay;
+        animation: ambient-pulse 6s infinite;
+    }
+
+    html[data-theme="night"] .mouse-light-effect {
+        background: radial-gradient(circle 800px at var(--mouse-x) var(--mouse-y),
+                rgba(255, 180, 100, 0.15) 0%,
+                transparent 70%);
+        mix-blend-mode: screen;
+        animation: ambient-pulse 6s infinite;
+    }
+}
+
+/* ================================================
+   3. Utility Layer Extensions  
+   ================================================ */
+@layer utilities {
+    .preserve-3d {
+        transform-style: preserve-3d;
+    }
+
+    .backface-hidden {
+        backface-visibility: hidden;
+    }
+
+    .text-shadow-glow {
+        text-shadow: 0 0 20px currentColor;
+    }
+}

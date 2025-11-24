@@ -1,0 +1,32 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Core Styles */
+@import '../css/core/variables.css';
+@import '../css/core/animations.css';
+
+/* Layout Styles */
+@import '../css/layouts/main-showroom.css';
+
+/* Concept Styles */
+@import '../css/concept-2-showroom.css';
+
+/* Base Reset */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+    width: 100%;
+    min-height: 100vh;
+}
