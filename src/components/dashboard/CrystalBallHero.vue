@@ -25,10 +25,9 @@ const dreamHome = computed(() => dreamHomeStore.dreamHomeInfo)
 <style scoped>
 .crystal-ball-hero {
   width: 100%;
-  min-height: 600px;
-  padding: 3rem;
+  padding: 1.5rem 3rem;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   background: transparent;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -49,10 +48,8 @@ html[data-theme="night"] .hero-title {
 }
 
 .crystal-ball-container {
-  width: 100%;
-  max-width: var(--crystal-ball-size);
-  height: var(--crystal-ball-size);
-  aspect-ratio: 1 / 1;
+  width: var(--crystal-ball-size-desktop);
+  height: var(--crystal-ball-size-desktop);
   margin: 0 auto;
 }
 
@@ -71,12 +68,12 @@ html[data-theme="night"] .hero-message {
 /* Responsive */
 @media (max-width: 1023px) {
   .crystal-ball-hero {
-    min-height: 500px;
+    min-height: 420px;
     padding: 2rem;
   }
   
   .crystal-ball-container {
-    max-width: var(--crystal-ball-size-tablet);
+    width: var(--crystal-ball-size-tablet);
     height: var(--crystal-ball-size-tablet);
   }
   
@@ -92,7 +89,7 @@ html[data-theme="night"] .hero-message {
   }
   
   .crystal-ball-container {
-    max-width: var(--crystal-ball-size-mobile);
+    width: var(--crystal-ball-size-mobile);
     height: var(--crystal-ball-size-mobile);
   }
   

@@ -63,6 +63,38 @@
    --opacity-medium: 0.75;
    --opacity-high: 0.85;
 
+   /* Dashboard Section Backgrounds (Toss-style) */
+   --dashboard-section-bg-light: rgba(232, 224, 213, 0.5);
+   --dashboard-section-bg-medium: rgba(232, 224, 213, 0.7);
+   --dashboard-section-bg-dark: rgba(232, 224, 213, 0.85);
+   --dashboard-section-bg-night-light: rgba(58, 53, 48, 0.3);
+   --dashboard-section-bg-night-medium: rgba(58, 53, 48, 0.5);
+   --dashboard-section-bg-night-dark: rgba(58, 53, 48, 0.6);
+
+   /* CrystalBall Size System */
+   --crystal-ball-size-desktop: 350px;
+   --crystal-ball-size-tablet: 280px;
+   --crystal-ball-size-mobile: 250px;
+
+   /* Mini CrystalBall Size System */
+   --crystal-ball-mini-desktop: 120px;
+   --crystal-ball-mini-tablet: 100px;
+   --crystal-ball-mini-mobile: 80px;
+
+   /* Collection Grid Settings */
+   --collection-grid-columns: 3;
+   --collection-grid-gap-row: 4rem;
+   --collection-grid-gap-col: 3.5rem;
+   --collection-grid-gap-row-tablet: 3.5rem;
+   --collection-grid-gap-col-tablet: 3rem;
+   --collection-grid-gap-row-mobile: 3rem;
+   --collection-grid-gap-col-mobile: 2.5rem;
+
+   /* Active State Settings */
+   --active-border-width: 2px;
+   --active-glow-radius-day: 30px;
+   --active-glow-radius-night: 40px;
+
    /* Z-Index */
    --z-background: -2;
    --z-content: 1;
