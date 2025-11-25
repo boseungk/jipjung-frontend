@@ -1,11 +1,8 @@
 <template>
   <div class="collection-view">
-    <!-- Background Effects (Collection Only) -->
+    <!-- Snow Effect (Global for Collection) -->
     <SnowCanvas />
-    
-    <!-- Theme Controls (Collection Only) -->
-    <ColorThemeManager position="top-left" :show-labels="true" />
-    
+
     <!-- Main Collection Gallery -->
     <main class="collection-container">
       <!-- Hero CrystalBall: Currently Selected -->
@@ -59,7 +56,6 @@
 <script setup>
 import { ref } from 'vue'
 import SnowCanvas from '../components/SnowCanvas.vue'
-import ColorThemeManager from '../components/ColorThemeManager.vue'
 import CrystalBall from '../components/CrystalBall.vue'
 
 // Selected crystal index
@@ -273,7 +269,7 @@ html[data-theme="night"] .empty-text {
 }
 
 .empty-subtext {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--showroom-text-secondary-day, #8D6E63);
 }
 
@@ -282,57 +278,34 @@ html[data-theme="night"] .empty-subtext {
 }
 
 /* Responsive */
-@media (max-width: 1023px) {
-  .collection-container {
-    padding: 3rem 1.5rem;
-  }
-  
-  .main-crystal-container {
-    max-width: var(--crystal-ball-size-tablet, 280px);
-    height: var(--crystal-ball-size-tablet, 280px);
-  }
-  
-  .mini-crystals-grid {
-    grid-template-columns: repeat(2, 100px);
-    gap: 3.5rem 3rem;
-  }
-  
-  .mini-crystal-wrapper {
-    width: 100px;
-    height: 100px;
-  }
-}
-
 @media (max-width: 767px) {
   .collection-container {
-    padding: 2rem 1rem;
+    padding: 3rem 2rem;
   }
-  
+
   .collection-title {
     font-size: 2rem;
   }
-  
+
   .section-subtitle {
     font-size: 1.5rem;
+    margin-bottom: 3rem;
   }
-  
-  .main-crystal-container {
-    max-width: var(--crystal-ball-size-mobile, 250px);
-    height: var(--crystal-ball-size-mobile, 250px);
-  }
-  
+
   .mini-crystals-grid {
-    grid-template-columns: repeat(2, 80px);
-    gap: 3rem 2.5rem;
+    grid-template-columns: repeat(2, 120px);
+    gap: 3rem 2rem;
   }
-  
-  .mini-crystal-wrapper {
-    width: 80px;
-    height: 80px;
+}
+
+@media (max-width: 480px) {
+  .collection-title {
+    font-size: 1.75rem;
   }
-  
-  .mini-crystal-label {
-    font-size: 0.875rem;
+
+  .mini-crystals-grid {
+    grid-template-columns: 120px;
+    gap: 2.5rem;
   }
 }
 </style>

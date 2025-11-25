@@ -41,6 +41,37 @@
       </router-link>
     </div>
 
+    <!-- Color Theme Selector -->
+    <div class="nav-color-theme">
+      <button
+        class="color-theme-btn"
+        @click="toggleColorMenu"
+        aria-label="색상 테마 선택"
+        title="색상 테마 변경"
+        :aria-expanded="colorMenuOpen"
+      >
+        <span class="theme-icon">🎨</span>
+        <span class="dropdown-arrow" :class="{ open: colorMenuOpen }">▼</span>
+      </button>
+
+      <!-- Color Dropdown Menu -->
+      <transition name="dropdown">
+        <div v-if="colorMenuOpen" class="color-dropdown">
+          <button
+            v-for="theme in colorThemes"
+            :key="theme.value"
+            class="color-item"
+            :class="{ active: currentColorTheme === theme.value }"
+            @click="selectColorTheme(theme.value)"
+          >
+            <span class="color-dot" :style="{ background: theme.color }"></span>
+            <span class="color-label">{{ theme.label }}</span>
+            <span v-if="currentColorTheme === theme.value" class="check-icon">✓</span>
+          </button>
+        </div>
+      </transition>
+    </div>
+
     <!-- Theme Toggle Button -->
     <button
       class="theme-toggle-btn"
@@ -119,9 +150,11 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
+import { useColorTheme } from '../composables/useColorTheme'
 
 const router = useRouter()
 const { isNight, toggleTheme } = useTheme()
+const { currentColorTheme, setColorTheme } = useColorTheme()
 
 // User info (temporary - replace with actual user store)
 const userName = ref('사용자')
@@ -129,13 +162,37 @@ const userName = ref('사용자')
 // Menu states
 const userMenuOpen = ref(false)
 const mobileMenuOpen = ref(false)
+const colorMenuOpen = ref(false)
+
+// Color themes
+const colorThemes = [
+  { value: 'warm-beige', label: '따뜻한 베이지', color: '#D4A574' },
+  { value: 'olive-green', label: '올리브 그린', color: '#8D9F87' },
+  { value: 'cool-gray', label: '쿨 그레이', color: '#90A4AE' },
+  { value: 'sky-blue', label: '스카이 블루', color: '#64B5F6' }
+]
 
 const toggleUserMenu = () => {
   userMenuOpen.value = !userMenuOpen.value
+  colorMenuOpen.value = false
 }
 
 const closeUserMenu = () => {
   userMenuOpen.value = false
+}
+
+const toggleColorMenu = () => {
+  colorMenuOpen.value = !colorMenuOpen.value
+  userMenuOpen.value = false
+}
+
+const closeColorMenu = () => {
+  colorMenuOpen.value = false
+}
+
+const selectColorTheme = (theme) => {
+  setColorTheme(theme)
+  closeColorMenu()
 }
 
 const toggleMobileMenu = () => {
@@ -157,6 +214,9 @@ const handleLogout = () => {
 const handleClickOutside = (event) => {
   if (!event.target.closest('.nav-user')) {
     closeUserMenu()
+  }
+  if (!event.target.closest('.nav-color-theme')) {
+    closeColorMenu()
   }
   if (!event.target.closest('.nav-menu') && !event.target.closest('.mobile-hamburger')) {
     closeMobileMenu()
@@ -361,6 +421,139 @@ html[data-theme="night"] .theme-toggle-btn:active {
 
 .theme-icon {
   transition: all 0.4s ease;
+  font-size: 1.25rem;
+}
+
+/* Color Theme Selector */
+.nav-color-theme {
+  position: relative;
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+.color-theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: auto;
+  height: 40px;
+  padding: 0 0.875rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-theme="day"] .color-theme-btn {
+  background: var(--showroom-card-bg-day, #F5EDE3);
+  box-shadow:
+    3px 3px 6px var(--showroom-shadow-dark-day, #D4C8BD),
+    -3px -3px 6px var(--showroom-shadow-light-day, #FFFFFF);
+}
+
+html[data-theme="day"] .color-theme-btn:hover {
+  transform: translateY(-2px);
+}
+
+html[data-theme="day"] .color-theme-btn:active {
+  transform: translateY(0);
+  box-shadow:
+    inset 2px 2px 4px var(--showroom-shadow-dark-day, #D4C8BD),
+    inset -2px -2px 4px var(--showroom-shadow-light-day, #FFFFFF);
+}
+
+html[data-theme="night"] .color-theme-btn {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="night"] .color-theme-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+html[data-theme="night"] .color-theme-btn:active {
+  background: rgba(0, 0, 0, 0.15);
+  transform: translateY(0);
+}
+
+.color-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="day"] .color-dropdown {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="night"] .color-dropdown {
+  background: rgba(58, 53, 48, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.color-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+html[data-theme="day"] .color-item {
+  color: var(--showroom-text-day, #5D4037);
+}
+
+html[data-theme="day"] .color-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .color-item {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+html[data-theme="night"] .color-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.color-item.active {
+  font-weight: 600;
+}
+
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-label {
+  flex: 1;
+}
+
+.check-icon {
+  font-size: 1rem;
+  color: var(--showroom-accent-day, #D4A574);
+}
+
+html[data-theme="night"] .check-icon {
+  color: var(--showroom-accent-night, #D4A574);
 }
 
 /* User Dropdown */
