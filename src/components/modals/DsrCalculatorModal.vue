@@ -450,6 +450,17 @@ html[data-theme="night"] .form-input::placeholder {
   cursor: pointer;
 }
 
+/* Hide number input spinners (arrows) */
+.form-input[type="number"]::-webkit-outer-spin-button,
+.form-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Submit Button */
 .submit-button {
   display: flex;
