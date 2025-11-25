@@ -94,7 +94,7 @@ const handleChangeDreamHome = () => {
 }
 
 html[data-theme="night"] .achievement-section-wrapper {
-  background: var(--dashboard-section-bg-night-light, rgba(58, 53, 48, 0.3));
+  background: var(--dashboard-section-bg-night-light, rgba(58, 53, 48, 0.6));
 }
 
 /* Gamification Section: Medium Background */
@@ -105,7 +105,7 @@ html[data-theme="night"] .achievement-section-wrapper {
 }
 
 html[data-theme="night"] .gamification-section-wrapper {
-  background: var(--dashboard-section-bg-night-medium, rgba(58, 53, 48, 0.5));
+  background: var(--dashboard-section-bg-night-medium, rgba(58, 53, 48, 0.75));
 }
 
 /* Two Column Section: Medium Background */
@@ -116,7 +116,7 @@ html[data-theme="night"] .gamification-section-wrapper {
 }
 
 html[data-theme="night"] .two-column-section-wrapper {
-  background: var(--dashboard-section-bg-night-medium, rgba(58, 53, 48, 0.5));
+  background: var(--dashboard-section-bg-night-medium, rgba(58, 53, 48, 0.75));
 }
 
 /* Dream Home Section: Darker Background */
@@ -127,7 +127,7 @@ html[data-theme="night"] .two-column-section-wrapper {
 }
 
 html[data-theme="night"] .dreamhome-section-wrapper {
-  background: var(--dashboard-section-bg-night-dark, rgba(58, 53, 48, 0.6));
+  background: var(--dashboard-section-bg-night-dark, rgba(58, 53, 48, 0.85));
 }
 
 /* Two Column Layout */

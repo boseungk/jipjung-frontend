@@ -177,19 +177,15 @@
         --mouse-y: 50%;
     }
 
-    /* Body Styles */
+    /* Body Styles - NO transition for instant theme switching */
     html[data-theme="day"] body {
         background-color: var(--showroom-bg-day);
         color: var(--showroom-text-day);
-        transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-            color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     html[data-theme="night"] body {
         background-color: var(--showroom-bg-night);
         color: var(--showroom-text-night);
-        transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-            color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 

@@ -2,15 +2,19 @@
   <div>
     <!-- Environment Background Effects -->
     <div class="winter-gradient"></div>
-    <div class="mouse-light-effect"></div>
+    <!-- Lighting effects only on Collection page -->
+    <div v-if="isCollectionPage" class="mouse-light-effect"></div>
     <div class="rising-light-container"></div>
     <div class="frost-overlay"></div>
   </div>
 </template>
 
 <script setup>
-// Background effects are primarily CSS-based
-// This component just provides the DOM structure
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const isCollectionPage = computed(() => route.path === '/collection')
 </script>
 
 <style scoped>
