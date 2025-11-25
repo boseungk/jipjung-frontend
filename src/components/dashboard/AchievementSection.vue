@@ -45,7 +45,7 @@
 
     <!-- CTA Buttons -->
     <div class="cta-buttons">
-      <button class="cta-btn cta-primary" @click="onSaving">
+      <button class="cta-btn cta-primary" @click="openSavingModal">
         <span class="btn-icon">💾</span>
         저축하기
       </button>
@@ -54,13 +54,22 @@
         드림홈 변경
       </button>
     </div>
+    
+    <!-- Saving Input Modal -->
+    <SavingInputModal 
+      :is-open="savingModalOpen" 
+      @close="closeSavingModal"
+      @submit="handleSavingSubmit"
+    />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { storeToRefs } from "pinia";
 import { useDreamHomeStore } from "../../stores/dreamHomeStore";
 import { formatNumber } from "../../utils/formatters";
+import SavingInputModal from '../modals/SavingInputModal.vue'
 
 const dreamHomeStore = useDreamHomeStore();
 const {
@@ -73,9 +82,22 @@ const {
 
 const emit = defineEmits(["saving", "changeDreamHome"]);
 
-const onSaving = () => {
-  emit("saving");
-};
+// Modal state
+const savingModalOpen = ref(false)
+
+const openSavingModal = () => {
+  savingModalOpen.value = true
+}
+
+const closeSavingModal = () => {
+  savingModalOpen.value = false
+}
+
+const handleSavingSubmit = (data) => {
+  console.log('저축 데이터:', data)
+  // TODO: Integrate with store
+  emit("saving", data)
+}
 
 const onChangeDreamHome = () => {
   emit("changeDreamHome");

@@ -3,28 +3,32 @@
     <!-- Background Effects (Global) -->
     <BackgroundEffects />
     
-    <!-- Theme Toggle (Global) -->
-    <ThemeToggle position="top-right" :show-tooltip="true" />
-    
-    <!-- Navigation Bar (Global) -->
-    <NavigationBar />
+    <!-- Top Navigation Bar (Global) -->
+    <TopNavigationBar />
     
     <!-- Router View: DashboardView or CollectionView -->
-    <router-view v-slot="{ Component }">
-      <transition name="page-fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
+    <div class="main-content">
+      <router-view v-slot="{ Component }">
+        <transition name="page-fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </div>
   </div>
 </template>
 
 <script setup>
 import BackgroundEffects from './components/BackgroundEffects.vue'
-import ThemeToggle from './components/ThemeToggle.vue'
-import NavigationBar from './components/NavigationBar.vue'
+import TopNavigationBar from './components/TopNavigationBar.vue'
 </script>
 
 <style>
+/* Main content padding to account for fixed top nav */
+.main-content {
+  padding-top: 64px;
+  min-height: calc(100vh - 64px);
+}
+
 /* Page Transition */
 .page-fade-enter-active,
 .page-fade-leave-active {
@@ -36,3 +40,4 @@ import NavigationBar from './components/NavigationBar.vue'
   opacity: 0;
 }
 </style>
+

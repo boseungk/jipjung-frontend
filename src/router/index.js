@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 import CollectionView from '../views/CollectionView.vue'
+import PropertyListView from '../views/PropertyListView.vue'
+import ProfileSettingsView from '../views/ProfileSettingsView.vue'
 
 const routes = [
     {
@@ -17,6 +19,22 @@ const routes = [
         component: CollectionView,
         meta: {
             title: '집짓기 - 컬렉션'
+        }
+    },
+    {
+        path: '/properties',
+        name: 'Properties',
+        component: PropertyListView,
+        meta: {
+            title: '집짓기 - 매물 검색'
+        }
+    },
+    {
+        path: '/profile',
+        name: 'Profile',
+        component: ProfileSettingsView,
+        meta: {
+            title: '집짓기 - 프로필 설정'
         }
     }
 ]
