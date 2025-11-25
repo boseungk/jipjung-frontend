@@ -9,7 +9,7 @@
     </div>
 
     <!-- Desktop Menu -->
-    <div class="nav-menu" :class="{ 'menu-open': mobileMenuOpen }">
+    <div class="nav-menu" :class="{ 'menu-open': mobileMenuOpen }" @click.stop>
       <router-link
         to="/"
         class="nav-menu-item"
@@ -136,7 +136,7 @@
     <!-- Mobile Hamburger -->
     <button
       class="mobile-hamburger"
-      @click="toggleMobileMenu"
+      @click.stop="toggleMobileMenu"
       aria-label="메뉴 열기/닫기"
     >
       <span class="hamburger-line"></span>
@@ -218,7 +218,9 @@ const handleClickOutside = (event) => {
   if (!event.target.closest('.nav-color-theme')) {
     closeColorMenu()
   }
-  if (!event.target.closest('.nav-menu') && !event.target.closest('.mobile-hamburger')) {
+  if (mobileMenuOpen.value &&
+      !event.target.closest('.nav-menu') &&
+      !event.target.closest('.mobile-hamburger')) {
     closeMobileMenu()
   }
 }

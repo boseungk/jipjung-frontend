@@ -27,6 +27,7 @@ import TopNavigationBar from './components/TopNavigationBar.vue'
 .main-content {
   padding-top: 64px;
   min-height: calc(100vh - 64px);
+  scrollbar-gutter: stable;
 }
 
 /* Page Transition */
