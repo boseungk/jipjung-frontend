@@ -66,24 +66,36 @@ function handleNext() {
 <style scoped>
 .onboarding-step {
   text-align: center;
-  padding: 2rem 0;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+html[data-theme="night"] .onboarding-step {
+  background: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .step-title {
-  font-size: 1.75rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  color: var(--showroom-text-day, #5D4037);
-  margin-bottom: 0.75rem;
+  color: var(--showroom-text-day, #3E2723);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
 }
 
 html[data-theme="night"] .step-title {
-  color: var(--showroom-text-night, #F5EDE3);
+  color: var(--showroom-text-night, #FFFFFF);
 }
 
 .step-description {
-  font-size: 1rem;
-  color: var(--showroom-text-secondary-day, #8D6E63);
+  font-size: 1.0625rem;
+  color: var(--showroom-text-secondary-day, #6D4C41);
   margin-bottom: 2.5rem;
+  line-height: 1.6;
 }
 
 html[data-theme="night"] .step-description {
@@ -101,8 +113,8 @@ html[data-theme="night"] .step-description {
 
 .year-input {
   flex: 1;
-  padding: 0.75rem 1rem;
-  font-size: 1.25rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 1.5rem;
   font-weight: 600;
   text-align: center;
   border: 2px solid rgba(93, 64, 55, 0.15);
@@ -110,6 +122,8 @@ html[data-theme="night"] .step-description {
   background: rgba(255, 255, 255, 0.7);
   color: var(--showroom-text-day, #5D4037);
   transition: all 0.25s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 .year-input:focus {
