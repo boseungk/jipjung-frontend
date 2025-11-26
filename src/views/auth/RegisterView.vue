@@ -39,7 +39,7 @@ function handleRegisterSuccess() {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: var(--showroom-bg-day, #F5EDE3);
+  background: radial-gradient(circle at center, var(--showroom-bg-day, #F5EDE3) 0%, #EBE0D6 100%);
 }
 
 html[data-theme="night"] .auth-view {
@@ -52,19 +52,17 @@ html[data-theme="night"] .auth-view {
 }
 
 .auth-card {
-  background: var(--showroom-bg-day, #F5EDE3);
+  background: #FFFFFF;
   padding: 3rem 2.5rem;
   border-radius: 24px;
   box-shadow: 
-    12px 12px 24px rgba(93, 64, 55, 0.15),
-    -12px -12px 24px rgba(255, 255, 255, 0.7);
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 24px 48px -12px rgba(44, 36, 32, 0.25);
 }
 
 html[data-theme="night"] .auth-card {
   background: var(--showroom-bg-night, #4A3F35);
-  box-shadow: 
-    12px 12px 24px rgba(0, 0, 0, 0.4),
-    -12px -12px 24px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.4);
 }
 
 .auth-header {

@@ -131,9 +131,9 @@ html[data-theme="night"] .form-group label {
   width: 100%;
   padding: 0.625rem 0.875rem;
   font-size: 1rem;
-  border: 2px solid rgba(93, 64, 55, 0.15);
+  border: 2px solid rgba(93, 64, 55, 0.1);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.7);
+  background: #EEF0F2;
   color: var(--showroom-text-day, #5D4037);
   transition: all 0.25s ease;
   line-height: 1.5;
@@ -146,18 +146,18 @@ html[data-theme="night"] .form-group label {
 
 .neomorphic-input:focus {
   outline: none;
-  border-color: var(--showroom-accent-day, #D4A574);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+  border-color: #FF7F50;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(255, 127, 80, 0.15);
 }
 
 .neomorphic-input.error {
   border-color: #D32F2F;
-  background: rgba(255, 255, 255, 0.9);
+  background: #FEF2F2;
 }
 
 .neomorphic-input.error:focus {
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.15);
 }
 
 html[data-theme="night"] .neomorphic-input {
@@ -247,7 +247,6 @@ html[data-theme="night"] .checkbox-label {
   font-weight: 500;
 }
 
-/* Neomorphic Button */
 .neomorphic-button {
   width: 100%;
   padding: 0.75rem 2rem;
@@ -257,29 +256,24 @@ html[data-theme="night"] .checkbox-label {
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  margin-top: 0.5rem;
 }
 
 .neomorphic-button.primary {
-  background: var(--showroom-accent-day, #D4A574);
-  color: #FFFFFF;
-  box-shadow: 
-    4px 4px 8px rgba(93, 64, 55, 0.2),
-    -4px -4px 8px rgba(255, 255, 255, 0.7);
+  background: #FF7F50;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
+  font-weight: 700;
 }
 
 .neomorphic-button.primary:hover:not(:disabled) {
-  box-shadow: 
-    6px 6px 12px rgba(93, 64, 55, 0.25),
-    -6px -6px 12px rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
+  background: #FF6A3D;
+  box-shadow: 0 6px 16px rgba(255, 127, 80, 0.4);
+  transform: translateY(-2px);
 }
 
 .neomorphic-button.primary:active:not(:disabled) {
-  box-shadow: 
-    inset 3px 3px 6px rgba(93, 64, 55, 0.3),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+  background: #FF5A2D;
+  box-shadow: 0 2px 8px rgba(255, 127, 80, 0.2);
   transform: translateY(0);
 }
 

@@ -135,18 +135,12 @@ function removeArea(index) {
 <style scoped>
 .onboarding-step {
   text-align: center;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 1rem 0;
   max-width: 650px;
   margin: 0 auto;
 }
 
-html[data-theme="night"] .onboarding-step {
-  background: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
+
 
 .step-title {
   text-align: center;
@@ -241,7 +235,7 @@ html[data-theme="night"] .area-chip {
   font-size: 1rem;
   border: 2px solid rgba(93, 64, 55, 0.15);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.7);
+  background: #EEF0F2;
   color: var(--showroom-text-day, #5D4037);
   transition: all 0.25s ease;
   cursor: pointer;

@@ -60,18 +60,12 @@ const formattedIncome = computed(() => {
 <style scoped>
 .onboarding-step {
   text-align: center;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 1rem 0;
   max-width: 600px;
   margin: 0 auto;
 }
 
-html[data-theme="night"] .onboarding-step {
-  background: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
+
 
 .step-title {
   font-size: 1.875rem;

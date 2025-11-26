@@ -61,18 +61,12 @@ function handleNext() {
 <style scoped>
 .onboarding-step {
   text-align: center;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 1rem 0;
   max-width: 600px;
   margin: 0 auto;
 }
 
-html[data-theme="night"] .onboarding-step {
-  background: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
+
 
 .step-title {
   font-size: 1.875rem;
@@ -112,9 +106,9 @@ html[data-theme="night"] .step-description {
   font-size: 1.5rem;
   font-weight: 600;
   text-align: center;
-  border: 2px solid rgba(93, 64, 55, 0.15);
+  border: 2px solid rgba(93, 64, 55, 0.1);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.7);
+  background: #EEF0F2;
   color: var(--showroom-text-day, #5D4037);
   transition: all 0.25s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
@@ -123,9 +117,9 @@ html[data-theme="night"] .step-description {
 
 .loan-input:focus {
   outline: none;
-  border-color: var(--showroom-accent-day, #D4A574);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+  border-color: #FF7F50;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(255, 127, 80, 0.15);
 }
 
 html[data-theme="night"] .loan-input {

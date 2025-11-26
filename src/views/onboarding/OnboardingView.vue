@@ -145,7 +145,7 @@ async function handleComplete() {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: var(--showroom-bg-day, #F5EDE3);
+  background: radial-gradient(circle at center, var(--showroom-bg-day, #F5EDE3) 0%, #EBE0D6 100%);
 }
 
 html[data-theme="night"] .onboarding-view {
@@ -158,19 +158,17 @@ html[data-theme="night"] .onboarding-view {
 }
 
 .onboarding-card {
-  background: var(--showroom-bg-day, #F5EDE3);
+  background: #FFFFFF;
   padding: 3rem 2.5rem;
   border-radius: 24px;
-  box-shadow:
-    12px 12px 24px rgba(93, 64, 55, 0.15),
-    -12px -12px 24px rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 24px 48px -12px rgba(44, 36, 32, 0.25);
 }
 
 html[data-theme="night"] .onboarding-card {
   background: var(--showroom-bg-night, #4A3F35);
-  box-shadow:
-    12px 12px 24px rgba(0, 0, 0, 0.4),
-    -12px -12px 24px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.4);
 }
 
 .onboarding-header {
@@ -236,25 +234,22 @@ html[data-theme="night"] .onboarding-description {
 
 /* Primary Button (다음/시작하기) - Neumorphic */
 .nav-button.primary {
-  background: var(--showroom-accent-day, #D4A574);
+  background: #FF7F50;
   color: white;
-  box-shadow:
-    4px 4px 8px rgba(93, 64, 55, 0.2),
-    -4px -4px 8px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
+  font-weight: 700;
 }
 
 .nav-button.primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow:
-    6px 6px 12px rgba(93, 64, 55, 0.25),
-    -6px -6px 12px rgba(255, 255, 255, 0.8);
+  background: #FF6A3D;
+  box-shadow: 0 6px 16px rgba(255, 127, 80, 0.4);
+  transform: translateY(-2px);
 }
 
 .nav-button.primary:active:not(:disabled) {
+  background: #FF5A2D;
+  box-shadow: 0 2px 8px rgba(255, 127, 80, 0.2);
   transform: translateY(0);
-  box-shadow:
-    inset 3px 3px 6px rgba(93, 64, 55, 0.3),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
 }
 
 .nav-button.primary:disabled {
@@ -269,43 +264,38 @@ html[data-theme="night"] .nav-button.primary {
     -4px -4px 8px rgba(255, 255, 255, 0.05);
 }
 
-/* Secondary Button (이전) - Neumorphic Same Style */
+/* Secondary Button (이전) - Solid Beige Style */
 .nav-button.secondary {
-  background: rgba(255, 255, 255, 0.6);
+  background: #E8DFD5;
   color: var(--showroom-text-day, #5D4037);
-  box-shadow:
-    4px 4px 8px rgba(93, 64, 55, 0.15),
-    -4px -4px 8px rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(93, 64, 55, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .nav-button.secondary:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: #DDD4CA;
+  border-color: rgba(93, 64, 55, 0.25);
   transform: translateY(-1px);
-  box-shadow:
-    6px 6px 12px rgba(93, 64, 55, 0.2),
-    -6px -6px 12px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .nav-button.secondary:active {
+  background: #D2C9BF;
   transform: translateY(0);
-  box-shadow:
-    inset 3px 3px 6px rgba(93, 64, 55, 0.2),
-    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 html[data-theme="night"] .nav-button.secondary {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   color: var(--showroom-text-night, #F5EDE3);
-  box-shadow:
-    4px 4px 8px rgba(0, 0, 0, 0.25),
-    -4px -4px 8px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 html[data-theme="night"] .nav-button.secondary:hover {
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow:
-    6px 6px 12px rgba(0, 0, 0, 0.3),
-    -6px -6px 12px rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Slide Fade Transition */
