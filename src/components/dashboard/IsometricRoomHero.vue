@@ -39,7 +39,7 @@ const { currentAmount, targetAmount, daysRemaining } = storeToRefs(dreamHomeStor
 <style scoped>
 .isometric-hero {
   width: 100%;
-  padding: 0.5rem 1rem 1rem;
+  padding: 1rem 1rem 2rem; /* Increased top/bottom padding */
   display: flex;
   flex-direction: column;
   align-items: center;

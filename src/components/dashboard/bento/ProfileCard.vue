@@ -45,8 +45,9 @@ const userName = '홍길동'
 .profile-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem; /* Increased gap slightly */
   grid-area: profile;
+  padding: 1.75rem; /* Increased padding for airy feel */
 }
 
 /* Level Badge - ACCENT COLOR */

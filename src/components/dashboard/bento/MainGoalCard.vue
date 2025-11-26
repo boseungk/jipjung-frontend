@@ -54,7 +54,7 @@ const handleSaving = () => {
 .main-goal-card {
   grid-area: main;
   grid-row: auto;
-  padding: 2.5rem;
+  padding: 2rem; /* Reduced from 2.5rem for better density */
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
 }
 
@@ -66,7 +66,7 @@ html[data-theme="night"] .main-goal-card {
 .equal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
+  gap: 2rem; /* Reduced from 2.5rem */
   align-items: center;
   height: 100%;
 }
@@ -131,7 +131,7 @@ html[data-theme="night"] .donut-text {
 .content-column {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced from 2rem */
   justify-content: center;
 }
 

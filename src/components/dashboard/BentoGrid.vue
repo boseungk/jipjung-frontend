@@ -20,7 +20,7 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
 .bento-grid {
   display: grid;
   gap: 1.5rem;
-  padding: 0.5rem 2rem 2rem;
+  padding: 2rem 2rem 2rem; /* Increased top padding for better separation */
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -43,7 +43,7 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: minmax(200px, auto);
-    padding: 0.5rem 1.5rem 2rem;
+    padding: 1.5rem 1.5rem 2rem;
     grid-template-areas:
       "profile streak"
       "main main"
@@ -55,8 +55,8 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
 @media (max-width: 767px) {
   .bento-grid {
     grid-template-columns: 1fr;
-    padding: 0rem 1rem 2rem;
-    gap: 1rem;
+    padding: 1rem 1rem 2rem;
+    gap: 1rem; /* Reduced gap for mobile */
     /* No grid areas needed for single column, auto placement works */
   }
 }
