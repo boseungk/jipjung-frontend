@@ -1,11 +1,16 @@
 <template>
   <div class="profile-view">
     <div class="profile-container">
-      <h1 class="page-title">👤 프로필 설정</h1>
+      <h1 class="page-title">
+        <AppIcon name="user" :size="24" />
+        프로필 설정
+      </h1>
       <p class="page-subtitle">내 정보를 관리하세요</p>
-      
+
       <div class="coming-soon">
-        <div class="coming-soon-icon">⚙️</div>
+        <div class="coming-soon-icon">
+          <PhGear :size="32" weight="duotone" />
+        </div>
         <h2>준비 중입니다</h2>
         <p>곧 프로필 관리 기능이 제공될 예정입니다!</p>
       </div>
@@ -14,6 +19,7 @@
 </template>
 
 <script setup>
+import { PhGear } from '@phosphor-icons/vue'
 // Placeholder component - actual implementation coming soon
 </script>
 
@@ -36,6 +42,10 @@
   text-align: center;
   margin-bottom: 0.5rem;
   color: var(--showroom-text-day, #5D4037);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="night"] .page-title {
@@ -61,6 +71,8 @@ html[data-theme="night"] .page-subtitle {
 .coming-soon-icon {
   font-size: 6rem;
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
 }
 
 .coming-soon h2 {

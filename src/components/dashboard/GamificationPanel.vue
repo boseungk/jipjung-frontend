@@ -2,7 +2,7 @@
   <div class="gamification-panel">
     <!-- Level Section -->
     <div class="level-section">
-      <div class="level-icon">🌟</div>
+      <div class="level-icon"><AppIcon name="star" :size="40" :active="true" :is-major-cta="true" /></div>
       <div class="level-info">
         <div class="level-header">
           <span class="level-text">Level {{ currentLevel }}</span>
@@ -28,7 +28,7 @@
     
     <!-- Streak Section -->
     <div class="streak-section">
-      <div class="streak-icon">🔥</div>
+      <div class="streak-icon"><AppIcon name="fire" :size="32" :active="true" :is-major-cta="true" /></div>
       <div class="streak-info">
         <span class="streak-text">연속 저축: {{ currentStreak }}일</span>
         <span class="streak-divider">|</span>
@@ -82,7 +82,6 @@ html[data-theme="night"] .gamification-panel {
 }
 
 .level-icon {
-  font-size: 2.5rem;
   flex-shrink: 0;
 }
 
@@ -191,7 +190,6 @@ html[data-theme="night"] .streak-section {
 }
 
 .streak-icon {
-  font-size: 2rem;
   animation: flicker 2s infinite;
   flex-shrink: 0;
 }

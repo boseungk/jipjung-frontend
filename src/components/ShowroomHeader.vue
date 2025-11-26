@@ -1,6 +1,9 @@
 <template>
   <header class="header">
-    <h1>🏠 라이프스타일 쇼룸</h1>
+    <h1>
+      <AppIcon name="house" :size="24" />
+      라이프스타일 쇼룸
+    </h1>
     <p>당신의 저축을 아름다운 공간으로 전시하세요</p>
   </header>
 </template>
@@ -20,6 +23,9 @@
   margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
   transition: color 0.5s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="day"] .header h1 {

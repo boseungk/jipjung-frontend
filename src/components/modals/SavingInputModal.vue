@@ -4,9 +4,12 @@
       <div class="modal-container" @click.stop>
         <!-- Header -->
         <div class="modal-header">
-          <h2 class="modal-title">💰 저축 기록하기</h2>
+          <h2 class="modal-title">
+            <AppIcon name="piggyBank" :size="24" weight="fill" color="currentColor" />
+            저축 기록하기
+          </h2>
           <button class="close-button" @click="closeModal" aria-label="닫기">
-            ✕
+            <PhX :size="20" weight="bold" color="currentColor" />
           </button>
         </div>
 
@@ -75,7 +78,7 @@
 
           <!-- Submit Button -->
           <button type="submit" class="submit-button">
-            <span class="button-icon">💾</span>
+            <AppIcon name="floppyDisk" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" />
             저축 기록하기
           </button>
         </form>
@@ -86,6 +89,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { PhX } from '@phosphor-icons/vue'
 
 const props = defineProps({
   isOpen: {
@@ -200,6 +204,9 @@ html[data-theme="night"] .modal-container {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--showroom-text-day, #5D4037);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="night"] .modal-title {
@@ -418,9 +425,6 @@ html[data-theme="night"] .submit-button:active {
     inset -2px -2px 8px rgba(255, 255, 255, 0.03);
 }
 
-.button-icon {
-  font-size: 1.25rem;
-}
 
 /* Modal Transition */
 .modal-enter-active,

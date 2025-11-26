@@ -2,7 +2,7 @@
   <div class="bento-card profile-card">
     <!-- Level Badge - MOVED FROM HERO -->
     <div class="level-badge">
-      <span class="level-icon">⭐</span>
+      <span class="level-icon"><AppIcon name="star" :size="16" :active="true" :is-major-cta="true" /></span>
       <span class="level-text">Lv.{{ currentLevel }} {{ levelTitle }}</span>
     </div>
     
@@ -10,7 +10,7 @@
       <!-- Avatar -->
       <div class="avatar-section">
         <div class="avatar-circle">
-          <span class="avatar-emoji">👤</span>
+          <span class="avatar-emoji"><AppIcon name="user" :size="32" /></span>
         </div>
       </div>
       
@@ -64,9 +64,6 @@ const userName = '홍길동'
   align-self: flex-start;
 }
 
-.level-icon {
-  font-size: 1rem;
-}
 
 .level-text {
   white-space: nowrap;
@@ -100,9 +97,6 @@ html[data-theme="night"] .avatar-circle {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.avatar-emoji {
-  font-size: 2rem;
-}
 
 /* User Info */
 .user-info {

@@ -1,3 +1,7 @@
+<script setup>
+import { PhCalendarBlank, PhTrophy } from '@phosphor-icons/vue'
+</script>
+
 <template>
   <div class="showroom-samples">
     <!-- Price Card -->
@@ -11,22 +15,30 @@
     <!-- Info Cards -->
     <div class="showroom-info">
       <div class="showroom-info-item">
-        <div class="icon">🏠</div>
+        <div class="icon">
+          <AppIcon name="house" :size="20" />
+        </div>
         <div class="value">85%</div>
         <div class="label">달성률</div>
       </div>
       <div class="showroom-info-item">
-        <div class="icon">📅</div>
+        <div class="icon">
+          <PhCalendarBlank :size="20" weight="duotone" />
+        </div>
         <div class="value">127일</div>
         <div class="label">진행 기간</div>
       </div>
       <div class="showroom-info-item">
-        <div class="icon">💰</div>
+        <div class="icon">
+          <AppIcon name="piggyBank" :size="20" />
+        </div>
         <div class="value">₩425만</div>
         <div class="label">현재 저축액</div>
       </div>
       <div class="showroom-info-item">
-        <div class="icon">🎯</div>
+        <div class="icon">
+          <PhTrophy :size="20" weight="fill" color="#FF7F50" />
+        </div>
         <div class="value">₩75만</div>
         <div class="label">남은 금액</div>
       </div>

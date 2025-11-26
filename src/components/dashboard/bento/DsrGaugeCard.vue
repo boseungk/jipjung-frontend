@@ -13,7 +13,7 @@
     </div>
     
     <div class="status-info">
-      <span class="status-icon">✅</span>
+      <span class="status-icon"><PhCheckCircle :size="18" weight="fill" color="#43A047" /></span>
       <span class="status-text">{{ statusMessage }}</span>
     </div>
   </div>
@@ -24,6 +24,7 @@ import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDsrStore } from '../../../stores/dsrStore'
 import VueApexCharts from 'vue3-apexcharts'
+import { PhCheckCircle } from '@phosphor-icons/vue'
 
 const apexchart = VueApexCharts
 
@@ -124,9 +125,6 @@ html[data-theme="night"] .card-title {
   padding: 0.5rem;
 }
 
-.status-icon {
-  font-size: 1.125rem;
-}
 
 .status-text {
   font-size: 0.875rem;

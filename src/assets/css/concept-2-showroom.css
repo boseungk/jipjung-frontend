@@ -15,45 +15,45 @@
 
 /* Theme 1: Warm Beige (따뜻한 베이지) - Default */
 :root[data-color-theme="warm-beige"] {
-  /* Day Mode */
-  --showroom-bg-day: #E8E0D5;
-  --showroom-card-bg-day: #F5EDE3;
+  /* Day Mode - 새로운 색상 시스템 */
+  --showroom-bg-day: #F9F8F6;  /* 기존: #E8E0D5 → 모던한 웜 그레이 */
+  --showroom-card-bg-day: #F9F8F6;  /* 기존: #F5EDE3 */
   --showroom-shadow-light-day: #FFFFFF;
-  --showroom-shadow-dark-day: #D4C8BD;
-  --showroom-accent-day: #D4A574;
-  --showroom-text-day: #5D4037;
+  --showroom-shadow-dark-day: #E8E4E1;  /* #F9F8F6보다 약간 어둡게 */
+  --showroom-accent-day: #FF7F50;  /* 기존: #D4A574 → Living Coral */
+  --showroom-text-day: #2C2420;  /* 기존: #5D4037 → Deep Coffee Brown */
 
-  /* Night Mode */
+  /* Night Mode - 반전 시스템 */
   --showroom-bg-night: #3a3530;
   --showroom-card-bg-night: #4a4540;
   --showroom-shadow-light-night: #4f4a45;
   --showroom-shadow-dark-night: #2a2520;
-  --showroom-accent-night: #D4A574;
-  --showroom-text-night: #F5EDE3;
-  --showroom-glow-night: rgba(212, 165, 116, 0.4);
+  --showroom-accent-night: #FF7F50;  /* 기존: #D4A574 → Living Coral */
+  --showroom-text-night: #F9F8F6;  /* 기존: #F5EDE3 → Day 배경색 재활용 */
+  --showroom-glow-night: rgba(255, 127, 80, 0.4);  /* 코랄 색상으로 */
 
   /* Neumorphism Specific */
   --neu-shadow-light-day: #FFFFFF;
-  --neu-shadow-dark-day: #C8BDB2;
+  --neu-shadow-dark-day: #D8D4D1;  /* 새 배경에 맞춰 조정 */
   --neu-shadow-light-night: #5a5550;
   --neu-shadow-dark-night: #1a1510;
 
   /* Glassmorphism Specific */
-  --glass-bg-day: rgba(255, 255, 255, 0.75);
+  --glass-bg-day: rgba(249, 248, 246, 0.75);
   --glass-border-day: rgba(255, 255, 255, 0.4);
   --glass-bg-night: rgba(58, 53, 48, 0.75);
-  --glass-border-night: rgba(212, 165, 116, 0.4);
-  --glass-glow-night: rgba(212, 165, 116, 0.5);
+  --glass-border-night: rgba(255, 127, 80, 0.4);  /* 코랄 색상으로 */
+  --glass-glow-night: rgba(255, 127, 80, 0.5);  /* 코랄 색상으로 */
 
   /* Minimal Text */
   --minimal-bg-day: rgba(255, 255, 255, 0.5);
-  --minimal-text-day: #5D4037;
+  --minimal-text-day: #2C2420;  /* 새 텍스트 색상 */
   --minimal-bg-night: rgba(30, 30, 30, 0.4);
-  --minimal-text-night: #F5EDE3;
+  --minimal-text-night: #F9F8F6;  /* 새 텍스트 색상 */
 
   /* Lighting Effects */
-  --light-warm-glow: rgba(255, 200, 120, 0.6);
-  --light-ambient: rgba(212, 165, 116, 0.3);
+  --light-warm-glow: rgba(255, 127, 80, 0.6);  /* 코랄 색상으로 */
+  --light-ambient: rgba(255, 127, 80, 0.3);  /* 코랄 색상으로 */
   --light-spotlight: rgba(255, 255, 255, 0.8);
 }
 

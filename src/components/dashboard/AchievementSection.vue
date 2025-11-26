@@ -2,7 +2,7 @@
   <div class="achievement-section">
     <!-- Achievement Rate -->
     <div class="achievement-header">
-      <div class="achievement-icon">💰</div>
+      <div class="achievement-icon"><AppIcon name="piggyBank" :size="24" :active="true" :is-major-cta="true" /></div>
       <h2 class="achievement-title">목표 달성률</h2>
       <div class="achievement-rate">{{ achievementRate }}%</div>
     </div>
@@ -37,7 +37,7 @@
 
     <!-- D-Day -->
     <div class="dday-container">
-      <span class="dday-icon">📅</span>
+      <span class="dday-icon"><PhCalendarBlank :size="20" weight="duotone" /></span>
       <span class="dday-text">D-{{ daysRemaining }}</span>
       <span class="dday-divider">|</span>
       <span class="dday-date">예상 달성일: {{ targetDate }}</span>
@@ -46,11 +46,11 @@
     <!-- CTA Buttons -->
     <div class="cta-buttons">
       <button class="cta-btn cta-primary" @click="openSavingModal">
-        <span class="btn-icon">💾</span>
+        <span class="btn-icon"><AppIcon name="floppyDisk" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" /></span>
         저축하기
       </button>
       <button class="cta-btn cta-secondary" @click="onChangeDreamHome">
-        <span class="btn-icon">🏠</span>
+        <span class="btn-icon"><AppIcon name="house" :size="20" aria-hidden="true" /></span>
         드림홈 변경
       </button>
     </div>
@@ -70,6 +70,7 @@ import { storeToRefs } from "pinia";
 import { useDreamHomeStore } from "../../stores/dreamHomeStore";
 import { formatNumber } from "../../utils/formatters";
 import SavingInputModal from '../modals/SavingInputModal.vue'
+import { PhCalendarBlank } from '@phosphor-icons/vue'
 
 const dreamHomeStore = useDreamHomeStore();
 const {
@@ -128,7 +129,6 @@ html[data-theme="night"] .achievement-section {
 }
 
 .achievement-icon {
-  font-size: 2.5rem;
   margin-bottom: 0.5rem;
 }
 
@@ -407,9 +407,6 @@ html[data-theme="night"] .cta-secondary:active {
   box-shadow: inset 3px 3px 10px rgba(0, 0, 0, 0.5);
 }
 
-.btn-icon {
-  font-size: 1.25rem;
-}
 
 /* Responsive */
 @media (max-width: 767px) {

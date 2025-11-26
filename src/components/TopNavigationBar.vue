@@ -3,7 +3,7 @@
     <!-- Logo -->
     <div class="nav-logo">
       <router-link to="/" class="logo-link">
-        <span class="logo-icon">🏠</span>
+        <AppIcon name="house" :size="28" weight="fill" color="#FF7F50" class="logo-icon" />
         <span class="logo-text">집-중</span>
       </router-link>
     </div>
@@ -16,7 +16,7 @@
         :class="{ active: $route.path === '/' }"
         @click="closeMobileMenu"
       >
-        <span class="menu-icon">📊</span>
+        <AppIcon name="chartBar" :size="18" :active="$route.path === '/'" :is-major-cta="true" class="menu-icon" />
         <span class="menu-label">대시보드</span>
       </router-link>
 
@@ -26,7 +26,7 @@
         :class="{ active: $route.path === '/properties' }"
         @click="closeMobileMenu"
       >
-        <span class="menu-icon">🏘️</span>
+        <AppIcon name="buildings" :size="18" :active="$route.path === '/properties'" :is-major-cta="true" class="menu-icon" />
         <span class="menu-label">매물</span>
       </router-link>
 
@@ -36,7 +36,7 @@
         :class="{ active: $route.path === '/collection' }"
         @click="closeMobileMenu"
       >
-        <span class="menu-icon">🔮</span>
+        <AppIcon name="magicWand" :size="18" :active="$route.path === '/collection'" :is-major-cta="true" class="menu-icon" />
         <span class="menu-label">컬렉션</span>
       </router-link>
     </div>
@@ -50,8 +50,8 @@
         title="색상 테마 변경"
         :aria-expanded="colorMenuOpen"
       >
-        <span class="theme-icon">🎨</span>
-        <span class="dropdown-arrow" :class="{ open: colorMenuOpen }">▼</span>
+        <AppIcon name="palette" :size="20" :active="colorMenuOpen" class="theme-icon" />
+        <PhCaretDown :size="10" weight="bold" class="dropdown-arrow" :class="{ open: colorMenuOpen }" />
       </button>
 
       <!-- Color Dropdown Menu -->
@@ -66,7 +66,7 @@
           >
             <span class="color-dot" :style="{ background: theme.color }"></span>
             <span class="color-label">{{ theme.label }}</span>
-            <span v-if="currentColorTheme === theme.value" class="check-icon">✓</span>
+            <PhCheck v-if="currentColorTheme === theme.value" :size="16" weight="bold" class="check-icon" />
           </button>
         </div>
       </transition>
@@ -113,20 +113,20 @@
         aria-haspopup="true"
         :aria-expanded="userMenuOpen"
       >
-        <span class="user-icon">👤</span>
+        <AppIcon name="user" :size="20" :active="userMenuOpen" class="user-icon" />
         <span class="user-name">{{ userName }}</span>
-        <span class="dropdown-arrow" :class="{ open: userMenuOpen }">▼</span>
+        <PhCaretDown :size="10" weight="bold" class="dropdown-arrow" :class="{ open: userMenuOpen }" />
       </button>
 
       <!-- Dropdown Menu -->
       <transition name="dropdown">
         <div v-if="userMenuOpen" class="user-dropdown">
           <router-link to="/profile" class="dropdown-item" @click="closeUserMenu">
-            <span class="dropdown-icon">⚙️</span>
+            <AppIcon name="gear" :size="18" class="dropdown-icon" />
             <span>프로필 설정</span>
           </router-link>
           <button class="dropdown-item" @click="handleLogout">
-            <span class="dropdown-icon">🚪</span>
+            <AppIcon name="doorOpen" :size="18" class="dropdown-icon" />
             <span>로그아웃</span>
           </button>
         </div>

@@ -4,9 +4,12 @@
       <div class="modal-container" @click.stop>
         <!-- Header -->
         <div class="modal-header">
-          <h2 class="modal-title">🏦 DSR 상세 계산기</h2>
+          <h2 class="modal-title">
+            <PhBank :size="24" weight="duotone" color="currentColor" />
+            DSR 상세 계산기
+          </h2>
           <button class="close-button" @click="closeModal" aria-label="닫기">
-            ✕
+            <PhX :size="20" weight="bold" color="currentColor" />
           </button>
         </div>
 
@@ -115,7 +118,7 @@
 
           <!-- Calculate Button -->
           <button type="submit" class="submit-button">
-            <span class="button-icon">🧮</span>
+            <AppIcon name="calculator" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" />
             DSR 계산하기
           </button>
         </form>
@@ -123,7 +126,10 @@
         <!-- Result Section -->
         <div v-if="result" class="result-section">
           <div class="result-header">
-            <h3 class="result-title">📊 계산 결과</h3>
+            <h3 class="result-title">
+              <PhChartLine :size="20" weight="duotone" color="currentColor" />
+              계산 결과
+            </h3>
           </div>
 
           <div class="result-grid">
@@ -150,7 +156,11 @@
             <!-- Approval Status -->
             <div class="result-item" :class="{ approved: result.isApproved, rejected: !result.isApproved }">
               <span class="result-label">승인 가능 여부</span>
-              <span class="result-value">{{ result.isApproved ? '✅ 승인 가능' : '❌ 승인 불가' }}</span>
+              <span class="result-value">
+                <PhCheckCircle v-if="result.isApproved" :size="18" weight="fill" color="#81C784" />
+                <PhXCircle v-else :size="18" weight="fill" color="#F44336" />
+                {{ result.isApproved ? '승인 가능' : '승인 불가' }}
+              </span>
             </div>
 
             <!-- Stress Interest Rate -->
@@ -161,7 +171,10 @@
           </div>
 
           <div class="result-note">
-            <p>💡 DSR 40% 이하일 경우 대출 승인 가능합니다.</p>
+            <p>
+              <PhLightbulb :size="16" weight="duotone" color="currentColor" />
+              DSR 40% 이하일 경우 대출 승인 가능합니다.
+            </p>
             <p v-if="result.isApproved">추천 최대 대출액: ₩{{ formatNumber(result.maxLoanAmount) }}만</p>
           </div>
         </div>
@@ -172,6 +185,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { PhBank, PhX, PhChartLine, PhLightbulb, PhCheckCircle, PhXCircle } from '@phosphor-icons/vue'
 
 const props = defineProps({
   isOpen: {
@@ -321,6 +335,9 @@ html[data-theme="night"] .modal-container {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--showroom-text-day, #5D4037);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="night"] .modal-title {
@@ -532,6 +549,9 @@ html[data-theme="night"] .result-section {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--showroom-text-day, #5D4037);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="night"] .result-title {
@@ -584,6 +604,9 @@ html[data-theme="night"] .result-label {
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--showroom-text-day, #5D4037);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 html[data-theme="night"] .result-value {
@@ -613,6 +636,9 @@ html[data-theme="night"] .result-note {
 
 .result-note p {
   margin: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Modal Transition */

@@ -1,7 +1,7 @@
 <template>
   <div class="bento-card weekly-streak-card">
     <h3 class="card-title">연속 저축</h3>
-    
+
     <!-- Week Days Circles -->
     <div class="days-grid">
       <div
@@ -11,14 +11,14 @@
         :class="{ active: day.completed, today: day.isToday }"
         @click="handleDayClick(day)"
       >
-        <span v-if="day.completed" class="check-icon">✓</span>
+        <span v-if="day.completed" class="check-icon"><PhCheck :size="16" weight="bold" color="white" /></span>
         <span v-else class="day-label">{{ day.label }}</span>
       </div>
     </div>
     
     <!-- Streak Count -->
     <div class="streak-info">
-      <span class="streak-icon">🔥</span>
+      <span class="streak-icon"><AppIcon name="fire" :size="24" :active="true" :is-major-cta="true" /></span>
       <span class="streak-count">{{ currentStreak }}일 연속</span>
     </div>
   </div>
@@ -29,6 +29,7 @@ import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
 import confetti from 'canvas-confetti'
+import { PhCheck } from '@phosphor-icons/vue'
 
 const gamificationStore = useGamificationStore()
 const { currentStreak } = storeToRefs(gamificationStore)
@@ -141,10 +142,6 @@ html[data-theme="night"] .day-circle.today:not(.active) {
   transform: scale(1.1);
 }
 
-.check-icon {
-  font-size: 1rem;
-  font-weight: bold;
-}
 
 /* Streak Info */
 .streak-info {
@@ -157,7 +154,6 @@ html[data-theme="night"] .day-circle.today:not(.active) {
 }
 
 .streak-icon {
-  font-size: 1.5rem;
   animation: flicker 2s ease-in-out infinite;
 }
 

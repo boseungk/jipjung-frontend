@@ -5,8 +5,40 @@ import router from './router'
 import { createPinia } from 'pinia'
 import VueApexCharts from 'vue3-apexcharts'
 
+// Phosphor Icons 전역 등록
+import {
+  PhHouse, PhChartBar, PhBuildings, PhMagicWand,
+  PhPalette, PhUser, PhDoorOpen, PhGear,
+  PhCheck, PhX, PhCaretDown,
+  PhPiggyBank, PhFloppyDisk, PhStar, PhFire,
+  PhBank, PhCalculator, PhChartLine, PhLightbulb,
+  PhCheckCircle, PhXCircle, PhTrophy, PhCalendarBlank,
+  PhTrendUp, PhConfetti
+} from '@phosphor-icons/vue'
+
+// AppIcon Wrapper
+import AppIcon from './components/common/AppIcon.vue'
+
 const app = createApp(App)
 const pinia = createPinia()
+
+// Phosphor Icons 전역 등록
+const icons = {
+  PhHouse, PhChartBar, PhBuildings, PhMagicWand,
+  PhPalette, PhUser, PhDoorOpen, PhGear,
+  PhCheck, PhX, PhCaretDown,
+  PhPiggyBank, PhFloppyDisk, PhStar, PhFire,
+  PhBank, PhCalculator, PhChartLine, PhLightbulb,
+  PhCheckCircle, PhXCircle, PhTrophy, PhCalendarBlank,
+  PhTrendUp, PhConfetti
+}
+
+Object.entries(icons).forEach(([name, component]) => {
+  app.component(name, component)
+})
+
+// AppIcon Wrapper 전역 등록
+app.component('AppIcon', AppIcon)
 
 app.use(pinia)
 app.use(router)

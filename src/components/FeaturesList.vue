@@ -1,3 +1,7 @@
+<script setup>
+import { PhLightbulb, PhTrophy } from '@phosphor-icons/vue'
+</script>
+
 <template>
   <div class="features-list">
     <div class="feature-card">
@@ -7,13 +11,17 @@
     </div>
 
     <div class="feature-card">
-      <div class="icon" aria-hidden="true">💡</div>
+      <div class="icon" aria-hidden="true">
+        <PhLightbulb :size="20" weight="duotone" />
+      </div>
       <h3>프리미엄 조명</h3>
       <p>스포트라이트, 글로우, 반짝이는 파티클 효과</p>
     </div>
 
     <div class="feature-card">
-      <div class="icon" aria-hidden="true">🎯</div>
+      <div class="icon" aria-hidden="true">
+        <PhTrophy :size="20" weight="fill" color="#FF7F50" />
+      </div>
       <h3>마일스톤 시각화</h3>
       <p>저축 목표 달성 시 가구 하나씩 해금</p>
     </div>

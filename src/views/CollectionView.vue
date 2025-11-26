@@ -7,7 +7,11 @@
     <main class="collection-container">
       <!-- Hero CrystalBall: Currently Selected -->
       <section class="hero-crystal-section">
-        <h1 class="collection-title">🔮 나의 드림홈 컬렉션 🔮</h1>
+        <h1 class="collection-title">
+          <AppIcon name="magicWand" :size="32" weight="fill" color="#FF7F50" />
+          나의 드림홈 컬렉션
+          <AppIcon name="magicWand" :size="32" weight="fill" color="#FF7F50" />
+        </h1>
         
         <div class="main-crystal-container">
           <transition name="crystal-swap" mode="out-in">
@@ -44,7 +48,9 @@
         
         <!-- Empty State -->
         <div v-if="collections.length === 0" class="empty-state">
-          <div class="empty-icon">🏠</div>
+          <div class="empty-icon">
+            <AppIcon name="house" :size="48" />
+          </div>
           <p class="empty-text">아직 저장된 집이 없습니다</p>
           <p class="empty-subtext">마음에 드는 집을 저장해보세요</p>
         </div>
@@ -105,6 +111,10 @@ const selectCrystal = (index) => {
   margin-bottom: 3rem;
   color: var(--showroom-text-day, #5D4037);
   transition: color 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
 html[data-theme="night"] .collection-title {
@@ -255,6 +265,8 @@ html[data-theme="night"] .mini-crystal-item:hover .mini-crystal-label {
   font-size: 4rem;
   margin-bottom: 1.5rem;
   opacity: 0.5;
+  display: flex;
+  justify-content: center;
 }
 
 .empty-text {

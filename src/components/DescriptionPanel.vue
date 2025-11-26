@@ -1,6 +1,9 @@
 <template>
   <div class="description-panel">
-    <h2>🏠 라이프스타일 쇼룸</h2>
+    <h2>
+      <AppIcon name="house" :size="24" />
+      라이프스타일 쇼룸
+    </h2>
     <p><strong>살고 싶은 공간, 만들어가는 꿈</strong></p>
     <p>진짜 Neumorphism 디자인이 적용되었어요!</p>
     <p>좌측 상단에서 색상 테마를 선택하고, Day/Night 버튼으로 조명 효과를 확인하세요.</p>
@@ -36,6 +39,10 @@ html[data-theme="night"] .description-panel {
   font-weight: 600;
   margin-bottom: 0.75rem;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="day"] .description-panel h2 {

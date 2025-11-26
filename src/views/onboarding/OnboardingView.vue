@@ -3,7 +3,10 @@
     <div class="onboarding-container">
       <div class="onboarding-card">
         <div class="onboarding-header">
-          <h1 class="onboarding-title">환영합니다! 🎉</h1>
+          <h1 class="onboarding-title">
+            환영합니다!
+            <PhConfetti :size="32" weight="fill" color="#FF7F50" />
+          </h1>
           <p class="onboarding-description">
             시작하기 전에 몇 가지 정보를 알려주세요
           </p>
@@ -57,6 +60,7 @@
 import { ref, computed, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import { PhConfetti } from '@phosphor-icons/vue'
 import StepIndicator from '@/components/onboarding/StepIndicator.vue'
 import OnboardingStep1 from '@/components/onboarding/OnboardingStep1.vue'
 import OnboardingStep2 from '@/components/onboarding/OnboardingStep2.vue'
@@ -180,6 +184,10 @@ html[data-theme="night"] .onboarding-card {
   font-weight: 700;
   color: var(--showroom-accent-day, #D4A574);
   margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 html[data-theme="night"] .onboarding-title {

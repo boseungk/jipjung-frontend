@@ -1,7 +1,7 @@
 <template>
   <div class="dsr-card">
     <div class="card-header">
-      <div class="card-icon">📊</div>
+      <div class="card-icon"><PhChartLine :size="24" weight="duotone" /></div>
       <h3 class="card-title">DSR 요약</h3>
     </div>
 
@@ -23,14 +23,14 @@
         <div class="stat-item">
           <span class="stat-label">승인 상태</span>
           <span class="stat-value" :class="{ approved: dsrRatio <= 40, rejected: dsrRatio > 40 }">
-            {{ dsrRatio <= 40 ? '✅ 가능' : '❌ 불가' }}
+            <PhCheckCircle v-if="dsrRatio <= 40" :size="18" weight="fill" color="#81C784" /> <PhXCircle v-else :size="18" weight="fill" color="#F44336" /> {{ dsrRatio <= 40 ? '가능' : '불가' }}
           </span>
         </div>
       </div>
 
       <!-- CTA Button -->
       <button class="detail-button" @click="openCalculator">
-        <span class="button-icon">🧮</span>
+        <span class="button-icon"><AppIcon name="calculator" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" /></span>
         상세 계산하기
       </button>
     </div>
@@ -50,6 +50,7 @@ import { storeToRefs } from 'pinia'
 import { useDsrStore } from '../../stores/dsrStore'
 import { formatNumber } from '../../utils/formatters'
 import DsrCalculatorModal from '../modals/DsrCalculatorModal.vue'
+import { PhChartLine, PhCheckCircle, PhXCircle } from '@phosphor-icons/vue'
 
 const dsrStore = useDsrStore()
 const { dsrRatio, maxLoanAmount } = storeToRefs(dsrStore)
@@ -84,9 +85,6 @@ const handleCalculatorResult = (result) => {
   margin-bottom: 2rem;
 }
 
-.card-icon {
-  font-size: 2rem;
-}
 
 .card-title {
   font-family: 'Fredoka', sans-serif;
@@ -239,9 +237,6 @@ html[data-theme="night"] .detail-button:active {
   box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.4);
 }
 
-.button-icon {
-  font-size: 1.25rem;
-}
 
 /* Responsive */
 @media (max-width: 640px) {

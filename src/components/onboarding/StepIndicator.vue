@@ -10,7 +10,7 @@
       }"
     >
       <div class="dot-inner">
-        <span v-if="step < currentStep" class="check-icon">✓</span>
+        <PhCheck v-if="step < currentStep" :size="18" weight="bold" color="white" class="check-icon" />
         <span v-else class="step-number">{{ step }}</span>
       </div>
     </div>
@@ -21,6 +21,8 @@
 </template>
 
 <script setup>
+import { PhCheck } from '@phosphor-icons/vue'
+
 defineProps({
   currentStep: {
     type: Number,
@@ -95,8 +97,9 @@ html[data-theme="night"] .step-dot.active .dot-inner {
 }
 
 .check-icon {
-  font-size: 1.125rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .step-label {

@@ -3,7 +3,7 @@
     <!-- Header (Always Visible) -->
     <button class="panel-header" @click="toggleExpand">
       <div class="header-left">
-        <span class="home-icon">🏠</span>
+        <span class="home-icon"><AppIcon name="house" :size="24" /></span>
         <span class="home-name">{{ propertyName }}</span>
         <span class="home-location">({{ location }})</span>
       </div>
@@ -27,7 +27,7 @@
           <div class="info-item">
             <span class="info-label">최근 시세</span>
             <span class="info-value trend-up">
-              📈 +2.3% ↑
+              <PhTrendUp :size="20" weight="duotone" /> +2.3% ↑
             </span>
           </div>
         </div>
@@ -41,6 +41,7 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '../../stores/dreamHomeStore'
 import { formatNumber } from '../../utils/formatters'
+import { PhTrendUp } from '@phosphor-icons/vue'
 
 const dreamHomeStore = useDreamHomeStore()
 const { propertyName, location, price, targetAmount } = storeToRefs(dreamHomeStore)
@@ -125,9 +126,6 @@ html[data-theme="night"] .panel-header:active {
   gap: 0.75rem;
 }
 
-.home-icon {
-  font-size: 1.5rem;
-}
 
 .home-name {
   font-size: 1.125rem;
