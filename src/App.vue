@@ -3,11 +3,11 @@
     <!-- Background Effects (Global) -->
     <BackgroundEffects />
     
-    <!-- Top Navigation Bar (Global) -->
-    <TopNavigationBar />
+    <!-- Top Navigation Bar (Only show on authenticated pages) -->
+    <TopNavigationBar v-if="showNavBar" />
     
     <!-- Router View: DashboardView or CollectionView -->
-    <div class="main-content">
+    <div class="main-content" :class="{ 'no-nav': !showNavBar }">
       <router-view v-slot="{ Component }">
         <transition name="page-fade" mode="out-in">
           <component :is="Component" />
@@ -18,8 +18,25 @@
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 import BackgroundEffects from './components/BackgroundEffects.vue'
 import TopNavigationBar from './components/TopNavigationBar.vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
+
+// 네비게이션 바를 보여줄지 여부
+const showNavBar = computed(() => {
+  const publicRoutes = ['Login', 'Register', 'Onboarding']
+  return !publicRoutes.includes(route.name)
+})
+
+// 앱 시작 시 인증 상태 확인
+onMounted(async () => {
+  await authStore.checkAuth()
+})
 </script>
 
 <style>
@@ -28,6 +45,12 @@ import TopNavigationBar from './components/TopNavigationBar.vue'
   padding-top: 64px;
   min-height: calc(100vh - 64px);
   scrollbar-gutter: stable;
+}
+
+/* No navigation bar (for auth pages) */
+.main-content.no-nav {
+  padding-top: 0;
+  min-height: 100vh;
 }
 
 /* Page Transition */

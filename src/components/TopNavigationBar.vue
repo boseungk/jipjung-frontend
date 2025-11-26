@@ -147,17 +147,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useColorTheme } from '../composables/useColorTheme'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
 const { isNight, toggleTheme } = useTheme()
 const { currentColorTheme, setColorTheme } = useColorTheme()
+const authStore = useAuthStore()
 
-// User info (temporary - replace with actual user store)
-const userName = ref('사용자')
+// User info from auth store
+const userName = computed(() => authStore.userName || '사용자')
 
 // Menu states
 const userMenuOpen = ref(false)
@@ -166,9 +168,9 @@ const colorMenuOpen = ref(false)
 
 // Color themes
 const colorThemes = [
-  { value: 'warm-beige', label: '따뜻한 베이지', color: '#D4A574' },
+  { value: 'warm-beige', label: '베이지', color: '#D4A574' },
   { value: 'olive-green', label: '올리브 그린', color: '#8D9F87' },
-  { value: 'cool-gray', label: '쿨 그레이', color: '#90A4AE' },
+  { value: 'cool-gray', label: '그레이', color: '#90A4AE' },
   { value: 'sky-blue', label: '스카이 블루', color: '#64B5F6' }
 ]
 
@@ -203,11 +205,16 @@ const closeMobileMenu = () => {
   mobileMenuOpen.value = false
 }
 
-const handleLogout = () => {
+const handleLogout = async () => {
   closeUserMenu()
-  // TODO: Implement logout logic
-  console.log('로그아웃')
-  router.push('/login')
+  try {
+    await authStore.logout()
+    router.push('/login')
+  } catch (error) {
+    console.error('로그아웃 실패:', error)
+    // 에러가 발생해도 로그인 페이지로 이동
+    router.push('/login')
+  }
 }
 
 // Close dropdown when clicking outside

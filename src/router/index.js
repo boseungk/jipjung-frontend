@@ -1,16 +1,53 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { setupRouterGuards } from './guards'
+
+// Existing views
 import DashboardView from '../views/DashboardView.vue'
 import CollectionView from '../views/CollectionView.vue'
 import PropertyListView from '../views/PropertyListView.vue'
 import ProfileSettingsView from '../views/ProfileSettingsView.vue'
 
+// Auth views (will be created)
+const LoginView = () => import('../views/auth/LoginView.vue')
+const RegisterView = () => import('../views/auth/RegisterView.vue')
+const OnboardingView = () => import('../views/onboarding/OnboardingView.vue')
+
 const routes = [
+    {
+        path: '/login',
+        name: 'Login',
+        component: LoginView,
+        meta: {
+            title: '집-중 - 로그인',
+            public: true
+        }
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: RegisterView,
+        meta: {
+            title: '집-중 - 회원가입',
+            public: true
+        }
+    },
+    {
+        path: '/onboarding',
+        name: 'Onboarding',
+        component: OnboardingView,
+        meta: {
+            title: '집-중 - 시작하기',
+            requiresAuth: true
+        }
+    },
     {
         path: '/',
         name: 'Dashboard',
         component: DashboardView,
         meta: {
-            title: '집짓기 - 대시보드'
+            title: '집-중 - 대시보드',
+            requiresAuth: true,
+            requiresOnboarding: true
         }
     },
     {
@@ -18,7 +55,9 @@ const routes = [
         name: 'Collection',
         component: CollectionView,
         meta: {
-            title: '집짓기 - 컬렉션'
+            title: '집-중 - 컬렉션',
+            requiresAuth: true,
+            requiresOnboarding: true
         }
     },
     {
@@ -26,7 +65,9 @@ const routes = [
         name: 'Properties',
         component: PropertyListView,
         meta: {
-            title: '집짓기 - 매물 검색'
+            title: '집-중 - 매물 검색',
+            requiresAuth: true,
+            requiresOnboarding: true
         }
     },
     {
@@ -34,7 +75,9 @@ const routes = [
         name: 'Profile',
         component: ProfileSettingsView,
         meta: {
-            title: '집짓기 - 프로필 설정'
+            title: '집-중 - 프로필 설정',
+            requiresAuth: true,
+            requiresOnboarding: true
         }
     }
 ]
@@ -51,9 +94,12 @@ const router = createRouter({
     }
 })
 
+// Setup authentication guards
+setupRouterGuards(router)
+
 // Update document title on route change
 router.beforeEach((to, from, next) => {
-    document.title = to.meta.title || '집짓기'
+    document.title = to.meta.title || '집-중'
     next()
 })
 
