@@ -15,133 +15,82 @@
       :class="{ 'menu-open': mobileMenuOpen }"
       @click.stop
     >
-      <router-link
-        to="/"
-        class="nav-menu-item"
-        :class="{ active: $route.path === '/' }"
-        @click="closeMobileMenu"
-      >
-        <AppIcon name="chartBar" :size="18" :active="$route.path === '/'" :is-major-cta="true" class="menu-icon" />
-        <span class="menu-label">대시보드</span>
-      </router-link>
-
-      <router-link
-        to="/properties"
-        class="nav-menu-item"
-        :class="{ active: $route.path === '/properties' }"
-        @click="closeMobileMenu"
-      >
-        <AppIcon name="buildings" :size="18" :active="$route.path === '/properties'" :is-major-cta="true" class="menu-icon" />
-        <span class="menu-label">매물</span>
-      </router-link>
-
-      <router-link
-        to="/collection"
-        class="nav-menu-item"
-        :class="{ active: $route.path === '/collection' }"
-        @click="closeMobileMenu"
-      >
-        <AppIcon name="magicWand" :size="18" :active="$route.path === '/collection'" :is-major-cta="true" class="menu-icon" />
-        <span class="menu-label">컬렉션</span>
-      </router-link>
+      <NavMenuItem
+        v-for="item in menuItems"
+        :key="item.path"
+        :to="item.path"
+        :icon="item.icon"
+        :label="item.label"
+        @click="mobileMenuOpen = false"
+      />
     </div>
 
-    <!-- Color Theme Selector -->
+    <!--Color Theme Selector -->
     <div class="nav-color-theme">
       <button
-        class="color-theme-btn"
-        @click="toggleColorMenu"
+        class="color-theme-btn nav-btn-base"
+        @click="dropdown.toggle('color')"
         aria-label="색상 테마 선택"
-        title="색상 테마 변경"
-        :aria-expanded="colorMenuOpen"
+        :aria-expanded="dropdown.isOpen('color')"
       >
-        <AppIcon name="palette" :size="20" :active="colorMenuOpen" class="theme-icon" />
-        <PhCaretDown :size="10" weight="bold" class="dropdown-arrow" :class="{ open: colorMenuOpen }" />
+        <AppIcon name="palette" :size="20" :active="dropdown.isOpen('color')" class="theme-icon" />
+        <PhCaretDown :size="10" weight="bold" class="dropdown-arrow" :class="{ open: dropdown.isOpen('color') }" />
       </button>
 
-      <!-- Color Dropdown Menu -->
-      <transition name="dropdown">
-        <div v-if="colorMenuOpen" class="color-dropdown">
-          <button
-            v-for="theme in colorThemes"
-            :key="theme.value"
-            class="color-item"
-            :class="{ active: currentColorTheme === theme.value }"
-            @click="selectColorTheme(theme.value)"
-          >
-            <span class="color-dot" :style="{ background: theme.color }"></span>
-            <span class="color-label">{{ theme.label }}</span>
-            <PhCheck v-if="currentColorTheme === theme.value" :size="16" weight="bold" class="check-icon" />
-          </button>
-        </div>
-      </transition>
+      <DropdownMenu :is-open="dropdown.isOpen('color')">
+        <button
+          v-for="theme in colorThemes"
+          :key="theme.value"
+          class="dropdown-item-base"
+          :class="{ active: currentColorTheme === theme.value }"
+          @click="selectColorTheme(theme.value)"
+        >
+          <span class="color-dot" :style="{ background: theme.color }"></span>
+          <span class="color-label">{{ theme.label }}</span>
+          <PhCheck v-if="currentColorTheme === theme.value" :size="16" weight="bold" class="check-icon" />
+        </button>
+      </DropdownMenu>
     </div>
 
     <!-- Theme Toggle Button -->
     <button
-      class="theme-toggle-btn"
+      class="theme-toggle-btn nav-btn-base"
       @click="toggleTheme"
       aria-label="테마 전환"
       title="Day/Night 모드 전환"
     >
-      <!-- Sun Icon (Day Mode) -->
-      <svg
-        v-if="!isNight"
-        class="theme-icon"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
-        <circle cx="12" cy="12" r="5" stroke="#FFB300" stroke-width="2" fill="#FFD54F"/>
-        <path d="M12 1V3M12 21V23M23 12H21M3 12H1M20.5 3.5L19.07 4.93M4.93 19.07L3.5 20.5M20.5 20.5L19.07 19.07M4.93 4.93L3.5 3.5" stroke="#FFB300" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <!-- Moon Icon (Night Mode) -->
-      <svg
-        v-else
-        class="theme-icon"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#5D4037" stroke="#5D4037" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <ThemeIcons :type="isNight ? 'moon' : 'sun'" />
     </button>
 
     <!-- User Profile Dropdown -->
     <div class="nav-user">
       <button
-        class="user-button"
-        @click="toggleUserMenu"
+        class="user-button nav-btn-base"
+        @click="dropdown.toggle('user')"
         aria-label="사용자 메뉴"
-        aria-haspopup="true"
-        :aria-expanded="userMenuOpen"
+        :aria-expanded="dropdown.isOpen('user')"
       >
-        <AppIcon name="user" :size="20" :active="userMenuOpen" class="user-icon" />
+        <AppIcon name="user" :size="20" :active="dropdown.isOpen('user')" class="user-icon" />
         <span class="user-name">{{ userName }}</span>
-        <PhCaretDown :size="10" weight="bold" class="dropdown-arrow" :class="{ open: userMenuOpen }" />
+        <PhCaretDown :size="10" weight="bold" class="dropdown-arrow" :class="{ open: dropdown.isOpen('user') }" />
       </button>
 
-      <!-- Dropdown Menu -->
-      <transition name="dropdown">
-        <div v-if="userMenuOpen" class="user-dropdown">
-          <router-link to="/profile" class="dropdown-item" @click="closeUserMenu">
-            <AppIcon name="gear" :size="18" class="dropdown-icon" />
-            <span>프로필 설정</span>
-          </router-link>
-          <button class="dropdown-item" @click="handleLogout">
-            <AppIcon name="doorOpen" :size="18" class="dropdown-icon" />
-            <span>로그아웃</span>
-          </button>
-        </div>
-      </transition>
+      <DropdownMenu :is-open="dropdown.isOpen('user')">
+        <router-link to="/profile" class="dropdown-item-base" @click="dropdown.close()">
+          <AppIcon name="gear" :size="18" class="dropdown-icon" />
+          <span>프로필 설정</span>
+        </router-link>
+        <button class="dropdown-item-base" @click="handleLogout">
+          <AppIcon name="doorOpen" :size="18" class="dropdown-icon" />
+          <span>로그아웃</span>
+        </button>
+      </DropdownMenu>
     </div>
 
     <!-- Mobile Hamburger -->
     <button
       class="mobile-hamburger"
-      @click.stop="toggleMobileMenu"
+      @click.stop="mobileMenuOpen = !mobileMenuOpen"
       aria-label="메뉴 열기/닫기"
     >
       <span class="hamburger-line"></span>
@@ -152,124 +101,171 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
-import { useColorTheme } from '../composables/useColorTheme'
+import { PhCaretDown, PhCheck } from '@phosphor-icons/vue'
+import { useTheme } from '@/composables/useTheme'
+import { useColorTheme } from '@/composables/useColorTheme'
+import { useDropdown } from '@/composables/useDropdown'
+import { useResponsive } from '@/composables/useResponsive'
 import { useAuthStore } from '@/stores/authStore'
+import { NAV_MENU_ITEMS, COLOR_THEMES } from '@/constants/navigation'
+import AppIcon from './common/AppIcon.vue'
+import NavMenuItem from './common/NavMenuItem.vue'
+import ThemeIcons from './common/ThemeIcons.vue'
+import DropdownMenu from './common/DropdownMenu.vue'
 
 const router = useRouter()
 const { isNight, toggleTheme } = useTheme()
 const { currentColorTheme, setColorTheme } = useColorTheme()
+const dropdown = useDropdown()
+const { isMobile } = useResponsive()
 const authStore = useAuthStore()
 
-// User info from auth store
-const userName = computed(() => authStore.userName || '사용자')
-
-// Menu states
-const userMenuOpen = ref(false)
+// Data
+const menuItems = NAV_MENU_ITEMS
+const colorThemes = COLOR_THEMES
 const mobileMenuOpen = ref(false)
-const colorMenuOpen = ref(false)
-const isMobile = ref(false)
 
-// Desktop에서는 항상 노출, 모바일에서는 햄버거가 열렸을 때만 노출
+// Computed
+const userName = computed(() => authStore.userName || '사용자')
 const showNavMenu = computed(() => !isMobile.value || mobileMenuOpen.value)
 
-// Color themes
-const colorThemes = [
-  { value: 'warm-beige', label: '베이지', color: '#D4A574' },
-  { value: 'olive-green', label: '올리브 그린', color: '#8D9F87' },
-  { value: 'cool-gray', label: '그레이', color: '#90A4AE' },
-  { value: 'sky-blue', label: '스카이 블루', color: '#64B5F6' }
-]
-
-const toggleUserMenu = () => {
-  userMenuOpen.value = !userMenuOpen.value
-  colorMenuOpen.value = false
-}
-
-const closeUserMenu = () => {
-  userMenuOpen.value = false
-}
-
-const toggleColorMenu = () => {
-  colorMenuOpen.value = !colorMenuOpen.value
-  userMenuOpen.value = false
-}
-
-const closeColorMenu = () => {
-  colorMenuOpen.value = false
-}
-
+// Methods
 const selectColorTheme = (theme) => {
   setColorTheme(theme)
-  closeColorMenu()
-}
-
-const toggleMobileMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-}
-
-const closeMobileMenu = () => {
-  mobileMenuOpen.value = false
-}
-
-const updateIsMobile = () => {
-  const mobile = window.innerWidth <= 768
-  isMobile.value = mobile
-
-  // 모바일이 아닌 상태로 돌아가면 모바일 메뉴 상태를 초기화
-  if (!mobile && mobileMenuOpen.value) {
-    mobileMenuOpen.value = false
-  }
+  dropdown.close('color')
 }
 
 const handleLogout = async () => {
-  closeUserMenu()
+  dropdown.close()
   try {
     await authStore.logout()
     router.push('/login')
   } catch (error) {
     console.error('로그아웃 실패:', error)
-    // 에러가 발생해도 로그인 페이지로 이동
     router.push('/login')
   }
 }
 
-// Close dropdown when clicking outside
+// Close dropdowns and mobile menu when clicking outside
 const handleClickOutside = (event) => {
   if (!event.target.closest('.nav-user')) {
-    closeUserMenu()
+    dropdown.close('user')
   }
   if (!event.target.closest('.nav-color-theme')) {
-    closeColorMenu()
+    dropdown.close('color')
   }
   if (mobileMenuOpen.value &&
       !event.target.closest('.nav-menu') &&
       !event.target.closest('.mobile-hamburger')) {
-    closeMobileMenu()
+    mobileMenuOpen.value = false
   }
 }
 
 onMounted(() => {
-  updateIsMobile()
   document.addEventListener('click', handleClickOutside)
-  window.addEventListener('resize', updateIsMobile)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  window.removeEventListener('resize', updateIsMobile)
 })
 </script>
 
 <style scoped>
+/* Shared Button Styles */
+.nav-btn-base {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: none;
+  border-radius: var(--nav-btn-radius, 20px);
+  cursor: pointer;
+  transition: var(--nav-btn-transition, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  flex-shrink: 0;
+}
+
+html[data-theme="day"] .nav-btn-base {
+  background: var(--showroom-card-bg-day, #F5EDE3);
+  box-shadow:
+    3px 3px 6px var(--showroom-shadow-dark-day, #D4C8BD),
+    -3px -3px 6px var(--showroom-shadow-light-day, #FFFFFF);
+}
+
+html[data-theme="day"] .nav-btn-base:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    4px 4px 8px var(--showroom-shadow-dark-day, #D4C8BD),
+    -4px -4px 8px var(--showroom-shadow-light-day, #FFFFFF);
+}
+
+html[data-theme="day"] .nav-btn-base:active {
+  transform: translateY(0);
+  box-shadow:
+    inset 2px 2px 4px var(--showroom-shadow-dark-day, #D4C8BD),
+    inset -2px -2px 4px var(--showroom-shadow-light-day, #FFFFFF);
+}
+
+html[data-theme="night"] .nav-btn-base {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="night"] .nav-btn-base:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="night"] .nav-btn-base:active {
+  background: rgba(0, 0, 0, 0.15);
+  transform: translateY(0);
+  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Shared Dropdown Item Styles */
+.dropdown-item-base {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+html[data-theme="day"] .dropdown-item-base {
+  color: var(--showroom-text-day, #5D4037);
+}
+
+html[data-theme="day"] .dropdown-item-base:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .dropdown-item-base {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+html[data-theme="night"] .dropdown-item-base:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Component-specific Styles */
 .top-nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: var(--nav-height, 64px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,7 +325,7 @@ html[data-theme="night"] .logo-text {
   color: var(--showroom-text-night, #F5EDE3);
 }
 
-/* Desktop Menu - Centered */
+/* Desktop Menu */
 .nav-menu {
   display: flex;
   align-items: center;
@@ -340,230 +336,37 @@ html[data-theme="night"] .logo-text {
   margin: 0 auto;
 }
 
-/* Right Section Container */
-.theme-toggle-btn,
-.nav-user {
-  flex: 0 0 auto;
-}
-
-.nav-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 12px;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Day Mode Menu Items */
-html[data-theme="day"] .nav-menu-item {
-  color: var(--showroom-text-day, #5D4037);
-  background: transparent;
-}
-
-html[data-theme="day"] .nav-menu-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="day"] .nav-menu-item.active {
-  background: var(--showroom-accent-day, #D4A574);
-  color: white;
-  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
-}
-
-/* Night Mode Menu Items */
-html[data-theme="night"] .nav-menu-item {
-  color: var(--showroom-text-night, #F5EDE3);
-  background: transparent;
-}
-
-html[data-theme="night"] .nav-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-html[data-theme="night"] .nav-menu-item.active {
-  background: rgba(212, 165, 116, 0.2);
-  color: var(--showroom-accent-night, #D4A574);
-  box-shadow: 0 2px 12px rgba(212, 165, 116, 0.3);
-}
-
-.menu-icon {
-  font-size: 1.125rem;
-}
-
-/* Theme Toggle Button */
+/* Theme Toggle & User buttons */
 .theme-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 40px;
   height: 40px;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-  margin-right: 0.75rem;
-}
-
-html[data-theme="day"] .theme-toggle-btn {
-  background: var(--showroom-card-bg-day, #F5EDE3);
-  box-shadow:
-    3px 3px 6px var(--showroom-shadow-dark-day, #D4C8BD),
-    -3px -3px 6px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="day"] .theme-toggle-btn:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    4px 4px 8px var(--showroom-shadow-dark-day, #D4C8BD),
-    -4px -4px 8px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="day"] .theme-toggle-btn:active {
-  transform: translateY(0);
-  box-shadow:
-    inset 2px 2px 4px var(--showroom-shadow-dark-day, #D4C8BD),
-    inset -2px -2px 4px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="night"] .theme-toggle-btn {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-html[data-theme="night"] .theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-}
-
-html[data-theme="night"] .theme-toggle-btn:active {
-  background: rgba(0, 0, 0, 0.15);
-  transform: translateY(0);
-  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.theme-icon {
-  transition: all 0.4s ease;
-  font-size: 1.25rem;
-}
-
-/* Color Theme Selector */
-.nav-color-theme {
-  position: relative;
-  flex-shrink: 0;
   margin-right: 0.75rem;
 }
 
 .color-theme-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
   width: auto;
   height: 40px;
   padding: 0 0.875rem;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 0.25rem;
 }
 
-html[data-theme="day"] .color-theme-btn {
-  background: var(--showroom-card-bg-day, #F5EDE3);
-  box-shadow:
-    3px 3px 6px var(--showroom-shadow-dark-day, #D4C8BD),
-    -3px -3px 6px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="day"] .color-theme-btn:hover {
-  transform: translateY(-2px);
-}
-
-html[data-theme="day"] .color-theme-btn:active {
-  transform: translateY(0);
-  box-shadow:
-    inset 2px 2px 4px var(--showroom-shadow-dark-day, #D4C8BD),
-    inset -2px -2px 4px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="night"] .color-theme-btn {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-html[data-theme="night"] .color-theme-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-}
-
-html[data-theme="night"] .color-theme-btn:active {
-  background: rgba(0, 0, 0, 0.15);
-  transform: translateY(0);
-}
-
-.color-dropdown {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 180px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-html[data-theme="day"] .color-dropdown {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-html[data-theme="night"] .color-dropdown {
-  background: rgba(58, 53, 48, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.color-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.875rem 1.25rem;
-  border: none;
-  background: transparent;
+.user-button {
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 24px;
   font-size: 0.9375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-html[data-theme="day"] .color-item {
-  color: var(--showroom-text-day, #5D4037);
-}
-
-html[data-theme="day"] .color-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="night"] .color-item {
-  color: var(--showroom-text-night, #F5EDE3);
-}
-
-html[data-theme="night"] .color-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.color-item.active {
   font-weight: 600;
+}
+
+/* Color Theme Selector */
+.nav-color-theme,
+.nav-user {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav-color-theme {
+  margin-right: 0.75rem;
 }
 
 .color-dot {
@@ -587,74 +390,6 @@ html[data-theme="night"] .check-icon {
   color: var(--showroom-accent-night, #D4A574);
 }
 
-/* User Dropdown */
-.nav-user {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.user-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 24px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Day Mode User Button */
-html[data-theme="day"] .user-button {
-  background: var(--showroom-card-bg-day, #F5EDE3);
-  color: var(--showroom-text-day, #5D4037);
-  box-shadow:
-    3px 3px 6px var(--showroom-shadow-dark-day, #D4C8BD),
-    -3px -3px 6px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="day"] .user-button:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    4px 4px 8px var(--showroom-shadow-dark-day, #D4C8BD),
-    -4px -4px 8px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-html[data-theme="day"] .user-button:active {
-  transform: translateY(0);
-  box-shadow:
-    inset 2px 2px 4px var(--showroom-shadow-dark-day, #D4C8BD),
-    inset -2px -2px 4px var(--showroom-shadow-light-day, #FFFFFF);
-}
-
-/* Night Mode User Button */
-html[data-theme="night"] .user-button {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--showroom-text-night, #F5EDE3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-html[data-theme="night"] .user-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-}
-
-html[data-theme="night"] .user-button:active {
-  background: rgba(0, 0, 0, 0.15);
-  transform: translateY(0);
-  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.user-icon {
-  font-size: 1.25rem;
-}
-
 .dropdown-arrow {
   font-size: 0.625rem;
   transition: transform 0.3s ease;
@@ -662,78 +397,6 @@ html[data-theme="night"] .user-button:active {
 
 .dropdown-arrow.open {
   transform: rotate(180deg);
-}
-
-/* Dropdown Menu */
-.user-dropdown {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 180px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-html[data-theme="day"] .user-dropdown {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-html[data-theme="night"] .user-dropdown {
-  background: rgba(58, 53, 48, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.875rem 1.25rem;
-  border: none;
-  background: transparent;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-html[data-theme="day"] .dropdown-item {
-  color: var(--showroom-text-day, #5D4037);
-}
-
-html[data-theme="day"] .dropdown-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="night"] .dropdown-item {
-  color: var(--showroom-text-night, #F5EDE3);
-}
-
-html[data-theme="night"] .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.dropdown-icon {
-  font-size: 1.125rem;
-}
-
-/* Dropdown Transition */
-.dropdown-enter-active,
-.dropdown-leave-active {
-  transition: all 0.2s ease;
-}
-
-.dropdown-enter-from,
-.dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
 }
 
 /* Mobile Hamburger */
@@ -800,12 +463,6 @@ html[data-theme="night"] .hamburger-line {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
-  }
-
-  .nav-menu-item {
-    width: 100%;
-    padding: 1rem;
-    border-radius: 8px;
   }
 
   .mobile-hamburger {
