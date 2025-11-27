@@ -19,7 +19,8 @@ const routes = [
         component: LoginView,
         meta: {
             title: '집-중 - 로그인',
-            public: true
+            public: true,
+            hideNavbar: true
         }
     },
     {
@@ -28,7 +29,8 @@ const routes = [
         component: RegisterView,
         meta: {
             title: '집-중 - 회원가입',
-            public: true
+            public: true,
+            hideNavbar: true
         }
     },
     {
@@ -37,7 +39,8 @@ const routes = [
         component: OnboardingView,
         meta: {
             title: '집-중 - 시작하기',
-            requiresAuth: true
+            requiresAuth: true,
+            hideNavbar: true
         }
     },
     {

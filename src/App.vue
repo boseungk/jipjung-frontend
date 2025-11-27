@@ -27,10 +27,9 @@ import TopNavigationBar from './components/TopNavigationBar.vue'
 const route = useRoute()
 const authStore = useAuthStore()
 
-// 네비게이션 바를 보여줄지 여부
+// 네비게이션 바를 보여줄지 여부 (라우터 meta.hideNavbar 기반)
 const showNavBar = computed(() => {
-  const publicRoutes = ['Login', 'Register', 'Onboarding']
-  return !publicRoutes.includes(route.name)
+  return !route.meta.hideNavbar
 })
 
 // 앱 시작 시 인증 상태 확인

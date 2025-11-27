@@ -9,7 +9,12 @@
     </div>
 
     <!-- Desktop Menu -->
-    <div class="nav-menu" :class="{ 'menu-open': mobileMenuOpen }" @click.stop>
+    <div
+      class="nav-menu"
+      v-show="showNavMenu"
+      :class="{ 'menu-open': mobileMenuOpen }"
+      @click.stop
+    >
       <router-link
         to="/"
         class="nav-menu-item"
@@ -165,6 +170,10 @@ const userName = computed(() => authStore.userName || '사용자')
 const userMenuOpen = ref(false)
 const mobileMenuOpen = ref(false)
 const colorMenuOpen = ref(false)
+const isMobile = ref(false)
+
+// Desktop에서는 항상 노출, 모바일에서는 햄버거가 열렸을 때만 노출
+const showNavMenu = computed(() => !isMobile.value || mobileMenuOpen.value)
 
 // Color themes
 const colorThemes = [
@@ -205,6 +214,16 @@ const closeMobileMenu = () => {
   mobileMenuOpen.value = false
 }
 
+const updateIsMobile = () => {
+  const mobile = window.innerWidth <= 768
+  isMobile.value = mobile
+
+  // 모바일이 아닌 상태로 돌아가면 모바일 메뉴 상태를 초기화
+  if (!mobile && mobileMenuOpen.value) {
+    mobileMenuOpen.value = false
+  }
+}
+
 const handleLogout = async () => {
   closeUserMenu()
   try {
@@ -233,11 +252,14 @@ const handleClickOutside = (event) => {
 }
 
 onMounted(() => {
+  updateIsMobile()
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', updateIsMobile)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', updateIsMobile)
 })
 </script>
 

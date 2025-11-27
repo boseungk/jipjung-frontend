@@ -25,6 +25,8 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  grid-auto-flow: row;
+  grid-auto-rows: minmax(0, auto);
 }
 
 /* Desktop: 3 columns with named grid areas */
@@ -57,7 +59,12 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
     grid-template-columns: 1fr;
     padding: 1rem 1rem 2rem;
     gap: 1rem; /* Reduced gap for mobile */
-    /* No grid areas needed for single column, auto placement works */
+    grid-template-areas:
+      "profile"
+      "main"
+      "streak"
+      "dsr"
+      "growth";
   }
 }
 
