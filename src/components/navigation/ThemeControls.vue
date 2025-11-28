@@ -13,7 +13,7 @@
 
       <DropdownMenu :is-open="isColorOpen">
         <button
-          v-for="theme in colorThemes"
+          v-for="theme in normalizedColorThemes"
           :key="theme.value"
           class="dropdown-item-base"
           :class="{ active: currentColorTheme === theme.value }"
@@ -38,16 +38,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { PhCaretDown, PhCheck } from '@phosphor-icons/vue'
+import { COLOR_THEMES as DEFAULT_COLOR_THEMES } from '@/constants/navigation'
 import AppIcon from '../common/AppIcon.vue'
 import DropdownMenu from '../common/DropdownMenu.vue'
 import ThemeIcons from '../common/ThemeIcons.vue'
 
-defineProps({
+const props = defineProps({
   colorThemes: {
     type: Array,
-    required: true
+    default: () => DEFAULT_COLOR_THEMES
   },
   currentColorTheme: {
     type: String,
@@ -66,6 +67,19 @@ defineProps({
 defineEmits(['toggle-color-dropdown', 'select-color-theme', 'toggle-theme'])
 
 const colorMenuRef = ref(null)
+const allowedThemeValues = ['warm-beige', 'cool-gray']
+const normalizedColorThemes = computed(() => {
+  const source = Array.isArray(props.colorThemes) && props.colorThemes.length
+    ? props.colorThemes
+    : DEFAULT_COLOR_THEMES
+  const seen = new Set()
+  return source.filter((theme) => {
+    const keep = allowedThemeValues.includes(theme.value) && !seen.has(theme.value)
+    if (keep) seen.add(theme.value)
+    return keep
+  })
+})
+
 defineExpose({ colorMenuEl: colorMenuRef })
 </script>
 

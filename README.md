@@ -215,11 +215,9 @@ jipjung-frontend/
 ### 🎨 디자인 시스템
 - **Neumorphism** (Day 모드): 부드러운 입체 효과
 - **Glassmorphism** (Night 모드): 반투명 유리 효과
-- **4가지 컬러 테마**:
+- **2가지 컬러 테마**:
   - 🏠 Warm Beige (따뜻한 베이지)
-  - 🌿 Olive Green (차분한 올리브)
   - 🌫️ Cool Gray (세련된 그레이)
-  - ☁️ Sky Blue (모던 블루)
 
 ### 🌟 인터랙티브 효과
 - ❄️ **눈 내리는 효과**: 마우스 반응형 파티클

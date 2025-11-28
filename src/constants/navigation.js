@@ -10,9 +10,7 @@ export const NAV_MENU_ITEMS = [
 
 export const COLOR_THEMES = [
     { value: 'warm-beige', label: '베이지', color: '#D4A574' },
-    { value: 'olive-green', label: '올리브 그린', color: '#8D9F87' },
-    { value: 'cool-gray', label: '그레이', color: '#90A4AE' },
-    { value: 'sky-blue', label: '스카이 블루', color: '#64B5F6' }
+    { value: 'cool-gray', label: '그레이', color: '#90A4AE' }
 ]
 
 export const BREAKPOINTS = {

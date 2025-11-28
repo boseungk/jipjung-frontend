@@ -136,53 +136,7 @@
 }
 
 /* ================================================
-   5. 색상 테마 - Theme 2: Olive Green (차분한 올리브)
-   ================================================ */
-:root[data-color-theme="olive-green"] {
-  /* Day Mode */
-  --showroom-bg-day: #d2dcc8;
-  --showroom-card-bg-day: #fcfbf8;
-  --showroom-shadow-light-day: #ffffff;
-  --showroom-shadow-dark-day: #aab99e;
-  --showroom-accent-day: #81C784;
-  --showroom-text-day: #3d3d3d;
-
-  /* Night Mode */
-  --showroom-bg-night: #2d3a2d;
-  --showroom-card-bg-night: #3d4a3d;
-  --showroom-shadow-light-night: #4a5a4a;
-  --showroom-shadow-dark-night: #1d2a1d;
-  --showroom-accent-night: #81C784;
-  --showroom-text-night: #e8f0e8;
-  --showroom-glow-night: rgba(129, 199, 132, 0.4);
-
-  /* Neumorphism Specific */
-  --neu-shadow-light-day: #ffffff;
-  --neu-shadow-dark-day: #9fae94;
-  --neu-shadow-light-night: #5a6a5a;
-  --neu-shadow-dark-night: #1d2a1d;
-
-  /* Glassmorphism Specific */
-  --glass-bg-day: rgba(252, 251, 248, 0.75);
-  --glass-border-day: rgba(255, 255, 255, 0.5);
-  --glass-bg-night: rgba(45, 58, 45, 0.75);
-  --glass-border-night: rgba(129, 199, 132, 0.4);
-  --glass-glow-night: rgba(129, 199, 132, 0.5);
-
-  /* Minimal Text */
-  --minimal-bg-day: rgba(255, 255, 255, 0.5);
-  --minimal-text-day: #3d3d3d;
-  --minimal-bg-night: rgba(30, 35, 30, 0.4);
-  --minimal-text-night: #e8f0e8;
-
-  /* Lighting Effects */
-  --light-warm-glow: rgba(129, 199, 132, 0.6);
-  --light-ambient: rgba(129, 199, 132, 0.3);
-  --light-spotlight: rgba(255, 255, 255, 0.8);
-}
-
-/* ================================================
-   6. 색상 테마 - Theme 3: Cool Gray (세련된 그레이)
+   5. 색상 테마 - Theme 2: Cool Gray (세련된 그레이)
    ================================================ */
 :root[data-color-theme="cool-gray"] {
   /* Day Mode */
@@ -228,53 +182,7 @@
 }
 
 /* ================================================
-   7. 색상 테마 - Theme 4: Sky Blue (모던 블루)
-   ================================================ */
-:root[data-color-theme="sky-blue"] {
-  /* Day Mode */
-  --showroom-bg-day: #E0F2FE;
-  --showroom-card-bg-day: #F0F9FF;
-  --showroom-shadow-light-day: #FFFFFF;
-  --showroom-shadow-dark-day: #BAE6FD;
-  --showroom-accent-day: #0EA5E9;
-  --showroom-text-day: #0C4A6E;
-
-  /* Night Mode */
-  --showroom-bg-night: #0c4a6e;
-  --showroom-card-bg-night: #075985;
-  --showroom-shadow-light-night: #0e7490;
-  --showroom-shadow-dark-night: #082f49;
-  --showroom-accent-night: #38BDF8;
-  --showroom-text-night: #E0F2FE;
-  --showroom-glow-night: rgba(56, 189, 248, 0.4);
-
-  /* Neumorphism Specific */
-  --neu-shadow-light-day: #FFFFFF;
-  --neu-shadow-dark-day: #AFDCFD;
-  --neu-shadow-light-night: #1e8ab0;
-  --neu-shadow-dark-night: #082f49;
-
-  /* Glassmorphism Specific */
-  --glass-bg-day: rgba(240, 249, 255, 0.75);
-  --glass-border-day: rgba(255, 255, 255, 0.5);
-  --glass-bg-night: rgba(12, 74, 110, 0.75);
-  --glass-border-night: rgba(56, 189, 248, 0.4);
-  --glass-glow-night: rgba(56, 189, 248, 0.5);
-
-  /* Minimal Text */
-  --minimal-bg-day: rgba(255, 255, 255, 0.5);
-  --minimal-text-day: #0C4A6E;
-  --minimal-bg-night: rgba(10, 35, 50, 0.4);
-  --minimal-text-night: #E0F2FE;
-
-  /* Lighting Effects */
-  --light-warm-glow: rgba(56, 189, 248, 0.6);
-  --light-ambient: rgba(56, 189, 248, 0.3);
-  --light-spotlight: rgba(255, 255, 255, 0.8);
-}
-
-/* ================================================
-   8. 그림자 시스템 (Shadow System)
+   6. 그림자 시스템 (Shadow System)
    ================================================ */
 :root {
   /* Day Mode Shadows */
@@ -293,7 +201,7 @@
 }
 
 /* ================================================
-   9. 반응형 브레이크포인트 (사용 참고)
+   7. 반응형 브레이크포인트 (사용 참고)
    ================================================ */
 /*
   --breakpoint-mobile: 480px;
