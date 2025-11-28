@@ -64,27 +64,36 @@ const isActive = computed(() => {
   border: 1px solid transparent;
 }
 
-/* Day Mode */
+/* Day Mode - Refined Glassmorphism Style */
 html[data-theme="day"] .nav-menu-item {
-  color: var(--showroom-text-day, #5D4037); /* Match Admin Button Color */
-  background: var(--nav-menu-bg-day, #FFFFFF); /* Idle Bg: White */
-  border: 1px solid var(--nav-menu-border-day, rgba(255, 255, 255, 0.6));
-  box-shadow: var(--nav-menu-shadow-day, 0 4px 10px -2px rgba(88, 60, 50, 0.08));
+  color: var(--showroom-text-day, #2C2420);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(88, 60, 50, 0.08), 
+              inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 html[data-theme="day"] .nav-menu-item:hover {
-  background: var(--nav-menu-hover-bg-day, #FFFFFF);
+  background: rgba(255, 255, 255, 0.85);
   transform: translateY(-2px);
-  box-shadow: var(--nav-menu-hover-shadow-day, 0 6px 14px rgba(88, 60, 50, 0.1), 0 2px 6px rgba(88, 60, 50, 0.05));
-  color: var(--showroom-text-day, #5D4037); /* Darker text on hover */
+  box-shadow: 0 6px 16px rgba(88, 60, 50, 0.12), 
+              inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme="day"] .nav-menu-item:active {
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
+  box-shadow: inset 0 2px 8px rgba(88, 60, 50, 0.15);
 }
 
 html[data-theme="day"] .nav-menu-item.active {
-  background: var(--nav-menu-active-bg-day, #FFE4D9); /* Darker Apricot Tint */
-  color: var(--nav-menu-active-color-day, #E06538); /* Deep Orange Text */
-  border: 1px solid var(--nav-menu-active-border-day, rgba(255, 127, 80, 0.3)); /* Stronger Border */
-  transform: translateY(1px);
-  box-shadow: var(--nav-menu-active-shadow-day, inset 0 2px 6px rgba(88, 60, 50, 0.1)); /* Stronger Inner Shadow */
+  background: var(--nav-menu-active-bg-day, rgba(255, 127, 80, 0.15));
+  color: var(--brand-accent, #FF7F50);
+  border: 1px solid rgba(255, 127, 80, 0.3);
+  box-shadow: inset 0 2px 6px rgba(255, 127, 80, 0.2),
+              0 2px 8px rgba(255, 127, 80, 0.1);
 }
 
 /* Night Mode */
@@ -99,10 +108,16 @@ html[data-theme="night"] .nav-menu-item:hover {
   box-shadow: var(--nav-menu-hover-shadow-night, 0 4px 12px rgba(0, 0, 0, 0.2));
 }
 
+html[data-theme="night"] .nav-menu-item:active {
+  background: rgba(0, 0, 0, 0.2);
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
 html[data-theme="night"] .nav-menu-item.active {
   background: var(--nav-menu-active-bg-night, rgba(212, 165, 116, 0.2));
   color: var(--showroom-accent-night, #D4A574);
-  transform: translateY(1px) scale(0.98);
   box-shadow: var(--nav-menu-active-shadow-night, inset 0 2px 8px rgba(0, 0, 0, 0.2));
 }
 
