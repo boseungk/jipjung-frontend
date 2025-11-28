@@ -8,9 +8,9 @@
       <!-- Hero CrystalBall: Currently Selected -->
       <section class="hero-crystal-section">
         <h1 class="collection-title">
-          <AppIcon name="magicWand" :size="32" weight="fill" color="#FF7F50" />
+          <AppIcon name="magicWand" :size="32" weight="fill" :color="brandAccent" />
           나의 드림홈 컬렉션
-          <AppIcon name="magicWand" :size="32" weight="fill" color="#FF7F50" />
+          <AppIcon name="magicWand" :size="32" weight="fill" :color="brandAccent" />
         </h1>
         
         <div class="main-crystal-container">
@@ -63,6 +63,7 @@
 import { ref } from 'vue'
 import SnowCanvas from '../components/SnowCanvas.vue'
 import CrystalBall from '../components/CrystalBall.vue'
+import { BRAND_ACCENT } from '@/constants/colors'
 
 // Selected crystal index
 const selectedIndex = ref(0)
@@ -76,6 +77,8 @@ const collections = ref([
   { id: 5, name: '인천 송도 신축빌라' },
   { id: 6, name: '대전 유성 전원주택' }
 ])
+
+const brandAccent = BRAND_ACCENT
 
 // Select crystal from grid
 const selectCrystal = (index) => {

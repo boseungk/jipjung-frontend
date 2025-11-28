@@ -12,6 +12,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useTheme } from '@/composables/useTheme'
+import { BRAND_ACCENT } from '@/constants/colors'
 
 const props = defineProps({
   name: {
@@ -37,7 +38,7 @@ const props = defineProps({
   },
   isMajorCta: {
     type: Boolean,
-    default: false // true면 active 시 #FF7F50 사용
+    default: false // true면 active 시 브랜드 색상 사용
   },
   customClass: {
     type: String,
@@ -66,8 +67,8 @@ const computedColor = computed(() => {
 
   // Active 상태
   if (props.active) {
-    // 주요 CTA는 #FF7F50
-    if (props.isMajorCta) return '#FF7F50'
+    // 주요 CTA는 브랜드 색상
+    if (props.isMajorCta) return BRAND_ACCENT
     // 보조는 테마 색상
     return isNight.value ? '#F9F8F6' : '#2C2420'
   }

@@ -122,9 +122,9 @@ html[data-theme="night"] .step-description {
 
 .year-input:focus {
   outline: none;
-  border-color: #FF7F50;
+  border-color: var(--brand-accent);
   background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 127, 80, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.15);
 }
 
 html[data-theme="night"] .year-input {

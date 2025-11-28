@@ -3,6 +3,7 @@
     :to="to"
     class="nav-menu-item"
     :class="{ active: isActive }"
+    :aria-current="isActive ? 'page' : null"
     @click="$emit('click')"
   >
     <AppIcon 
@@ -18,7 +19,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppIcon from './AppIcon.vue'
 
 const props = defineProps({
@@ -39,7 +40,14 @@ const props = defineProps({
 defineEmits(['click'])
 
 const route = useRoute()
-const isActive = computed(() => route.path === props.to)
+const router = useRouter()
+
+const resolvedPath = computed(() => router.resolve(props.to).path)
+const isActive = computed(() => {
+  const target = resolvedPath.value
+  const current = route.path
+  return current === target || current.startsWith(`${target}/`)
+})
 </script>
 
 <style scoped>
@@ -59,27 +67,24 @@ const isActive = computed(() => route.path === props.to)
 /* Day Mode */
 html[data-theme="day"] .nav-menu-item {
   color: var(--showroom-text-day, #5D4037); /* Match Admin Button Color */
-  background: #FFFFFF; /* Idle Bg: White */
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 10px -2px rgba(88, 60, 50, 0.08);
+  background: var(--nav-menu-bg-day, #FFFFFF); /* Idle Bg: White */
+  border: 1px solid var(--nav-menu-border-day, rgba(255, 255, 255, 0.6));
+  box-shadow: var(--nav-menu-shadow-day, 0 4px 10px -2px rgba(88, 60, 50, 0.08));
 }
 
 html[data-theme="day"] .nav-menu-item:hover {
-  background: #FFFFFF;
+  background: var(--nav-menu-hover-bg-day, #FFFFFF);
   transform: translateY(-2px);
-  box-shadow: 
-    0 6px 14px rgba(88, 60, 50, 0.1),
-    0 2px 6px rgba(88, 60, 50, 0.05);
+  box-shadow: var(--nav-menu-hover-shadow-day, 0 6px 14px rgba(88, 60, 50, 0.1), 0 2px 6px rgba(88, 60, 50, 0.05));
   color: var(--showroom-text-day, #5D4037); /* Darker text on hover */
 }
 
 html[data-theme="day"] .nav-menu-item.active {
-  background: #FFE4D9; /* Darker Apricot Tint */
-  color: #E06538; /* Deep Orange Text */
-  border: 1px solid rgba(255, 127, 80, 0.3); /* Stronger Border */
+  background: var(--nav-menu-active-bg-day, #FFE4D9); /* Darker Apricot Tint */
+  color: var(--nav-menu-active-color-day, #E06538); /* Deep Orange Text */
+  border: 1px solid var(--nav-menu-active-border-day, rgba(255, 127, 80, 0.3)); /* Stronger Border */
   transform: translateY(1px);
-  box-shadow: 
-    inset 0 2px 6px rgba(88, 60, 50, 0.1); /* Stronger Inner Shadow */
+  box-shadow: var(--nav-menu-active-shadow-day, inset 0 2px 6px rgba(88, 60, 50, 0.1)); /* Stronger Inner Shadow */
 }
 
 /* Night Mode */
@@ -89,16 +94,16 @@ html[data-theme="night"] .nav-menu-item {
 }
 
 html[data-theme="night"] .nav-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--nav-menu-hover-bg-night, rgba(255, 255, 255, 0.08));
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--nav-menu-hover-shadow-night, 0 4px 12px rgba(0, 0, 0, 0.2));
 }
 
 html[data-theme="night"] .nav-menu-item.active {
-  background: rgba(212, 165, 116, 0.2);
+  background: var(--nav-menu-active-bg-night, rgba(212, 165, 116, 0.2));
   color: var(--showroom-accent-night, #D4A574);
   transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--nav-menu-active-shadow-night, inset 0 2px 8px rgba(0, 0, 0, 0.2));
 }
 
 .menu-icon {

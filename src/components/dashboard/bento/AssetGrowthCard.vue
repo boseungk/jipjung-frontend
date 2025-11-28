@@ -17,8 +17,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
+import { BRAND_ACCENT } from '@/constants/colors'
 
 const apexchart = VueApexCharts
+const brandAccent = BRAND_ACCENT
 
 const chartLoaded = ref(false)
 
@@ -50,7 +52,7 @@ const chartOptions = computed(() => ({
   stroke: {
     curve: 'smooth',
     width: 3,
-    colors: ['#FF7F50'] /* CORAL ACCENT */
+    colors: [brandAccent] /* CORAL ACCENT */
   },
   fill: {
     type: 'gradient',
@@ -60,7 +62,7 @@ const chartOptions = computed(() => ({
       opacityTo: 0.1,
       stops: [0, 90, 100]
     },
-    colors: ['#FF7F50'] /* CORAL ACCENT */
+    colors: [brandAccent] /* CORAL ACCENT */
   },
   grid: {
     borderColor: 'rgba(0, 0, 0, 0.05)',

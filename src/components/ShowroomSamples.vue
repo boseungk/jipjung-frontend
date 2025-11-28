@@ -1,5 +1,8 @@
 <script setup>
 import { PhCalendarBlank, PhTrophy } from '@phosphor-icons/vue'
+import { BRAND_ACCENT } from '@/constants/colors'
+
+const brandAccent = BRAND_ACCENT
 </script>
 
 <template>
@@ -37,7 +40,7 @@ import { PhCalendarBlank, PhTrophy } from '@phosphor-icons/vue'
       </div>
       <div class="showroom-info-item">
         <div class="icon">
-          <PhTrophy :size="20" weight="fill" color="#FF7F50" />
+          <PhTrophy :size="20" weight="fill" :color="brandAccent" />
         </div>
         <div class="value">₩75만</div>
         <div class="label">남은 금액</div>

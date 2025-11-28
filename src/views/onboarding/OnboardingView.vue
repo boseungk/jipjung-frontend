@@ -5,7 +5,7 @@
         <div class="onboarding-header">
           <h1 class="onboarding-title">
             환영합니다!
-            <PhConfetti :size="32" weight="fill" color="#FF7F50" />
+            <PhConfetti :size="32" weight="fill" :color="brandAccent" />
           </h1>
           <p class="onboarding-description">
             시작하기 전에 몇 가지 정보를 알려주세요
@@ -61,6 +61,7 @@ import { ref, computed, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { PhConfetti } from '@phosphor-icons/vue'
+import { BRAND_ACCENT } from '@/constants/colors'
 import StepIndicator from '@/components/onboarding/StepIndicator.vue'
 import OnboardingStep1 from '@/components/onboarding/OnboardingStep1.vue'
 import OnboardingStep2 from '@/components/onboarding/OnboardingStep2.vue'
@@ -90,6 +91,7 @@ const stepComponents = {
 }
 
 const currentStepComponent = computed(() => stepComponents[currentStep.value])
+const brandAccent = BRAND_ACCENT
 
 const canProceed = computed(() => {
   switch (currentStep.value) {
@@ -234,21 +236,21 @@ html[data-theme="night"] .onboarding-description {
 
 /* Primary Button (다음/시작하기) - Neumorphic */
 .nav-button.primary {
-  background: #FF7F50;
+  background: var(--brand-accent);
   color: white;
-  box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
   font-weight: 700;
 }
 
 .nav-button.primary:hover:not(:disabled) {
-  background: #FF6A3D;
-  box-shadow: 0 6px 16px rgba(255, 127, 80, 0.4);
+  background: var(--brand-accent-hover);
+  box-shadow: 0 6px 16px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
   transform: translateY(-2px);
 }
 
 .nav-button.primary:active:not(:disabled) {
-  background: #FF5A2D;
-  box-shadow: 0 2px 8px rgba(255, 127, 80, 0.2);
+  background: var(--brand-accent-press);
+  box-shadow: 0 2px 8px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
   transform: translateY(0);
 }
 

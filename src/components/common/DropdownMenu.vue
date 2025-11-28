@@ -31,21 +31,21 @@ defineProps({
   min-width: 180px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--nav-dropdown-shadow);
 }
 
 html[data-theme="day"] .dropdown-menu {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--nav-dropdown-bg-day);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--nav-dropdown-border-day);
 }
 
 html[data-theme="night"] .dropdown-menu {
-  background: rgba(58, 53, 48, 0.95);
+  background: var(--nav-dropdown-bg-night);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--nav-dropdown-border-night);
 }
 
 /* Dropdown Transition */

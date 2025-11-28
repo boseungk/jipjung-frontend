@@ -113,28 +113,28 @@ html[data-theme="night"] .day-circle:not(.active) {
 
 /* Active State - CORAL ACCENT */
 .day-circle.active {
-  background: linear-gradient(135deg, #FF7F50, #FF6347); /* LIVING CORAL */
+  background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-strong)); /* LIVING CORAL */
   color: white;
   border: none;
-  box-shadow: 0 2px 8px rgba(255, 127, 80, 0.4);
+  box-shadow: 0 2px 8px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
 }
 
 html[data-theme="night"] .day-circle.active {
-  background: linear-gradient(135deg, #FF7F50, #FF6347);
-  box-shadow: 0 2px 12px rgba(255, 127, 80, 0.5);
+  background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-strong));
+  box-shadow: 0 2px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.5);
 }
 
 /* Today Highlight - CORAL */
 .day-circle.today:not(.active) {
-  border-color: #FF7F50; /* CORAL */
-  color: #FF7F50;
+  border-color: var(--brand-accent); /* CORAL */
+  color: var(--brand-accent);
   opacity: 1;
   border-width: 3px;
 }
 
 html[data-theme="night"] .day-circle.today:not(.active) {
-  border-color: #FF7F50;
-  color: #FF7F50;
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
 }
 
 .day-circle:hover:not(.active) {

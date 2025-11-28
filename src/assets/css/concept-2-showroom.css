@@ -20,7 +20,7 @@
   --showroom-card-bg-day: #F9F8F6;  /* 기존: #F5EDE3 */
   --showroom-shadow-light-day: #FFFFFF;
   --showroom-shadow-dark-day: #E8E4E1;  /* #F9F8F6보다 약간 어둡게 */
-  --showroom-accent-day: #FF7F50;  /* 기존: #D4A574 → Living Coral */
+  --showroom-accent-day: var(--brand-accent);  /* 기존: #D4A574 → Living Coral */
   --showroom-text-day: #2C2420;  /* 기존: #5D4037 → Deep Coffee Brown */
 
   /* Night Mode - 반전 시스템 */
@@ -28,9 +28,9 @@
   --showroom-card-bg-night: #4a4540;
   --showroom-shadow-light-night: #4f4a45;
   --showroom-shadow-dark-night: #2a2520;
-  --showroom-accent-night: #FF7F50;  /* 기존: #D4A574 → Living Coral */
+  --showroom-accent-night: var(--brand-accent);  /* 기존: #D4A574 → Living Coral */
   --showroom-text-night: #F9F8F6;  /* 기존: #F5EDE3 → Day 배경색 재활용 */
-  --showroom-glow-night: rgba(255, 127, 80, 0.4);  /* 코랄 색상으로 */
+  --showroom-glow-night: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);  /* 코랄 색상으로 */
 
   /* Neumorphism Specific */
   --neu-shadow-light-day: #FFFFFF;
@@ -42,8 +42,8 @@
   --glass-bg-day: rgba(249, 248, 246, 0.75);
   --glass-border-day: rgba(255, 255, 255, 0.4);
   --glass-bg-night: rgba(58, 53, 48, 0.75);
-  --glass-border-night: rgba(255, 127, 80, 0.4);  /* 코랄 색상으로 */
-  --glass-glow-night: rgba(255, 127, 80, 0.5);  /* 코랄 색상으로 */
+  --glass-border-night: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);  /* 코랄 색상으로 */
+  --glass-glow-night: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.5);  /* 코랄 색상으로 */
 
   /* Minimal Text */
   --minimal-bg-day: rgba(255, 255, 255, 0.5);
@@ -52,8 +52,8 @@
   --minimal-text-night: #F9F8F6;  /* 새 텍스트 색상 */
 
   /* Lighting Effects */
-  --light-warm-glow: rgba(255, 127, 80, 0.6);  /* 코랄 색상으로 */
-  --light-ambient: rgba(255, 127, 80, 0.3);  /* 코랄 색상으로 */
+  --light-warm-glow: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.6);  /* 코랄 색상으로 */
+  --light-ambient: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);  /* 코랄 색상으로 */
   --light-spotlight: rgba(255, 255, 255, 0.8);
 }
 

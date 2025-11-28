@@ -1,5 +1,8 @@
 <script setup>
 import { PhLightbulb, PhTrophy } from '@phosphor-icons/vue'
+import { BRAND_ACCENT } from '@/constants/colors'
+
+const brandAccent = BRAND_ACCENT
 </script>
 
 <template>
@@ -20,7 +23,7 @@ import { PhLightbulb, PhTrophy } from '@phosphor-icons/vue'
 
     <div class="feature-card">
       <div class="icon" aria-hidden="true">
-        <PhTrophy :size="20" weight="fill" color="#FF7F50" />
+        <PhTrophy :size="20" weight="fill" :color="brandAccent" />
       </div>
       <h3>마일스톤 시각화</h3>
       <p>저축 목표 달성 시 가구 하나씩 해금</p>

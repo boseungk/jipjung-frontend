@@ -1,7 +1,7 @@
 <template>
   <div class="crystal-ball-hero">
     <!-- Top Message -->
-    <h1 class="hero-title"><AppIcon name="magicWand" :size="32" weight="fill" color="#FF7F50" /> 나만의 꿈의 쇼룸 <AppIcon name="magicWand" :size="32" weight="fill" color="#FF7F50" /></h1>
+    <h1 class="hero-title"><AppIcon name="magicWand" :size="32" weight="fill" :color="brandAccent" /> 나만의 꿈의 쇼룸 <AppIcon name="magicWand" :size="32" weight="fill" :color="brandAccent" /></h1>
     
     <!-- Crystal Ball Container -->
     <div class="crystal-ball-container">
@@ -17,9 +17,11 @@
 import { computed } from 'vue'
 import CrystalBall from '../CrystalBall.vue'
 import { useDreamHomeStore } from '../../stores/dreamHomeStore'
+import { BRAND_ACCENT } from '@/constants/colors'
 
 const dreamHomeStore = useDreamHomeStore()
 const dreamHome = computed(() => dreamHomeStore.dreamHomeInfo)
+const brandAccent = BRAND_ACCENT
 </script>
 
 <style scoped>

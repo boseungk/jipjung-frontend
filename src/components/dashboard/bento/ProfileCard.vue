@@ -56,12 +56,12 @@ const userName = '홍길동'
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #FF7F50, #FF6347); /* LIVING CORAL */
+  background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-strong)); /* LIVING CORAL */
   color: white;
   font-size: 0.875rem;
   font-weight: 700;
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
   align-self: flex-start;
 }
 
@@ -158,13 +158,13 @@ html[data-theme="night"] .xp-bar-container {
 }
 
 html[data-theme="day"] .xp-bar {
-  background: linear-gradient(90deg, #FF7F50, #FF6B6B); /* LIVING CORAL gradient */
-  box-shadow: 0 2px 6px rgba(255, 127, 80, 0.4);
+  background: linear-gradient(90deg, var(--brand-accent), var(--brand-accent-soft)); /* LIVING CORAL gradient */
+  box-shadow: 0 2px 6px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
 }
 
 html[data-theme="night"] .xp-bar {
-  background: linear-gradient(90deg, #FF7F50, #FF6B6B);
-  box-shadow: 0 0 12px rgba(255, 127, 80, 0.5);
+  background: linear-gradient(90deg, var(--brand-accent), var(--brand-accent-soft));
+  box-shadow: 0 0 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.5);
 }
 
 .xp-text {

@@ -1,3 +1,4 @@
+@import './components/navigation.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -175,6 +176,50 @@
         --cursor-size: 30px;
         --mouse-x: 50%;
         --mouse-y: 50%;
+        /* Navigation Palette */
+        --nav-height: 64px;
+        --nav-bg-day: #EBE5DD;
+        --nav-border-day: #E0DAD3;
+        --nav-shadow-day: 0 4px 20px rgba(88, 60, 50, 0.08);
+        --nav-bg-night: rgba(58, 53, 48, 0.85);
+        --nav-border-night: rgba(255, 255, 255, 0.1);
+        --nav-shadow-night: 0 4px 20px rgba(0, 0, 0, 0.3);
+        --nav-btn-bg-day: #FFFFFF;
+        --nav-btn-shadow-day: 0 4px 12px rgba(88, 60, 50, 0.08), 0 2px 4px rgba(88, 60, 50, 0.04);
+        --nav-btn-shadow-day-hover: 0 6px 16px rgba(88, 60, 50, 0.1), 0 4px 8px rgba(88, 60, 50, 0.06);
+        --nav-btn-press-shadow-day: inset 0 2px 4px rgba(88, 60, 50, 0.1);
+        --nav-btn-bg-night: rgba(255, 255, 255, 0.06);
+        --nav-btn-border-night: rgba(255, 255, 255, 0.1);
+        --nav-btn-shadow-night: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+        --nav-btn-shadow-night-hover: 0 6px 16px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        --nav-btn-press-shadow-night: inset 0 4px 12px rgba(0, 0, 0, 0.4);
+        --nav-menu-bg-day: #FFFFFF;
+        --nav-menu-border-day: rgba(255, 255, 255, 0.6);
+        --nav-menu-shadow-day: 0 4px 10px -2px rgba(88, 60, 50, 0.08);
+        --nav-menu-hover-bg-day: #FFFFFF;
+        --nav-menu-hover-shadow-day: 0 6px 14px rgba(88, 60, 50, 0.1), 0 2px 6px rgba(88, 60, 50, 0.05);
+        --nav-menu-active-bg-day: #FFE4D9;
+        --nav-menu-active-color-day: #E06538;
+        --nav-menu-active-border-day: rgba(255, 127, 80, 0.3);
+        --nav-menu-active-shadow-day: inset 0 2px 6px rgba(88, 60, 50, 0.1);
+        --nav-menu-hover-bg-night: rgba(255, 255, 255, 0.08);
+        --nav-menu-hover-shadow-night: 0 4px 12px rgba(0, 0, 0, 0.2);
+        --nav-menu-active-bg-night: rgba(212, 165, 116, 0.2);
+        --nav-menu-active-shadow-night: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+        --nav-dropdown-bg-day: rgba(255, 255, 255, 0.95);
+        --nav-dropdown-border-day: rgba(0, 0, 0, 0.08);
+        --nav-dropdown-bg-night: rgba(58, 53, 48, 0.95);
+        --nav-dropdown-border-night: rgba(255, 255, 255, 0.1);
+        --nav-dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        --nav-hamburger-day: var(--showroom-text-day, #5D4037);
+        --nav-hamburger-night: var(--showroom-text-night, #F5EDE3);
+        /* Brand Accent */
+        --brand-accent: #FF7F50;
+        --brand-accent-rgb: 255, 127, 80;
+        --brand-accent-hover: #FF6A3D;
+        --brand-accent-press: #FF5A2D;
+        --brand-accent-strong: #FF6347;
+        --brand-accent-soft: #FF6B6B;
     }
 
     /* Body Styles - NO transition for instant theme switching */

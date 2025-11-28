@@ -146,9 +146,9 @@ html[data-theme="night"] .form-group label {
 
 .neomorphic-input:focus {
   outline: none;
-  border-color: #FF7F50;
+  border-color: var(--brand-accent);
   background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 127, 80, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.15);
 }
 
 .neomorphic-input.error {
@@ -259,21 +259,21 @@ html[data-theme="night"] .checkbox-label {
 }
 
 .neomorphic-button.primary {
-  background: #FF7F50;
+  background: var(--brand-accent);
   color: white;
-  box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
   font-weight: 700;
 }
 
 .neomorphic-button.primary:hover:not(:disabled) {
-  background: #FF6A3D;
-  box-shadow: 0 6px 16px rgba(255, 127, 80, 0.4);
+  background: var(--brand-accent-hover);
+  box-shadow: 0 6px 16px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
   transform: translateY(-2px);
 }
 
 .neomorphic-button.primary:active:not(:disabled) {
-  background: #FF5A2D;
-  box-shadow: 0 2px 8px rgba(255, 127, 80, 0.2);
+  background: var(--brand-accent-press);
+  box-shadow: 0 2px 8px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
   transform: translateY(0);
 }
 
