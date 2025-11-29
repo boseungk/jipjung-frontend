@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kakao Maps API Reference Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .controls button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .controls button:active {
+            transform: translateY(0);
+        }
+
+        /* Map Container - 기존 프로젝트 스타일 */
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        #map {
+            width: 100%;
+            height: 450px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Custom Marker Overlay Style */
+        .custom-marker {
+            display: inline-block;
+            padding: 8px 12px;
+            background: white;
+            border: 3px solid #4285f4;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .custom-marker:hover {
+            transform: scale(1.2);
+            z-index: 1000;
+            border-color: #ff6b6b;
+        }
+
+        /* Log Output */
+        .log-container {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .log-container h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        #log-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #6c757d;
+            margin-right: 0.5rem;
+        }
+
+        .log-message {
+            color: #495057;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+
+            #map {
+                height: 350px;
+            }
+        }
+
+        /* Info Window Style */
+        .info-window {
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗺️ Kakao Maps API Reference Demo</h1>
+            <p>EnjoyTrip 프로젝트에서 추출한 카카오 맵 레퍼런스 데모</p>
+        </header>
+
+        <section class="controls">
+            <button id="btn-add-markers">📍 샘플 마커 추가</button>
+            <button id="btn-clear-markers">🧹 마커 지우기</button>
+            <button id="btn-fit-bounds">🔍 범위 자동 조정</button>
+            <button id="btn-reset-map">🔄 지도 초기화</button>
+        </section>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+        <div class="log-container">
+            <h3>📋 실행 로그</h3>
+            <div id="log-output"></div>
+        </div>
+    </div>
+
+    <!-- Kakao Maps SDK -->
+    <!-- ⚠️ 본인의 API 키로 교체하세요: https://developers.kakao.com/ -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=d7ba6bdb4678bbecba6efac009de6e01&libraries=services"></script>
+
+    <script>
+        // ========================================
+        // 1. 데모 데이터 & 설정
+        // ========================================
+
+        // 부산 관광지 데모 데이터 (tourism-api.js에서 추출)
+        const DEMO_SPOTS = [
+            {
+                id: '126601',
+                title: '해운대해수욕장',
+                address: '부산광역시 해운대구 우동',
+                contentTypeId: '12',
+                mapx: 129.160019,
+                mapy: 35.158699,
+                tel: '051-749-4000',
+                description: '부산의 대표적인 해수욕장입니다.'
+            },
+            {
+                id: '126602',
+                title: '광안리해수욕장',
+                address: '부산광역시 수영구 광안해변로',
+                contentTypeId: '12',
+                mapx: 129.118666,
+                mapy: 35.153381,
+                tel: '051-622-4251',
+                description: '야경이 아름다운 해수욕장입니다.'
+            },
+            {
+                id: '126603',
+                title: '감천문화마을',
+                address: '부산광역시 사하구 감내2로 203',
+                contentTypeId: '12',
+                mapx: 129.010622,
+                mapy: 35.097649,
+                tel: '051-204-1444',
+                description: '한국의 마추픽추라 불리는 아름다운 마을입니다.'
+            },
+            {
+                id: '126604',
+                title: '부산타워',
+                address: '부산광역시 중구 용두산길 37-55',
+                contentTypeId: '12',
+                mapx: 129.032632,
+                mapy: 35.100910,
+                tel: '051-661-5000',
+                description: '부산의 랜드마크 타워입니다.'
+            },
+            {
+                id: '126605',
+                title: 'BIFF광장',
+                address: '부산광역시 중구 구덕로 58',
+                contentTypeId: '38',
+                mapx: 129.030388,
+                mapy: 35.096478,
+                tel: '051-243-9363',
+                description: '부산국제영화제 개최지로 유명한 거리입니다.'
+            }
+        ];
+
+        // 콘텐츠 타입별 이모지 매핑 (tourism-api.js에서 추출)
+        const MARKER_EMOJIS = {
+            '': '📍',      // 전체/기본
+            '12': '🏔️',   // 관광지
+            '14': '🎡',   // 문화시설
+            '15': '🎉',   // 축제공연행사
+            '25': '🗺️',   // 여행코스
+            '28': '⛷️',    // 레포츠
+            '32': '🏨',   // 숙박
+            '38': '🛍️',   // 쇼핑
+            '39': '🍽️'    // 음식점
+        };
+
+        // 콘텐츠 타입 이름 매핑
+        const CONTENT_TYPES = {
+            '': '전체',
+            '12': '관광지',
+            '14': '문화시설',
+            '15': '축제공연행사',
+            '25': '여행코스',
+            '28': '레포츠',
+            '32': '숙박',
+            '38': '쇼핑',
+            '39': '음식점'
+        };
+
+        // ========================================
+        // 2. 헬퍼 함수 (tourism-api.js에서 추출)
+        // ========================================
+
+        /**
+         * 콘텐츠 타입에 맞는 이모지 반환
+         */
+        function getMarkerEmoji(contentTypeId) {
+            return MARKER_EMOJIS[contentTypeId] || MARKER_EMOJIS[''];
+        }
+
+        /**
+         * 콘텐츠 타입 이름 반환
+         */
+        function getContentTypeName(contentTypeId) {
+            return CONTENT_TYPES[contentTypeId] || '기타';
+        }
+
+        /**
+         * 좌표 유효성 검증 (한국 범위)
+         */
+        function isValidCoordinate(mapx, mapy) {
+            return mapx && mapy &&
+                   124.5 <= mapx && mapx <= 132 &&  // 경도 범위
+                   33.0 <= mapy && mapy <= 38.6;    // 위도 범위
+        }
+
+        /**
+         * 현재 시간 포맷 (로그용)
+         */
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('ko-KR', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // ========================================
+        // 3. 카카오 맵 매니저 (map-manager.js에서 추출 및 간소화)
+        // ========================================
+
+        const KakaoMapsDemo = {
+            map: null,
+            markers: [],
+
+            /**
+             * 지도 초기화 (map-manager.js initializeMap 기반)
+             */
+            initializeMap() {
+                const container = document.getElementById('map');
+
+                if (!container) {
+                    this.log('❌ 지도 컨테이너를 찾을 수 없습니다.');
+                    return;
+                }
+
+                // 지도 옵션 설정
+                const options = {
+                    center: new kakao.maps.LatLng(35.1595, 129.1600), // 부산 중심 좌표
+                    level: 8 // 확대 레벨
+                };
+
+                // 지도 생성
+                this.map = new kakao.maps.Map(container, options);
+                this.log('✅ 지도가 초기화되었습니다. (중심: 부산, 레벨: 8)');
+
+                // 지도 타입 컨트롤 추가
+                const mapTypeControl = new kakao.maps.MapTypeControl();
+                this.map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+                // 줌 컨트롤 추가
+                const zoomControl = new kakao.maps.ZoomControl();
+                this.map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+                this.log('✅ 지도 컨트롤(타입, 줌)이 추가되었습니다.');
+            },
+
+            /**
+             * 커스텀 마커 생성 (map-manager.js setOverlay 기반)
+             */
+            createCustomMarker(spot) {
+                // 좌표 유효성 검증
+                if (!isValidCoordinate(spot.mapx, spot.mapy)) {
+                    this.log(`⚠️ 유효하지 않은 좌표: ${spot.title}`);
+                    return null;
+                }
+
+                // 좌표 생성 (주의: Kakao는 (위도, 경도) 순서)
+                const position = new kakao.maps.LatLng(spot.mapy, spot.mapx);
+
+                // 고유 마커 ID 생성
+                const markerId = `marker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+                // 이모지 가져오기
+                const emoji = getMarkerEmoji(spot.contentTypeId);
+                const typeName = getContentTypeName(spot.contentTypeId);
+
+                // 커스텀 오버레이 콘텐츠 (HTML)
+                const content = `
+                    <div class="custom-marker" id="${markerId}"
+                         data-spot-id="${spot.id}"
+                         title="${spot.title}">
+                        ${emoji}
+                    </div>
+                `;
+
+                // CustomOverlay 생성
+                const customOverlay = new kakao.maps.CustomOverlay({
+                    position: position,
+                    content: content,
+                    xAnchor: 0.5,
+                    yAnchor: 0.5
+                });
+
+                // 지도에 표시
+                customOverlay.setMap(this.map);
+
+                // InfoWindow 추가 (호버 시 표시)
+                this.addInfoWindow(customOverlay, spot, markerId);
+
+                this.log(`📍 마커 추가: ${spot.title} (${typeName})`);
+
+                return customOverlay;
+            },
+
+            /**
+             * InfoWindow 추가 (map-manager.js 기반)
+             */
+            addInfoWindow(overlay, spot, markerId) {
+                // InfoWindow 생성
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `<div class="info-window">${spot.title}</div>`,
+                    removable: false
+                });
+
+                // DOM 렌더링 대기 후 이벤트 리스너 추가
+                setTimeout(() => {
+                    const markerElement = document.getElementById(markerId);
+                    if (!markerElement) return;
+
+                    // 마우스 오버 시 InfoWindow 표시
+                    markerElement.addEventListener('mouseover', () => {
+                        infowindow.open(this.map, overlay);
+                    });
+
+                    // 마우스 아웃 시 InfoWindow 숨김
+                    markerElement.addEventListener('mouseout', () => {
+                        infowindow.close();
+                    });
+
+                    // 클릭 시 상세 정보 로그
+                    markerElement.addEventListener('click', () => {
+                        this.log(`🔍 선택: ${spot.title}`);
+                        console.log('[Spot Details]', spot);
+                    });
+                }, 0);
+            },
+
+            /**
+             * 여러 관광지 표시 (map-manager.js displayTouristSpots 기반)
+             */
+            displaySpots(spots) {
+                if (!spots || spots.length === 0) {
+                    this.log('⚠️ 표시할 관광지가 없습니다.');
+                    return;
+                }
+
+                this.log(`📊 ${spots.length}개의 관광지를 표시합니다.`);
+
+                // 기존 마커 제거
+                this.clearMarkers();
+
+                // LatLngBounds 객체 생성 (자동 범위 조정용)
+                const bounds = new kakao.maps.LatLngBounds();
+
+                // 각 관광지에 마커 추가
+                spots.forEach(spot => {
+                    const marker = this.createCustomMarker(spot);
+                    if (marker) {
+                        this.markers.push(marker);
+
+                        // bounds에 좌표 추가
+                        bounds.extend(new kakao.maps.LatLng(spot.mapy, spot.mapx));
+                    }
+                });
+
+                // 모든 마커가 보이도록 지도 범위 조정
+                if (this.markers.length > 0) {
+                    this.map.setBounds(bounds);
+                    this.log(`✅ 지도 범위가 자동 조정되었습니다.`);
+                }
+            },
+
+            /**
+             * 모든 마커 제거 (map-manager.js clearMarkers 기반)
+             */
+            clearMarkers() {
+                // 메모리 누수 방지: 각 마커를 지도에서 제거
+                this.markers.forEach(marker => {
+                    marker.setMap(null);
+                });
+
+                this.markers = [];
+                this.log('🧹 모든 마커가 제거되었습니다.');
+            },
+
+            /**
+             * 범위 자동 조정 (map-manager.js fitMapToBounds 기반)
+             */
+            fitToBounds() {
+                if (this.markers.length === 0) {
+                    this.log('⚠️ 표시된 마커가 없습니다.');
+                    return;
+                }
+
+                const bounds = new kakao.maps.LatLngBounds();
+
+                // 모든 마커의 위치를 bounds에 추가
+                DEMO_SPOTS.forEach(spot => {
+                    if (isValidCoordinate(spot.mapx, spot.mapy)) {
+                        bounds.extend(new kakao.maps.LatLng(spot.mapy, spot.mapx));
+                    }
+                });
+
+                // 지도 범위 조정
+                this.map.setBounds(bounds);
+                this.log('🔍 지도 범위를 자동으로 조정했습니다.');
+            },
+
+            /**
+             * 지도 초기화 (원래 위치로 복귀)
+             */
+            resetMap() {
+                const center = new kakao.maps.LatLng(35.1595, 129.1600);
+                this.map.setCenter(center);
+                this.map.setLevel(8);
+                this.log('🔄 지도가 초기 위치로 돌아갔습니다.');
+            },
+
+            /**
+             * 로그 출력
+             */
+            log(message) {
+                const logOutput = document.getElementById('log-output');
+                const time = getCurrentTime();
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="log-time">[${time}]</span><span class="log-message">${message}</span>`;
+                logOutput.appendChild(logEntry);
+
+                // 자동 스크롤
+                logOutput.scrollTop = logOutput.scrollHeight;
+
+                // 콘솔에도 출력
+                console.log(`[KakaoMapsDemo] ${message}`);
+            }
+        };
+
+        // ========================================
+        // 4. 이벤트 리스너 & 초기화
+        // ========================================
+
+        // Kakao Maps API 로딩 확인
+        function waitForKakao(callback, maxAttempts = 10) {
+            let attempts = 0;
+
+            const checkKakao = setInterval(() => {
+                attempts++;
+
+                if (typeof kakao !== 'undefined' && kakao.maps) {
+                    clearInterval(checkKakao);
+                    callback();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkKakao);
+                    alert('❌ Kakao Maps API를 로드할 수 없습니다. API 키를 확인하세요.');
+                }
+            }, 500);
+        }
+
+        // DOM 로딩 완료 후 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kakao API 로딩 대기
+            waitForKakao(() => {
+                // 지도 초기화
+                KakaoMapsDemo.initializeMap();
+
+                // 버튼 이벤트 리스너 등록
+                document.getElementById('btn-add-markers').addEventListener('click', () => {
+                    KakaoMapsDemo.displaySpots(DEMO_SPOTS);
+                });
+
+                document.getElementById('btn-clear-markers').addEventListener('click', () => {
+                    KakaoMapsDemo.clearMarkers();
+                });
+
+                document.getElementById('btn-fit-bounds').addEventListener('click', () => {
+                    KakaoMapsDemo.fitToBounds();
+                });
+
+                document.getElementById('btn-reset-map').addEventListener('click', () => {
+                    KakaoMapsDemo.resetMap();
+                });
+
+                // 환영 메시지
+                KakaoMapsDemo.log('👋 Kakao Maps Reference Demo에 오신 것을 환영합니다!');
+                KakaoMapsDemo.log('📍 "샘플 마커 추가" 버튼을 클릭하여 부산 관광지를 확인하세요.');
+            });
+        });
+    </script>
+</body>
+</html>
