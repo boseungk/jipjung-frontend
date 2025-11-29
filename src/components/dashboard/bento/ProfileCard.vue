@@ -121,27 +121,19 @@ html[data-theme="night"] .avatar-circle {
 .username {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #2C2420; /* DARKER for contrast */
-}
-
-html[data-theme="night"] .username {
-  color: var(--showroom-text-night, #F5EDE3);
+  color: var(--bento-text, #2C2420);
 }
 
 .exp-info {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #999; /* LIGHTER for hierarchy */
-}
-
-html[data-theme="night"] .exp-info {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--bento-text-muted, #6D5D4F);
 }
 
 /* XP Bar - Thick Capsule Shape with CORAL */
 .xp-bar-container {
   width: 100%;
-  height: 14px;
+  height: 20px;
   border-radius: 7px;
   overflow: hidden;
 }

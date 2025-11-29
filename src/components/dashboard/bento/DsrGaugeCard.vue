@@ -5,6 +5,7 @@
     <div class="gauge-wrapper">
       <apexchart
         v-if="chartLoaded"
+        :key="theme"
         type="radialBar"
         :options="chartOptions"
         :series="[dsrRatio]"
@@ -25,11 +26,14 @@ import { storeToRefs } from 'pinia'
 import { useDsrStore } from '../../../stores/dsrStore'
 import VueApexCharts from 'vue3-apexcharts'
 import { PhCheckCircle } from '@phosphor-icons/vue'
+import { useTheme } from '@/composables/useTheme'
+import { CHART_PALETTE } from '@/constants/colors'
 
 const apexchart = VueApexCharts
 
 const dsrStore = useDsrStore()
 const { dsrRatio } = storeToRefs(dsrStore)
+const { theme } = useTheme()
 
 const chartLoaded = ref(false)
 
@@ -45,6 +49,8 @@ const gaugeColor = computed(() => {
   return '#F44336'
 })
 
+const chartPalette = computed(() => (theme.value === 'night' ? CHART_PALETTE.night : CHART_PALETTE.day))
+
 const chartOptions = computed(() => ({
   chart: {
     type: 'radialBar',
@@ -58,7 +64,7 @@ const chartOptions = computed(() => ({
         background: 'transparent'
       },
       track: {
-        background: '#E8E0D5',
+        background: chartPalette.value.track,
         strokeWidth: '100%'
       },
       dataLabels: {
@@ -67,7 +73,7 @@ const chartOptions = computed(() => ({
           offsetY: -10,
           fontSize: '14px',
           fontWeight: 600,
-          color: '#8D6E63'
+          color: chartPalette.value.muted
         },
         value: {
           offsetY: 0,
@@ -97,17 +103,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.card-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--showroom-text-day, #5D4037);
-  margin: 0;
-}
-
-html[data-theme="night"] .card-title {
-  color: var(--showroom-text-night, #F5EDE3);
 }
 
 .gauge-wrapper {

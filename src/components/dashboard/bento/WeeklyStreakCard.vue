@@ -70,17 +70,6 @@ const triggerConfetti = () => {
   gap: 1.25rem;
 }
 
-.card-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--showroom-text-day, #5D4037);
-  margin: 0;
-}
-
-html[data-theme="night"] .card-title {
-  color: var(--showroom-text-night, #F5EDE3);
-}
-
 /* Days Grid */
 .days-grid {
   display: grid;

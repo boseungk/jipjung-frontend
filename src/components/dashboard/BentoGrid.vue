@@ -69,13 +69,32 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
 }
 
 /* Base card styles (inherited by all bento cards) */
+:global(html) {
+  --bento-card-bg: var(--showroom-card-bg-day, rgba(255, 255, 255, 0.95));
+  --bento-card-border: rgba(0, 0, 0, 0.02);
+  --bento-card-title: var(--showroom-text-day, #2C2420);
+  --bento-text: var(--showroom-text-day, #2C2420);
+  --bento-text-muted: #6D5D4F;
+}
+
+:global(html[data-theme="night"]) {
+  --bento-card-bg: var(--showroom-card-bg-night, #4a4540);
+  --bento-card-border: rgba(255, 255, 255, 0.08);
+  --bento-card-title: var(--showroom-text-night, #F5EDE3);
+  --bento-text: var(--showroom-text-night, #F5EDE3);
+  --bento-text-muted: rgba(245, 237, 227, 0.78);
+}
+
 :deep(.bento-card) {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bento-card-bg);
+  background-color: var(--bento-card-bg);
+  color: var(--bento-text);
   border-radius: 24px;
   padding: 1.5rem;
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(12px);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--bento-card-border);
 }
 
 :deep(.bento-card):hover {
@@ -83,12 +102,21 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
   box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.15);
 }
 
-html[data-theme="night"] :deep(.bento-card) {
-  background: rgba(58, 53, 48, 0.85);
+:global(html[data-theme="night"]) :deep(.bento-card) {
+  background: var(--showroom-shadow-dark-night, #2a2520);
+  background-color: var(--showroom-shadow-dark-night, #2a2520);
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  color: var(--showroom-text-night, #F5EDE3);
 }
 
-html[data-theme="night"] :deep(.bento-card):hover {
+:global(html[data-theme="night"]) :deep(.bento-card):hover {
   box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.6);
+}
+
+:deep(.card-title) {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--bento-card-title);
+  margin: 0;
 }
 </style>

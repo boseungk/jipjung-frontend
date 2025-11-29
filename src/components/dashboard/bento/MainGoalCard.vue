@@ -146,12 +146,8 @@ html[data-theme="night"] .donut-text {
 .context-small {
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #999;
+  color: var(--bento-text-muted, #6D5D4F);
   line-height: 1.2;
-}
-
-html[data-theme="night"] .context-small {
-  color: rgba(255, 255, 255, 0.5);
 }
 
 /* HUGE Amount - The Star */
@@ -171,12 +167,8 @@ html[data-theme="night"] .amount-huge {
 .unit-small {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #666;
+  color: var(--bento-text-muted, #6D5D4F);
   margin-left: 0.2rem;
-}
-
-html[data-theme="night"] .unit-small {
-  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Subtitle Info */
@@ -193,11 +185,7 @@ html[data-theme="night"] .subtitle-info {
 
 .muted {
   font-weight: 400;
-  color: #999;
-}
-
-html[data-theme="night"] .muted {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--bento-text-muted, #6D5D4F);
 }
 
 /* Full-Width Savings Button */

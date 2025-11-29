@@ -5,6 +5,7 @@
     <div class="chart-wrapper">
       <apexchart
         v-if="chartLoaded"
+        :key="theme"
         type="area"
         :options="chartOptions"
         :series="chartSeries"
@@ -17,10 +18,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
-import { BRAND_ACCENT } from '@/constants/colors'
+import { BRAND_ACCENT, CHART_PALETTE } from '@/constants/colors'
+import { useTheme } from '@/composables/useTheme'
 
 const apexchart = VueApexCharts
 const brandAccent = BRAND_ACCENT
+const { theme } = useTheme()
 
 const chartLoaded = ref(false)
 
@@ -38,82 +41,89 @@ const chartSeries = ref([
   }
 ])
 
-const chartOptions = computed(() => ({
-  chart: {
-    type: 'area',
-    toolbar: {
-      show: false
-    },
-    sparkline: {
-      enabled: false
-    },
-    fontFamily: "'Noto Sans KR', sans-serif"
-  },
-  stroke: {
-    curve: 'smooth',
-    width: 3,
-    colors: [brandAccent] /* CORAL ACCENT */
-  },
-  fill: {
-    type: 'gradient',
-    gradient: {
-      shadeIntensity: 1,
-      opacityFrom: 0.7,
-      opacityTo: 0.1,
-      stops: [0, 90, 100]
-    },
-    colors: [brandAccent] /* CORAL ACCENT */
-  },
-  grid: {
-    borderColor: 'rgba(0, 0, 0, 0.05)',
-    strokeDashArray: 4,
-    padding: {
-      left: 10,
-      right: 10,
-      top: 0,
-      bottom: 0
-    }
-  },
-  xaxis: {
-    type: 'datetime',
-    labels: {
-      style: {
-        fontSize: '12px',
-        colors: '#6D5D4F'
+const chartPalette = computed(() => (theme.value === 'night' ? CHART_PALETTE.night : CHART_PALETTE.day))
+
+const chartOptions = computed(() => {
+  const palette = chartPalette.value
+
+  return {
+    chart: {
+      type: 'area',
+      toolbar: {
+        show: false
       },
-      datetimeFormatter: {
-        month: 'MM월'
+      sparkline: {
+        enabled: false
+      },
+      fontFamily: "'Noto Sans KR', sans-serif"
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 3,
+      colors: [brandAccent] /* CORAL ACCENT */
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.1,
+        stops: [0, 90, 100]
+      },
+      colors: [brandAccent] /* CORAL ACCENT */
+    },
+    grid: {
+      borderColor: palette.grid,
+      strokeDashArray: 4,
+      padding: {
+        left: 10,
+        right: 10,
+        top: 0,
+        bottom: 0
       }
     },
-    axisBorder: {
-      show: false
-    },
-    axisTicks: {
-      show: false
-    }
-  },
-  yaxis: {
-    labels: {
-      formatter: (val) => `₩${Math.round(val)}만`,
-      style: {
-        fontSize: '12px',
-        colors: '#6D5D4F'
+    xaxis: {
+      type: 'datetime',
+      labels: {
+        style: {
+          fontSize: '12px',
+          colors: palette.muted
+        },
+        datetimeFormatter: {
+          month: 'MM월'
+        }
+      },
+      axisBorder: {
+        show: false
+      },
+      axisTicks: {
+        show: false
       }
-    }
-  },
-  tooltip: {
-    enabled: true,
-    x: {
-      format: 'MM월 dd일'
     },
-    y: {
-      formatter: (val) => `₩${Math.round(val)}만`
+    yaxis: {
+      labels: {
+        formatter: (val) => `₩${Math.round(val)}만`,
+        style: {
+          fontSize: '12px',
+          colors: palette.muted
+        }
+      }
+    },
+    tooltip: {
+      enabled: true,
+      theme: theme.value === 'night' ? 'dark' : 'light',
+      x: {
+        format: 'MM월 dd일'
+      },
+      y: {
+        formatter: (val) => `₩${Math.round(val)}만`
+      }
+    },
+    dataLabels: {
+      enabled: false
     }
-  },
-  dataLabels: {
-    enabled: false
   }
-}))
+})
 
 onMounted(() => {
   chartLoaded.value = true
@@ -126,17 +136,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.card-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--showroom-text-day, #5D4037);
-  margin: 0;
-}
-
-html[data-theme="night"] .card-title {
-  color: var(--showroom-text-night, #F5EDE3);
 }
 
 .chart-wrapper {
