@@ -1,22 +1,20 @@
 <template>
   <div class="property-exploration-layout">
-    <div class="layout-actions">
-      <button class="toggle-btn" @click="toggleMap">
-        {{ mapCollapsed ? '지도 펼치기' : '지도 접기' }}
-      </button>
-      <button class="toggle-btn" @click="toggleInfo">
-        {{ infoCollapsed ? '정보 패널 펼치기' : '정보 패널 접기' }}
-      </button>
-    </div>
-
-    <div class="split-container" :class="containerClasses">
+    <div class="split-container">
       <!-- 지도 패널 -->
-      <div class="map-panel" :class="{ hidden: mapCollapsed }">
+      <div class="map-panel">
         <PropertyMapPanel @openFilters="showFilters = true" />
       </div>
 
+      <!-- 리사이저 -->
+      <PanelResizer
+        @resizeStart="handleResizeStart"
+        @resize="handleResize"
+        @resizeEnd="handleResizeEnd"
+      />
+
       <!-- 정보 패널 -->
-      <div class="info-panel" :class="{ hidden: infoCollapsed }">
+      <div class="info-panel" :style="{ width: infoPanelWidth + 'px' }">
         <PropertyInfoPanel @openFilters="showFilters = true" />
       </div>
     </div>
@@ -31,26 +29,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { usePropertyStore } from '@/stores/propertyStore'
 import PropertyMapPanel from './PropertyMapPanel.vue'
 import PropertyInfoPanel from './PropertyInfoPanel.vue'
 import PropertyFilters from './PropertyFilters.vue'
+import PanelResizer from './PanelResizer.vue'
 
 const propertyStore = usePropertyStore()
 const showFilters = ref(false)
-const mapCollapsed = ref(false)
-const infoCollapsed = ref(false)
 
-const containerClasses = computed(() => {
-  return {
-    'map-collapsed': mapCollapsed.value,
-    'info-collapsed': infoCollapsed.value
-  }
-})
+// 리사이저 상태
+const MIN_PANEL_WIDTH = 505 // 최소 너비 (글자 줄바꿈 고려 + 핸들 영역)
+const MAX_PANEL_WIDTH = 600 // 최대 너비
+const DEFAULT_PANEL_WIDTH = 550 // 기본 너비
+
+const infoPanelWidth = ref(DEFAULT_PANEL_WIDTH)
+const initialPanelWidth = ref(DEFAULT_PANEL_WIDTH)
 
 onMounted(async () => {
-  // 매물 데이터 로드
+  // 매물 데이터 로드 (컴포넌트 마운트 후)
+  await nextTick()
   await propertyStore.fetchProperties()
 })
 
@@ -62,18 +61,36 @@ function handleFilterApply() {
   propertyStore.fetchProperties()
 }
 
-function toggleMap() {
-  mapCollapsed.value = !mapCollapsed.value
-  if (mapCollapsed.value) {
-    infoCollapsed.value = false
+/**
+ * 리사이저 드래그 시작
+ */
+function handleResizeStart() {
+  initialPanelWidth.value = infoPanelWidth.value
+}
+
+/**
+ * 리사이저 드래그 중
+ * @param {number} deltaX - 드래그 이동량
+ */
+function handleResize(deltaX) {
+  // 새 너비 계산 (드래그 방향 반대로 적용)
+  const newWidth = initialPanelWidth.value - deltaX
+
+  // 최소/최대 너비 제한
+  if (newWidth >= MIN_PANEL_WIDTH && newWidth <= MAX_PANEL_WIDTH) {
+    infoPanelWidth.value = newWidth
+  } else if (newWidth < MIN_PANEL_WIDTH) {
+    infoPanelWidth.value = MIN_PANEL_WIDTH
+  } else if (newWidth > MAX_PANEL_WIDTH) {
+    infoPanelWidth.value = MAX_PANEL_WIDTH
   }
 }
 
-function toggleInfo() {
-  infoCollapsed.value = !infoCollapsed.value
-  if (infoCollapsed.value) {
-    mapCollapsed.value = false
-  }
+/**
+ * 리사이저 드래그 종료
+ */
+function handleResizeEnd() {
+  // 필요시 localStorage에 저장하거나 다른 처리
 }
 </script>
 
@@ -84,125 +101,51 @@ function toggleInfo() {
   position: relative;
 }
 
-.layout-actions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  gap: 0.5rem;
-  z-index: 20;
-}
-
-.toggle-btn {
-  background: var(--nav-btn-bg-day);
-  backdrop-filter: blur(var(--nav-btn-blur-day));
-  border: 1px solid var(--nav-btn-border-day);
-  box-shadow: var(--nav-btn-shadow-day);
-  border-radius: 12px;
-  padding: 0.6rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--showroom-text-day);
-}
-
-html[data-theme="night"] .toggle-btn {
-  background: var(--nav-btn-bg-night);
-  backdrop-filter: blur(var(--nav-btn-blur-night));
-  border-color: var(--nav-btn-border-night);
-  box-shadow: var(--nav-btn-shadow-night);
-  color: var(--showroom-text-night);
-}
-
-.toggle-btn:hover {
-  transform: translateY(-2px);
-}
-
 .split-container {
   width: 100%;
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  transition: grid-template-columns 0.3s ease, grid-template-rows 0.3s ease;
+  display: flex;
+  flex-direction: row;
 }
 
-/* Desktop: 50/50 split (좌우) */
-@media (min-width: 1040px) {
+.map-panel {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0; /* flex 아이템이 컨텐츠 크기보다 작아질 수 있도록 */
+}
+
+.info-panel {
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.1s ease-out;
+}
+
+/* Desktop & Tablet: 좌우 배치 */
+@media (min-width: 768px) {
   .split-container {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
-  }
-
-  .map-panel {
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
-  }
-
-  html[data-theme="night"] .map-panel {
-    border-right-color: rgba(255, 255, 255, 0.05);
+    flex-direction: row;
   }
 }
 
-/* Tablet: 40/60 split (좌우) */
-@media (min-width: 768px) and (max-width: 1039px) {
-  .split-container {
-    grid-template-columns: 40% 60%;
-    grid-template-rows: 1fr;
-  }
-
-  .map-panel {
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
-  }
-
-  html[data-theme="night"] .map-panel {
-    border-right-color: rgba(255, 255, 255, 0.05);
-  }
-}
-
-/* Mobile: Stack (상하) */
+/* Mobile: 상하 배치 */
 @media (max-width: 767px) {
   .split-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: 300px 1fr;
+    flex-direction: column;
   }
 
   .map-panel {
+    height: 300px;
+    flex: 0 0 300px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
   html[data-theme="night"] .map-panel {
     border-bottom-color: rgba(255, 255, 255, 0.05);
   }
-}
 
-.map-panel,
-.info-panel {
-  overflow: hidden;
-}
-
-.map-panel.hidden,
-.info-panel.hidden {
-  display: none;
-}
-
-.split-container.map-collapsed {
-  grid-template-columns: 0 1fr;
-}
-
-.split-container.info-collapsed {
-  grid-template-columns: 1fr 0;
-}
-
-@media (max-width: 767px) {
-  .split-container.map-collapsed {
-    grid-template-columns: 1fr;
-    grid-template-rows: 0 1fr;
-  }
-
-  .split-container.info-collapsed {
-    grid-template-columns: 1fr;
-    grid-template-rows: 300px 0;
+  .info-panel {
+    flex: 1;
+    width: 100% !important; /* 모바일에서는 전체 너비 사용 */
   }
 }
 </style>

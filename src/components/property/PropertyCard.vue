@@ -9,8 +9,18 @@
     @click="handleClick"
   >
     <!-- 이미지 -->
-    <div class="card-image">
-      <img :src="property.images[0]" :alt="property.title" loading="lazy" />
+    <div class="card-image" :class="{ 'image-error': imageError }">
+      <img
+        v-if="!imageError"
+        :src="property.images[0].url"
+        :alt="property.images[0].alt"
+        loading="lazy"
+        @error="handleImageError"
+      />
+      <div v-else class="image-fallback">
+        <span class="fallback-icon">🏠</span>
+        <span class="fallback-text">{{ property.propertyType }}</span>
+      </div>
       <div class="image-badge">{{ property.propertyType }}</div>
       <button class="save-btn" @click.stop="handleSave" :class="{ saved: isSaved }">
         {{ isSaved ? '❤️' : '🤍' }}
@@ -49,7 +59,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
@@ -71,6 +81,14 @@ const { targetAmount } = storeToRefs(dreamHomeStore)
 const isSelected = computed(() => selectedProperty.value?.id === props.property.id)
 const isSaved = computed(() => savedPropertyIds.value.includes(props.property.id))
 const isAffordable = computed(() => props.property.price * 0.3 <= targetAmount.value)
+
+// 이미지 에러 처리
+const imageError = ref(false)
+
+function handleImageError() {
+  imageError.value = true
+  console.warn(`Failed to load image for property ${props.property.id}`)
+}
 
 function handleClick() {
   emit('select', props.property.id)
@@ -131,6 +149,41 @@ html[data-theme="night"] .property-card:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 이미지 에러 처리 */
+.card-image.image-error {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-theme="night"] .card-image.image-error {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.2), rgba(66, 133, 244, 0.1));
+}
+
+.image-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--showroom-text-day);
+  opacity: 0.7;
+}
+
+html[data-theme="night"] .image-fallback {
+  color: var(--showroom-text-night);
+}
+
+.fallback-icon {
+  font-size: 3rem;
+}
+
+.fallback-text {
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .image-badge {

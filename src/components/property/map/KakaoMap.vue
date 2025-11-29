@@ -120,6 +120,13 @@ watch(targetAmount, () => {
     }
 })
 
+// 지도 로딩 완료 시 마커 렌더링 (타이밍 이슈 해결)
+watch(isLoaded, (loaded) => {
+    if (loaded && hasProperties.value) {
+        renderMarkers()
+    }
+})
+
 // 외부에서 설정한 지도 중심/줌 변화 감시
 watch(
     mapCenter,
@@ -182,7 +189,8 @@ defineExpose({
     fitBounds: () => fitBounds(filteredProperties.value),
     reset: resetMap,
     centerMap,
-    setZoomLevel
+    setZoomLevel,
+    renderMarkers
 })
 </script>
 

@@ -96,18 +96,18 @@ function applyFilters(properties, filters = {}) {
     }
 
     // 가격 범위 필터
-    if (filters.priceMin !== undefined) {
+    if (filters.priceMin !== undefined && filters.priceMin !== null) {
         filtered = filtered.filter((p) => p.price >= filters.priceMin)
     }
-    if (filters.priceMax !== undefined) {
+    if (filters.priceMax !== undefined && filters.priceMax !== null) {
         filtered = filtered.filter((p) => p.price <= filters.priceMax)
     }
 
     // 면적 범위 필터
-    if (filters.areaMin !== undefined) {
+    if (filters.areaMin !== undefined && filters.areaMin !== null) {
         filtered = filtered.filter((p) => p.area >= filters.areaMin)
     }
-    if (filters.areaMax !== undefined) {
+    if (filters.areaMax !== undefined && filters.areaMax !== null) {
         filtered = filtered.filter((p) => p.area <= filters.areaMax)
     }
 

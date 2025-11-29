@@ -53,6 +53,24 @@ const PROPERTY_NAME_TEMPLATES = {
 }
 
 /**
+ * 부동산 이미지 키워드 (다양한 부동산 이미지 제공)
+ */
+const PROPERTY_IMAGE_KEYWORDS = [
+    'modern-apartment',
+    'luxury-home',
+    'interior-design',
+    'living-room',
+    'bedroom',
+    'kitchen',
+    'apartment-building',
+    'modern-architecture',
+    'real-estate',
+    'house-exterior',
+    'city-apartment',
+    'minimalist-interior'
+]
+
+/**
  * 랜덤 숫자 생성 (범위)
  * @param {number} min - 최소값
  * @param {number} max - 최대값
@@ -202,12 +220,18 @@ function generateProperty(id) {
     const featureCount = randomInt(3, 5)
     const features = randomChoices(PROPERTY_FEATURES, featureCount)
 
-    // 이미지 (placeholder)
+    // 이미지 (Unsplash 실제 부동산 사진)
     const imageCount = randomInt(3, 6)
-    const images = Array.from({ length: imageCount }, (_, i) => ({
-        url: `https://via.placeholder.com/400x300?text=Property+${id}+Image+${i + 1}`,
-        alt: `매물 ${id} 사진 ${i + 1}`
-    }))
+    const images = Array.from({ length: imageCount }, (_, i) => {
+        // 각 이미지마다 다른 키워드 사용
+        const keyword = PROPERTY_IMAGE_KEYWORDS[i % PROPERTY_IMAGE_KEYWORDS.length]
+        // seed를 사용하여 동일한 매물에는 동일한 이미지가 표시되도록 함
+        const seed = id * 100 + i
+        return {
+            url: `https://picsum.photos/seed/${seed}/400/300`,
+            alt: `매물 ${id} 사진 ${i + 1}`
+        }
+    })
 
     // 설명
     const description = `${sigungu} ${propertyType} ${area}평형 매물입니다. ${features.join(', ')} 등의 특징이 있습니다. ${buildYear}년에 건축되었으며, ${floor}층에 위치해 있습니다.`
