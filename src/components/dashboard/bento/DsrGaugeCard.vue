@@ -8,7 +8,7 @@
         type="radialBar"
         :options="chartOptions"
         :series="[dsrRatio]"
-        height="160"
+        height="190"
       />
     </div>
     
@@ -71,7 +71,7 @@ const chartOptions = computed(() => ({
         },
         value: {
           offsetY: 0,
-          fontSize: '28px',
+          fontSize: '32px',
           fontWeight: 'bold',
           color: gaugeColor.value,
           formatter: (val) => `${val.toFixed(1)}%`
@@ -96,7 +96,7 @@ onMounted(() => {
   grid-area: dsr;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .card-title {

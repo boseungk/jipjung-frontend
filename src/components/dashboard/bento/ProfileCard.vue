@@ -50,12 +50,13 @@ const userName = '홍길동'
   padding: 1.75rem; /* Increased padding for airy feel */
 }
 
-/* Level Badge - ACCENT COLOR */
+/* Level Badge - ACCENT COLOR - CENTERED CONTENT */
 .level-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  justify-content: center;
+  padding: 0.5rem 1.75rem;
+  position: relative;
   background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-strong)); /* LIVING CORAL */
   color: white;
   font-size: 0.875rem;
@@ -63,11 +64,21 @@ const userName = '홍길동'
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
   align-self: flex-start;
+  text-align: center;
 }
 
+.level-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+}
 
 .level-text {
   white-space: nowrap;
+  text-align: center;
 }
 
 .card-layout {

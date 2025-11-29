@@ -12,6 +12,7 @@
         @click="handleDayClick(day)"
       >
         <span v-if="day.completed" class="check-icon"><PhCheck :size="16" weight="bold" color="white" /></span>
+        <span v-else-if="!day.isToday" class="lock-icon"><PhLockSimple :size="12" weight="bold" /></span>
         <span v-else class="day-label">{{ day.label }}</span>
       </div>
     </div>
@@ -29,7 +30,7 @@ import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
 import confetti from 'canvas-confetti'
-import { PhCheck } from '@phosphor-icons/vue'
+import { PhCheck, PhLockSimple } from '@phosphor-icons/vue'
 
 const gamificationStore = useGamificationStore()
 const { currentStreak } = storeToRefs(gamificationStore)
@@ -99,16 +100,17 @@ html[data-theme="night"] .card-title {
   transition: all 0.3s ease;
 }
 
-/* Inactive State */
+/* Inactive State - IMPROVED VISIBILITY */
 .day-circle:not(.active) {
-  border: 2px solid var(--showroom-text-secondary-day, #8D6E63);
+  border: 2.5px solid var(--showroom-text-secondary-day, #8D6E63);
   color: var(--showroom-text-secondary-day, #8D6E63);
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 html[data-theme="night"] .day-circle:not(.active) {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 0.7;
 }
 
 /* Active State - CORAL ACCENT */
@@ -142,6 +144,17 @@ html[data-theme="night"] .day-circle.today:not(.active) {
   transform: scale(1.1);
 }
 
+/* Lock Icon for Future Days */
+.lock-icon {
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-theme="night"] .lock-icon {
+  opacity: 0.6;
+}
 
 /* Streak Info */
 .streak-info {

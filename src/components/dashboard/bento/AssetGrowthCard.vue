@@ -78,8 +78,8 @@ const chartOptions = computed(() => ({
     type: 'datetime',
     labels: {
       style: {
-        fontSize: '11px',
-        colors: '#8D6E63'
+        fontSize: '12px',
+        colors: '#6D5D4F'
       },
       datetimeFormatter: {
         month: 'MM월'
@@ -96,8 +96,8 @@ const chartOptions = computed(() => ({
     labels: {
       formatter: (val) => `₩${Math.round(val)}만`,
       style: {
-        fontSize: '11px',
-        colors: '#8D6E63'
+        fontSize: '12px',
+        colors: '#6D5D4F'
       }
     }
   },

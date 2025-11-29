@@ -206,10 +206,8 @@ transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
 ### 1. CSS 변수 확인
 - [ ] `variables.css`에 glassmorphism 변수 정의 확인
-- [ ] 기존 `--neu-*` 변수 제거 또는 deprecated 표시
 
 ### 2. 컴포넌트 업데이트
-- [ ] 기존 `.neu-btn` 클래스를 `.glass-btn`으로 변경
 - [ ] `backdrop-filter` 추가
 - [ ] `box-shadow` 를 변수 참조로 교체
 

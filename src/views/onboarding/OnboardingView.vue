@@ -245,20 +245,17 @@ html[data-theme="night"] .onboarding-description {
 
 .nav-button:active:not(:disabled) {
   box-shadow: var(--nav-btn-press-shadow-day);
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
 }
 
 /* Primary Button (다음/시작하기) - Glass CTA */
 .nav-button.primary {
-  background: linear-gradient(
-    135deg,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
-  );
+  background: linear-gradient(to right, #fb923c, #f97316);
   color: #ffffff;
   box-shadow:
     var(--nav-btn-shadow-day),
-    0 10px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.18);
+    0 10px 28px rgba(251, 146, 60, 0.4);
 }
 
 .nav-button.primary:hover:not(:disabled) {

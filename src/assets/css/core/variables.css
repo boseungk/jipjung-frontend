@@ -112,7 +112,7 @@
    --nav-btn-transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
    /* Day Mode - Navbar Background */
-   --nav-bg-day: #11100f;
+   --nav-bg-day: #f0eeec;
    --nav-border-day: #E0DAD3;
    --nav-shadow-day: 0 4px 20px rgba(88, 60, 50, 0.08);
 

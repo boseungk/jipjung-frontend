@@ -59,7 +59,6 @@ onMounted(() => { ... })
 ### Tailwind 사용
 - 유틸리티 클래스 우선 사용
 - 커스텀 플러그인: `src/assets/css/plugins/`
-  - `neumorphism.js`
   - `glassmorphism.js`
 
 ### 컬러 테마

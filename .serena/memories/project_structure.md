@@ -30,7 +30,6 @@ src/
 │   ├── css/                   # Tailwind + 커스텀 CSS
 │   │   ├── archive/           # 백업/마이그레이션 파일
 │   │   ├── plugins/           # Tailwind 플러그인
-│   │   │   ├── neumorphism.js
 │   │   │   └── glassmorphism.js
 │   │   ├── clay-design-system.css
 │   │   ├── input.css          # Tailwind 입력

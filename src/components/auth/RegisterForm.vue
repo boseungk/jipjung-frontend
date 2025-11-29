@@ -332,12 +332,8 @@ html[data-theme="night"] .glass-input:-webkit-autofill:focus {
 }
 
 .glass-button.primary {
-  background: linear-gradient(
-    135deg,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
-  );
-  color: #ffffff;
+  background: linear-gradient(to right, #fb923c, #f97316);
+  color: white;
 }
 
 .glass-button:hover:not(:disabled) {
@@ -349,7 +345,8 @@ html[data-theme="night"] .glass-input:-webkit-autofill:focus {
 
 .glass-button:active:not(:disabled) {
   box-shadow: var(--nav-btn-press-shadow-day);
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
 }
 
 .glass-button:disabled {

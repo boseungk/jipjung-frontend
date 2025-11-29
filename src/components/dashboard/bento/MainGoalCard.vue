@@ -213,7 +213,7 @@ html[data-theme="night"] .muted {
   font-weight: 700;
   font-size: 1.0625rem;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   background: linear-gradient(to right, #fb923c, #f97316);
   color: white;
   box-shadow: 0 10px 20px -5px rgba(251, 146, 60, 0.4);
@@ -225,9 +225,11 @@ html[data-theme="night"] .muted {
 }
 
 .savings-button:active {
-  transform: translateY(0px);
-  box-shadow: 0 10px 20px -5px rgba(251, 146, 60, 0.4);
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
+  box-shadow: inset 0 3px 8px rgba(251, 146, 60, 0.3);
 }
+
 
 .btn-icon {
   font-size: 1.375rem;
