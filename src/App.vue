@@ -2,10 +2,10 @@
   <div id="app">
     <!-- Background Effects (Global) -->
     <BackgroundEffects />
-    
+
     <!-- Top Navigation Bar (Only show on authenticated pages) -->
     <TopNavigationBar v-if="showNavBar" />
-    
+
     <!-- Router View: DashboardView or CollectionView -->
     <div class="main-content" :class="{ 'no-nav': !showNavBar }">
       <router-view v-slot="{ Component }">
@@ -14,6 +14,9 @@
         </transition>
       </router-view>
     </div>
+
+    <!-- Global Toast Notifications -->
+    <Toast />
   </div>
 </template>
 
@@ -23,6 +26,7 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import BackgroundEffects from './components/BackgroundEffects.vue'
 import TopNavigationBar from './components/TopNavigationBar.vue'
+import Toast from './components/common/Toast.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()

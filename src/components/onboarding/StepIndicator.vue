@@ -8,13 +8,18 @@
         active: step === currentStep,
         completed: step < currentStep
       }"
+      role="progressbar"
+      :aria-valuenow="currentStep"
+      :aria-valuemin="1"
+      :aria-valuemax="totalSteps"
+      :aria-label="`Step ${step} of ${totalSteps}`"
     >
       <div class="dot-inner">
-        <PhCheck v-if="step < currentStep" :size="18" weight="bold" color="white" class="check-icon" />
+        <PhCheck v-if="step < currentStep" :size="18" weight="bold" class="check-icon" />
         <span v-else class="step-number">{{ step }}</span>
       </div>
     </div>
-    <div class="step-label">
+    <div class="step-label" aria-live="polite">
       {{ currentStep }} / {{ totalSteps }}
     </div>
   </div>
@@ -26,11 +31,13 @@ import { PhCheck } from '@phosphor-icons/vue'
 defineProps({
   currentStep: {
     type: Number,
-    required: true
+    required: true,
+    validator: (value) => value >= 1
   },
   totalSteps: {
     type: Number,
-    default: 4
+    default: 4,
+    validator: (value) => value >= 1
   }
 })
 </script>
@@ -47,7 +54,7 @@ defineProps({
 
 .step-dot {
   position: relative;
-  transition: all 0.3s ease;
+  transition: var(--onboarding-transition-bounce);
 }
 
 .dot-inner {
@@ -59,41 +66,32 @@ defineProps({
   justify-content: center;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: all 0.3s ease;
-  border: 2px solid rgba(93, 64, 55, 0.2);
-  background: rgba(255, 255, 255, 0.5);
-  color: rgba(93, 64, 55, 0.5);
+  transition: var(--onboarding-transition-bounce);
+  
+  /* Default/Inactive state - Visible ring for progress visibility */
+  background: var(--onboarding-surface);
+  color: var(--onboarding-text-secondary); /* Darker for better visibility */
+  border: 2px solid rgba(88, 60, 50, 0.15); /* Subtle brown ring */
+  box-shadow: var(--onboarding-shadow-soft);
 }
 
-html[data-theme="night"] .dot-inner {
-  border-color: rgba(245, 237, 227, 0.2);
-  background: rgba(0, 0, 0, 0.2);
-  color: rgba(245, 237, 227, 0.5);
-}
-
+/* Completed state - Coral with pressed effect */
 .step-dot.completed .dot-inner {
-  background: var(--showroom-accent-day, #D4A574);
-  border-color: var(--showroom-accent-day, #D4A574);
+  background: var(--onboarding-primary);
   color: white;
+  box-shadow: var(--onboarding-shadow-pressed);
+  transform: scale(0.95);
 }
 
-html[data-theme="night"] .step-dot.completed .dot-inner {
-  background: var(--showroom-accent-night, #D4A574);
-  border-color: var(--showroom-accent-night, #D4A574);
-}
-
+/* Active state - Floating with glow */
 .step-dot.active .dot-inner {
-  background: rgba(255, 255, 255, 1);
-  border-color: var(--showroom-accent-day, #D4A574);
-  color: var(--showroom-accent-day, #D4A574);
-  box-shadow: 0 0 0 4px rgba(212, 165, 116, 0.15);
+  background: var(--onboarding-surface);
+  color: var(--onboarding-primary);
+  border: 2px solid var(--onboarding-primary);
+  box-shadow: 
+    var(--onboarding-shadow-floating),
+    0 0 0 4px rgba(var(--onboarding-primary-rgb), 0.15);
   transform: scale(1.1);
-}
-
-html[data-theme="night"] .step-dot.active .dot-inner {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: var(--showroom-accent-night, #D4A574);
-  color: var(--showroom-accent-night, #D4A574);
 }
 
 .check-icon {
@@ -102,18 +100,45 @@ html[data-theme="night"] .step-dot.active .dot-inner {
   justify-content: center;
 }
 
+.step-number {
+  font-variant-numeric: tabular-nums;
+}
+
 .step-label {
   position: absolute;
   bottom: -1.75rem;
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--showroom-text-secondary-day, #8D6E63);
+  font-weight: 600;
+  color: var(--onboarding-text-secondary);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
-html[data-theme="night"] .step-label {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
+/* Accessibility - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .step-dot,
+  .dot-inner {
+    transition: none;
+  }
+  
+  .step-dot.active .dot-inner {
+    animation: none;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .dot-inner {
+    width: 36px;
+    height: 36px;
+    font-size: 0.8125rem;
+  }
+  
+  .step-label {
+    bottom: -1.5rem;
+    font-size: 0.8125rem;
+  }
 }
 </style>

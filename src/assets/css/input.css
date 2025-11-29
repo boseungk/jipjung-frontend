@@ -1,5 +1,6 @@
 @import '../css/core/variables.css';
 @import './components/navigation.css';
+@import './components/onboarding.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

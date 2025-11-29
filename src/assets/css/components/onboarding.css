@@ -1,0 +1,188 @@
+/**
+ * Onboarding Design Tokens - "Soft 3D & Tactile" Design Language
+ * 
+ * This design system creates a tactile, physical feel through:
+ * - Inset shadows (trenches) for recessed elements
+ * - Drop shadows (floating) for raised elements
+ * - Scale transforms for pressed states
+ * - Coral-based color palette for warmth and energy
+ */
+
+:root {
+    /* ============================================
+     Color Palette - Coral-Based Warmth
+     ============================================ */
+
+    /* Base Colors */
+    --onboarding-bg: #F9F8F6;
+    --onboarding-surface: #FFFFFF;
+
+    /* Primary - Coral */
+    --onboarding-primary: #FF7F50;
+    --onboarding-primary-rgb: 255, 127, 80;
+    --onboarding-primary-light: #FF9F80;
+    --onboarding-primary-soft: #f9eae2;
+    --onboarding-primary-hover: #FF6B3D;
+
+    /* Text Colors */
+    --onboarding-text-primary: #2C2420;
+    --onboarding-text-secondary: #8D8D8D;
+    --onboarding-text-muted: #B8B8B8;
+
+    /* Input Colors - Trench Effect */
+    --onboarding-input-bg: #f7f7f7;
+    --onboarding-input-border: #E5E0DD;
+    --onboarding-input-focus: #FFFFFF;
+
+    /* Status Colors */
+    --onboarding-error: #D32F2F;
+    --onboarding-success: #4CAF50;
+
+    /* ============================================
+     Shadows - Tactile 3D Effects
+     ============================================ */
+
+    /* Soft Shadow - Subtle elevation */
+    --onboarding-shadow-soft: 0 10px 30px -10px rgba(88, 60, 50, 0.1);
+
+    /* Inset Shadow - Trench/recessed effect */
+    --onboarding-shadow-inset: inset 0 2px 5px rgba(88, 60, 50, 0.08);
+    --onboarding-shadow-inset-deep: inset 0 3px 8px rgba(88, 60, 50, 0.12);
+
+    /* Floating Shadow - Raised elements */
+    --onboarding-shadow-floating: 0 8px 16px -4px rgba(255, 127, 80, 0.3);
+    --onboarding-shadow-floating-strong: 0 12px 24px -6px rgba(255, 127, 80, 0.4);
+
+    /* Pressed Shadow - Depressed state (밝게 조정됨) */
+    --onboarding-shadow-pressed: inset 0 2px 8px rgba(88, 60, 50, 0.06);
+
+    /* Glow Shadow - Coral glow effect */
+    --onboarding-shadow-glow: 0 12px 24px -8px rgba(255, 127, 80, 0.4);
+    --onboarding-shadow-glow-strong: 0 16px 32px -8px rgba(255, 127, 80, 0.5);
+
+    /* ============================================
+     Transitions & Animations
+     ============================================ */
+
+    /* Base Transition - Smooth easing */
+    --onboarding-transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Bounce Transition - Playful feedback */
+    --onboarding-transition-bounce: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Fast Transition - Instant feedback */
+    --onboarding-transition-fast: all 0.15s ease-out;
+
+    /* ============================================
+     Typography Tokens
+     ============================================ */
+
+    /* Font Families */
+    --onboarding-font-number: 'Poppins', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    --onboarding-font-korean: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* Eyebrow - Small label/category */
+    --onboarding-font-eyebrow-size: 0.875rem;
+    --onboarding-font-eyebrow-weight: 700;
+    --onboarding-font-eyebrow-spacing: 0.05em;
+
+    /* Title - Main headings */
+    --onboarding-font-title-size: 1.875rem;
+    --onboarding-font-title-weight: 700;
+    --onboarding-font-title-spacing: -0.02em;
+
+    /* Body - Regular text */
+    --onboarding-font-body-size: 1.0625rem;
+    --onboarding-font-body-weight: 500;
+
+    /* ============================================
+     Spacing & Layout
+     ============================================ */
+
+    --onboarding-spacing-xs: 0.5rem;
+    --onboarding-spacing-sm: 0.75rem;
+    --onboarding-spacing-md: 1rem;
+    --onboarding-spacing-lg: 1.5rem;
+    --onboarding-spacing-xl: 2rem;
+    --onboarding-spacing-2xl: 2.5rem;
+
+    /* Border Radius */
+    --onboarding-radius-sm: 8px;
+    --onboarding-radius-md: 12px;
+    --onboarding-radius-lg: 16px;
+    --onboarding-radius-full: 999px;
+}
+
+/* ============================================
+   Dark Theme Overrides
+   ============================================ */
+
+html[data-theme="night"] {
+    /* Base Colors */
+    --onboarding-bg: #1A1614;
+    --onboarding-surface: #2A2420;
+
+    /* Text Colors */
+    --onboarding-text-primary: #F5EDE3;
+    --onboarding-text-secondary: #B8B0A8;
+    --onboarding-text-muted: #8D8580;
+
+    /* Input Colors */
+    --onboarding-input-bg: #3A3430;
+    --onboarding-input-border: #4A4440;
+    --onboarding-input-focus: #4A4440;
+
+    /* Shadows - Darker with higher contrast */
+    --onboarding-shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+    --onboarding-shadow-inset: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    --onboarding-shadow-inset-deep: inset 0 3px 8px rgba(0, 0, 0, 0.4);
+    --onboarding-shadow-floating: 0 8px 16px -4px rgba(255, 127, 80, 0.4);
+    --onboarding-shadow-pressed: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Typography Utilities */
+.onboarding-eyebrow {
+    font-size: var(--onboarding-font-eyebrow-size);
+    font-weight: var(--onboarding-font-eyebrow-weight);
+    letter-spacing: var(--onboarding-font-eyebrow-spacing);
+    color: var(--onboarding-primary);
+    text-transform: uppercase;
+}
+
+.onboarding-title {
+    font-size: var(--onboarding-font-title-size);
+    font-weight: var(--onboarding-font-title-weight);
+    letter-spacing: var(--onboarding-font-title-spacing);
+    color: var(--onboarding-text-primary);
+    line-height: 1.3;
+}
+
+/* Shadow Utilities */
+.shadow-tactile-soft {
+    box-shadow: var(--onboarding-shadow-soft);
+}
+
+.shadow-tactile-floating {
+    box-shadow: var(--onboarding-shadow-floating);
+}
+
+.shadow-tactile-pressed {
+    box-shadow: var(--onboarding-shadow-pressed);
+}
+
+.shadow-tactile-glow {
+    box-shadow: var(--onboarding-shadow-glow);
+}
+
+/* Transition Utilities */
+.transition-tactile {
+    transition: var(--onboarding-transition-base);
+}
+
+.transition-bounce {
+    transition: var(--onboarding-transition-bounce);
+}

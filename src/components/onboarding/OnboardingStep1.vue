@@ -11,14 +11,23 @@
         type="number"
         placeholder="1995"
         class="year-input"
-        :min="1900"
-        :max="currentYear"
+        :class="{ invalid: errorMessage }"
+        :min="VALIDATION.BIRTH_YEAR.MIN"
+        :max="VALIDATION.BIRTH_YEAR.MAX"
+        :aria-invalid="!!errorMessage"
+        :aria-describedby="errorMessage ? 'birth-year-error' : undefined"
+        aria-label="출생연도 입력"
         @keyup.enter="handleNext"
       />
       <span class="input-suffix">년</span>
     </div>
 
-    <div v-if="errorMessage" class="error-message">
+    <div 
+      v-if="errorMessage" 
+      id="birth-year-error"
+      class="error-message"
+      role="alert"
+    >
       {{ errorMessage }}
     </div>
   </div>
@@ -26,6 +35,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { VALIDATION } from '@/constants/onboardingConstants'
 
 const props = defineProps({
   modelValue: {
@@ -36,7 +46,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'next'])
 
-const currentYear = new Date().getFullYear()
 const errorMessage = ref('')
 
 const localBirthYear = computed({
@@ -48,11 +57,13 @@ const localBirthYear = computed({
 
 watch(localBirthYear, (newValue) => {
   if (newValue) {
-    if (newValue < 1900 || newValue > currentYear) {
-      errorMessage.value = `1900년부터 ${currentYear}년 사이의 연도를 입력해주세요`
+    if (newValue < VALIDATION.BIRTH_YEAR.MIN || newValue > VALIDATION.BIRTH_YEAR.MAX) {
+      errorMessage.value = VALIDATION.BIRTH_YEAR.ERROR_MESSAGE
     } else {
       errorMessage.value = ''
     }
+  } else {
+    errorMessage.value = ''
   }
 })
 
@@ -71,29 +82,20 @@ function handleNext() {
   margin: 0 auto;
 }
 
-
-
 .step-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: var(--showroom-text-day, #3E2723);
+  font-size: var(--onboarding-font-title-size);
+  font-weight: var(--onboarding-font-title-weight);
+  letter-spacing: var(--onboarding-font-title-spacing);
+  color: var(--onboarding-text-primary);
   margin-bottom: 1rem;
-  letter-spacing: -0.02em;
-}
-
-html[data-theme="night"] .step-title {
-  color: var(--showroom-text-night, #FFFFFF);
 }
 
 .step-description {
-  font-size: 1.0625rem;
-  color: var(--showroom-text-secondary-day, #6D4C41);
+  font-size: var(--onboarding-font-body-size);
+  font-weight: var(--onboarding-font-body-weight);
+  color: var(--onboarding-text-secondary);
   margin-bottom: 2.5rem;
   line-height: 1.6;
-}
-
-html[data-theme="night"] .step-description {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
 .input-group {
@@ -107,53 +109,58 @@ html[data-theme="night"] .step-description {
 
 .year-input {
   flex: 1;
-  padding: 0.625rem 0.875rem;
+  padding: 0.75rem 1rem;
   font-size: 1.5rem;
   font-weight: 600;
   text-align: center;
-  border: 2px solid rgba(93, 64, 55, 0.1);
-  border-radius: 10px;
-  background: #EEF0F2;
-  color: var(--showroom-text-day, #5D4037);
-  transition: all 0.25s ease;
+  border: none;
+  border-radius: var(--onboarding-radius-md);
+  
+  /* Trench effect */
+  background: var(--onboarding-input-bg);
+  box-shadow: var(--onboarding-shadow-inset);
+  color: var(--onboarding-text-primary);
+  
+  transition: var(--onboarding-transition-base);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-variant-numeric: tabular-nums;
 }
 
 .year-input:focus {
   outline: none;
-  border-color: var(--brand-accent);
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.15);
+  
+  /* Floating effect on focus */
+  background: var(--onboarding-input-focus);
+  box-shadow: var(--onboarding-shadow-floating);
+  transform: translateY(-2px);
 }
 
-html[data-theme="night"] .year-input {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--showroom-text-night, #F5EDE3);
-  border-color: rgba(245, 237, 227, 0.2);
+.year-input.invalid {
+  box-shadow: 
+    var(--onboarding-shadow-inset),
+    0 0 0 2px var(--onboarding-error);
 }
 
-html[data-theme="night"] .year-input:focus {
-  border-color: var(--showroom-accent-night, #D4A574);
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+.year-input::-webkit-input-placeholder {
+  color: var(--onboarding-text-muted);
+}
+
+.year-input::placeholder {
+  color: var(--onboarding-text-muted);
 }
 
 .input-suffix {
   font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--showroom-text-secondary-day, #8D6E63);
-}
-
-html[data-theme="night"] .input-suffix {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
+  font-weight: 600;
+  color: var(--onboarding-text-secondary);
 }
 
 .error-message {
   margin-top: 1rem;
   font-size: 0.875rem;
-  color: #D32F2F;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--onboarding-error);
+  animation: shake 0.3s ease-in-out;
 }
 
 /* Remove number input arrows */
@@ -165,5 +172,29 @@ html[data-theme="night"] .input-suffix {
 
 .year-input[type=number] {
   -moz-appearance: textfield;
+}
+
+/* Error shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .step-title {
+    font-size: 1.625rem;
+  }
+  
+  .step-description {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .year-input {
+    font-size: 1.375rem;
+    padding: 0.625rem 0.875rem;
+  }
 }
 </style>

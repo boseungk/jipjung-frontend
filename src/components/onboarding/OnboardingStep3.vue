@@ -2,49 +2,79 @@
   <div class="onboarding-step">
     <h2 class="step-title">기존 대출이 있으신가요?</h2>
     <p class="step-description">
-      기존 대출의 월 상환액을 입력해주세요 (없으면 0 입력)
+      기존 대출의 월 상환액을 입력해주세요
     </p>
 
-    <div class="input-group">
-      <input
-        v-model.number="localLoan"
-        type="number"
-        placeholder="0"
-        class="loan-input"
-        min="0"
-        max="1000"
-        @keyup.enter="handleNext"
-      />
-      <span class="input-suffix">만원</span>
-    </div>
+    <!-- Card-Based Selection UI -->
+    <div class="loan-selection">
+      <!-- Recommended Amount Cards -->
+      <div class="recommended-cards">
+        <button
+          v-for="amount in VALIDATION.EXISTING_LOAN.QUICK_AMOUNTS"
+          :key="amount"
+          @click="selectQuickAmount(amount)"
+          type="button"
+          class="amount-card"
+          :class="{ selected: localLoan === amount && !isCustom }"
+        >
+          <span class="amount-value">
+            {{ amount === 0 ? '없음' : amount }}
+          </span>
+          <span class="amount-unit" v-if="amount > 0">만원</span>
+        </button>
+      </div>
 
-    <div class="loan-examples">
-      <button
-        v-for="amount in quickAmounts"
-        :key="amount"
-        @click="localLoan = amount"
-        class="quick-btn"
-        :class="{ active: localLoan === amount }"
+      <!-- Custom Input Card -->
+      <div 
+        class="custom-input-card"
+        :class="{ expanded: isCustom }"
       >
-        {{ amount === 0 ? '없음' : `${amount}만원` }}
-      </button>
+        <button
+          v-if="!isCustom"
+          @click="enableCustomInput"
+          type="button"
+          class="custom-trigger"
+        >
+          <PhPencilLine :size="20" weight="bold" />
+          <span>직접 입력하기</span>
+        </button>
+        
+        <div v-else class="custom-input-content">
+          <input
+            ref="customInput"
+            v-model.number="localLoan"
+            type="number"
+            class="custom-amount-input"
+            placeholder="금액 입력"
+            :min="VALIDATION.EXISTING_LOAN.MIN"
+            :max="VALIDATION.EXISTING_LOAN.MAX"
+            aria-label="기존 대출 금액 직접 입력"
+            @blur="validateCustomInput"
+            @keyup.enter="handleNext"
+          />
+          <span class="input-suffix">만원</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import { PhPencilLine } from '@phosphor-icons/vue'
+import { VALIDATION } from '@/constants/onboardingConstants'
 
 const props = defineProps({
   modelValue: {
     type: Number,
-    default: 0
+    default: VALIDATION.EXISTING_LOAN.DEFAULT
   }
 })
 
 const emit = defineEmits(['update:modelValue', 'next'])
 
-const quickAmounts = [0, 30, 50, 100, 150]
+const isCustom = ref(false)
+const customInput = ref(null)
 
 const localLoan = computed({
   get: () => props.modelValue,
@@ -52,6 +82,28 @@ const localLoan = computed({
     emit('update:modelValue', value || 0)
   }
 })
+
+function selectQuickAmount(amount) {
+  localLoan.value = amount
+  isCustom.value = false
+}
+
+function enableCustomInput() {
+  isCustom.value = true
+  nextTick(() => {
+    customInput.value?.focus()
+  })
+}
+
+function validateCustomInput() {
+  // If input is invalid, don't close
+  if (localLoan.value < VALIDATION.EXISTING_LOAN.MIN) {
+    localLoan.value = VALIDATION.EXISTING_LOAN.MIN
+  }
+  if (localLoan.value > VALIDATION.EXISTING_LOAN.MAX) {
+    localLoan.value = VALIDATION.EXISTING_LOAN.MAX
+  }
+}
 
 function handleNext() {
   emit('next')
@@ -66,140 +118,232 @@ function handleNext() {
   margin: 0 auto;
 }
 
-
-
 .step-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: var(--showroom-text-day, #3E2723);
+  font-size: var(--onboarding-font-title-size);
+  font-weight: var(--onboarding-font-title-weight);
+  letter-spacing: var(--onboarding-font-title-spacing);
+  color: var(--onboarding-text-primary);
   margin-bottom: 1rem;
-  letter-spacing: -0.02em;
-}
-
-html[data-theme="night"] .step-title {
-  color: var(--showroom-text-night, #FFFFFF);
 }
 
 .step-description {
-  font-size: 1.0625rem;
-  color: var(--showroom-text-secondary-day, #6D4C41);
+  font-size: var(--onboarding-font-body-size);
+  font-weight: var(--onboarding-font-body-weight);
+  color: var(--onboarding-text-secondary);
   margin-bottom: 2.5rem;
   line-height: 1.6;
 }
 
-html[data-theme="night"] .step-description {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
+.loan-selection {
+  width: 100%;
 }
 
-.input-group {
+/* Recommended Amount Cards */
+.recommended-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.amount-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  min-height: 90px;
+  border: none;
+  border-radius: var(--onboarding-radius-md);
+  
+  /* Card elevation */
+  background: var(--onboarding-surface);
+  box-shadow: var(--onboarding-shadow-soft);
+  
+  cursor: pointer;
+  transition: var(--onboarding-transition-bounce);
+}
+
+.amount-card:hover:not(.selected) {
+  transform: translateY(-2px);
+  box-shadow: var(--onboarding-shadow-floating);
+}
+
+.amount-card.selected {
+  background: var(--onboarding-primary);
+  color: white;
+  box-shadow: var(--onboarding-shadow-pressed);
+  transform: scale(0.98);
+}
+
+.amount-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: 'Poppins', 'Montserrat', -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  margin-bottom: 0.25rem;
+}
+
+.amount-card.selected .amount-value {
+  color: white;
+}
+
+.amount-unit {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--onboarding-text-secondary);
+}
+
+.amount-card.selected .amount-unit {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Custom Input Card */
+.custom-input-card {
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--onboarding-radius-md);
+  background: var(--onboarding-surface);
+  box-shadow: var(--onboarding-shadow-soft);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-input-card:hover:not(.expanded) {
+  transform: translateY(-1px);
+  box-shadow: var(--onboarding-shadow-floating);
+}
+
+.custom-input-card.expanded {
+  background: var(--onboarding-primary-soft);
+  box-shadow: var(--onboarding-shadow-pressed);
+  transform: scale(0.98);
+}
+
+.custom-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin: 0 auto 2rem;
-  max-width: 300px;
-}
-
-.loan-input {
-  flex: 1;
-  padding: 0.625rem 0.875rem;
-  font-size: 1.5rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--onboarding-text-secondary);
+  font-size: 1rem;
   font-weight: 600;
+  cursor: pointer;
+  transition: var(--onboarding-transition-base);
+}
+
+.custom-trigger:hover {
+  color: var(--onboarding-primary);
+}
+
+.custom-input-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.custom-amount-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1.75rem;
+  font-weight: 700;
   text-align: center;
-  border: 2px solid rgba(93, 64, 55, 0.1);
-  border-radius: 10px;
-  background: #EEF0F2;
-  color: var(--showroom-text-day, #5D4037);
-  transition: all 0.25s ease;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  border: none;
+  border-radius: var(--onboarding-radius-md);
+  
+  /* Trench style */
+  background: var(--onboarding-surface);
+  box-shadow: var(--onboarding-shadow-inset);
+  color: var(--onboarding-primary);
+  
+  font-family: 'Poppins', 'Montserrat', -apple-system, sans-serif;
   font-variant-numeric: tabular-nums;
+  transition: var(--onboarding-transition-base);
 }
 
-.loan-input:focus {
+.custom-amount-input:focus {
   outline: none;
-  border-color: var(--brand-accent);
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.15);
+  box-shadow: var(--onboarding-shadow-floating);
+  transform: translateY(-1px);
 }
 
-html[data-theme="night"] .loan-input {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--showroom-text-night, #F5EDE3);
-  border-color: rgba(245, 237, 227, 0.2);
+.custom-amount-input::-webkit-input-placeholder {
+  color: var(--onboarding-text-muted);
+  font-size: 1rem;
 }
 
-html[data-theme="night"] .loan-input:focus {
-  border-color: var(--showroom-accent-night, #D4A574);
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+.custom-amount-input::placeholder {
+  color: var(--onboarding-text-muted);
+  font-size: 1rem;
 }
 
 .input-suffix {
   font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--showroom-text-secondary-day, #8D6E63);
-}
-
-html[data-theme="night"] .input-suffix {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
-}
-
-.loan-examples {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.quick-btn {
-  padding: 0.625rem 1.25rem;
-  border: 2px solid rgba(93, 64, 55, 0.15);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--showroom-text-day, #5D4037);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quick-btn:hover {
-  border-color: var(--showroom-accent-day, #D4A574);
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.quick-btn.active {
-  background: var(--showroom-accent-day, #D4A574);
-  border-color: var(--showroom-accent-day, #D4A574);
-  color: white;
-}
-
-html[data-theme="night"] .quick-btn {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--showroom-text-night, #F5EDE3);
-  border-color: rgba(245, 237, 227, 0.2);
-}
-
-html[data-theme="night"] .quick-btn:hover {
-  border-color: var(--showroom-accent-night, #D4A574);
-  background: rgba(0, 0, 0, 0.3);
-}
-
-html[data-theme="night"] .quick-btn.active {
-  background: var(--showroom-accent-night, #D4A574);
-  border-color: var(--showroom-accent-night, #D4A574);
+  font-weight: 600;
+  color: var(--onboarding-primary);
 }
 
 /* Remove number input arrows */
-.loan-input::-webkit-inner-spin-button,
-.loan-input::-webkit-outer-spin-button {
+.custom-amount-input::-webkit-inner-spin-button,
+.custom-amount-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.loan-input[type=number] {
+.custom-amount-input[type=number] {
   -moz-appearance: textfield;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .step-title {
+    font-size: 1.625rem;
+  }
+  
+  .step-description {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .recommended-cards {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .amount-card {
+    padding: 1.25rem 0.75rem;
+    min-height: 80px;
+  }
+  
+  .amount-value {
+    font-size: 1.25rem;
+  }
+  
+  .custom-input-card {
+    padding: 1rem 1.25rem;
+  }
+  
+  .custom-amount-input {
+    font-size: 1.5rem;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .amount-card,
+  .custom-input-card,
+  .custom-trigger {
+    transition: none;
+  }
 }
 </style>
