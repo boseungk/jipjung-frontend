@@ -7,7 +7,7 @@
         v-model="formData.email"
         type="email"
         placeholder="example@email.com"
-        class="neomorphic-input"
+        class="glass-input"
         :class="{ 'error': validation.hasError('email') }"
         @blur="() => validation.validateField('email', formData.email, validation.validateEmail)"
         @input="() => validation.clearFieldError('email')"
@@ -25,7 +25,7 @@
         v-model="formData.password"
         type="password"
         placeholder="••••••••"
-        class="neomorphic-input"
+        class="glass-input"
         :class="{ 'error': validation.hasError('password') }"
         @blur="() => validation.validateField('password', formData.password, validation.validatePassword)"
         @input="() => validation.clearFieldError('password')"
@@ -49,7 +49,7 @@
 
     <button
       type="submit"
-      class="neomorphic-button primary"
+      class="glass-button primary"
       :disabled="isLoading"
     >
       <span v-if="!isLoading">로그인</span>
@@ -126,76 +126,91 @@ html[data-theme="night"] .form-group label {
   color: var(--showroom-text-night, #F5EDE3);
 }
 
-/* Clean Box Input Design */
-.neomorphic-input {
+/* Jelly Glass Input */
+.glass-input {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: 0.75rem 1rem;
   font-size: 1rem;
-  border: 2px solid rgba(93, 64, 55, 0.1);
-  border-radius: 10px;
-  background: #EEF0F2;
+  border-radius: 14px;
+  border: 1px solid var(--nav-btn-border-day, rgba(0, 0, 0, 0.06));
+  background: var(--nav-btn-bg-day, rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
   color: var(--showroom-text-day, #5D4037);
-  transition: all 0.25s ease;
+  box-shadow: var(--nav-btn-shadow-day);
+  transition: var(--nav-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
   line-height: 1.5;
 }
 
-.neomorphic-input::placeholder {
-  color: rgba(93, 64, 55, 0.5);
-  font-size: 0.875rem;
+.glass-input::placeholder {
+  color: rgba(93, 64, 55, 0.6);
+  font-size: 0.9375rem;
 }
 
-.neomorphic-input:focus {
+.glass-input:hover {
+  box-shadow: var(--nav-btn-shadow-day-hover);
+  transform: translateY(-1px) scale(1.01);
+}
+
+.glass-input:focus {
   outline: none;
   border-color: var(--brand-accent);
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 0 4px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12),
+    var(--nav-btn-shadow-day-hover);
+  transform: translateY(-1px) scale(1.015);
 }
 
-.neomorphic-input.error {
+.glass-input.error {
   border-color: #D32F2F;
-  background: #FEF2F2;
+  background: rgba(254, 242, 242, 0.9);
+  box-shadow: 0 6px 14px rgba(211, 47, 47, 0.12);
 }
 
-.neomorphic-input.error:focus {
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.15);
+.glass-input.error:focus {
+  box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.15);
 }
 
-html[data-theme="night"] .neomorphic-input {
-  background: rgba(0, 0, 0, 0.2);
+html[data-theme="night"] .glass-input {
+  background: var(--nav-btn-bg-night, rgba(255, 255, 255, 0.08));
+  border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
   color: var(--showroom-text-night, #F5EDE3);
-  border-color: rgba(245, 237, 227, 0.2);
+  box-shadow: var(--nav-btn-shadow-night);
 }
 
-html[data-theme="night"] .neomorphic-input::placeholder {
-  color: rgba(245, 237, 227, 0.5);
+html[data-theme="night"] .glass-input::placeholder {
+  color: rgba(245, 237, 227, 0.65);
 }
 
-html[data-theme="night"] .neomorphic-input:focus {
+html[data-theme="night"] .glass-input:focus {
   border-color: var(--showroom-accent-night, #D4A574);
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 4px rgba(212, 165, 116, 0.14),
+    var(--nav-btn-shadow-night-hover, 0 12px 40px rgba(0, 0, 0, 0.5));
 }
 
-html[data-theme="night"] .neomorphic-input.error {
+html[data-theme="night"] .glass-input.error {
   border-color: #D32F2F;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Autofill 스타일 */
-.neomorphic-input:-webkit-autofill,
-.neomorphic-input:-webkit-autofill:hover,
-.neomorphic-input:-webkit-autofill:focus {
+.glass-input:-webkit-autofill,
+.glass-input:-webkit-autofill:hover,
+.glass-input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--showroom-text-day, #5D4037);
-  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.7) inset;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.85) inset;
   transition: background-color 5000s ease-in-out 0s;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
-html[data-theme="night"] .neomorphic-input:-webkit-autofill,
-html[data-theme="night"] .neomorphic-input:-webkit-autofill:hover,
-html[data-theme="night"] .neomorphic-input:-webkit-autofill:focus {
+html[data-theme="night"] .glass-input:-webkit-autofill,
+html[data-theme="night"] .glass-input:-webkit-autofill:hover,
+html[data-theme="night"] .glass-input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--showroom-text-night, #F5EDE3);
-  -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.2) inset;
+  -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3) inset;
 }
 
 /* Form Options */
@@ -247,46 +262,66 @@ html[data-theme="night"] .checkbox-label {
   font-weight: 500;
 }
 
-.neomorphic-button {
+.glass-button {
   width: 100%;
-  padding: 0.75rem 2rem;
+  padding: 0.85rem 2rem;
   font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.neomorphic-button.primary {
-  background: var(--brand-accent);
-  color: white;
-  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
   font-weight: 700;
+  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
+  border-radius: 16px;
+  cursor: pointer;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.16) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.08) 100%
+  );
+  color: var(--showroom-text-day, #5D4037);
+  box-shadow:
+    var(--nav-btn-shadow-day),
+    0 10px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.18);
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  transition: var(--nav-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
-.neomorphic-button.primary:hover:not(:disabled) {
-  background: var(--brand-accent-hover);
-  box-shadow: 0 6px 16px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
-  transform: translateY(-2px);
+.glass-button.primary {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
+  );
+  color: #ffffff;
 }
 
-.neomorphic-button.primary:active:not(:disabled) {
-  background: var(--brand-accent-press);
-  box-shadow: 0 2px 8px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
-  transform: translateY(0);
+.glass-button:hover:not(:disabled) {
+  box-shadow:
+    var(--nav-btn-shadow-day-hover),
+    0 14px 32px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.24);
+  transform: translateY(-2px) scale(1.02);
 }
 
-.neomorphic-button:disabled {
-  opacity: 0.6;
+.glass-button:active:not(:disabled) {
+  box-shadow: var(--nav-btn-press-shadow-day);
+  transform: translateY(1px) scale(0.98);
+}
+
+.glass-button:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
-html[data-theme="night"] .neomorphic-button.primary {
-  background: var(--showroom-accent-night, #D4A574);
-  box-shadow: 
-    4px 4px 8px rgba(0, 0, 0, 0.3),
-    -4px -4px 8px rgba(255, 255, 255, 0.05);
+html[data-theme="night"] .glass-button.primary {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.16) 100%
+  );
+  border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
+  box-shadow:
+    var(--nav-btn-shadow-night),
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    0 0 36px var(--glass-glow-night, rgba(212, 165, 116, 0.5));
+  color: #ffffff;
 }
 
 /* Loading Spinner */

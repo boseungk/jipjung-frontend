@@ -33,14 +33,6 @@ module.exports = {
         display: ['Fredoka', 'sans-serif'],
       },
       boxShadow: {
-        // Neumorphism shadows (Day mode)
-        'neu-sm': '6px 6px 12px var(--neu-shadow-dark-day), -6px -6px 12px var(--neu-shadow-light-day)',
-        'neu': '8px 8px 16px var(--neu-shadow-dark-day), -8px -8px 16px var(--neu-shadow-light-day)',
-        'neu-lg': '10px 10px 20px var(--neu-shadow-dark-day), -10px -10px 20px var(--neu-shadow-light-day)',
-        'neu-xl': '12px 12px 24px var(--neu-shadow-dark-day), -12px -12px 24px var(--neu-shadow-light-day)',
-        'neu-inset': 'inset 6px 6px 12px var(--neu-shadow-dark-day), inset -6px -6px 12px var(--neu-shadow-light-day)',
-        'neu-inset-deep': 'inset 8px 8px 16px rgba(0, 0, 0, 0.25), inset -8px -8px 16px rgba(255, 255, 255, 0.2)',
-
         // Glassmorphism shadows (Night mode)
         'glass': '0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2)',
         'glass-lg': '0 12px 28px rgba(0, 0, 0, 0.4), 0 6px 14px rgba(0, 0, 0, 0.3)',
@@ -135,7 +127,6 @@ module.exports = {
     },
   },
   plugins: [
-    require('./src/assets/css/plugins/neumorphism'),
     require('./src/assets/css/plugins/glassmorphism'),
   ],
 }

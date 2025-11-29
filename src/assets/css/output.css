@@ -573,11 +573,6 @@ video {
   --showroom-accent-night: #D4A574;
   --showroom-text-night: #F5EDE3;
   --showroom-glow-night: rgba(212, 165, 116, 0.4);
-  /* Neumorphism Specific */
-  --neu-shadow-light-day: #FFFFFF;
-  --neu-shadow-dark-day: #C8BDB2;
-  --neu-shadow-light-night: #5a5550;
-  --neu-shadow-dark-night: #1a1510;
   /* Glassmorphism Specific */
   --glass-bg-day: rgba(255, 255, 255, 0.75);
   --glass-border-day: rgba(255, 255, 255, 0.4);
@@ -611,10 +606,6 @@ video {
   --showroom-accent-night: #9CA3AF;
   --showroom-text-night: #F3F4F6;
   --showroom-glow-night: rgba(156, 163, 175, 0.4);
-  --neu-shadow-light-day: #FFFFFF;
-  --neu-shadow-dark-day: #C6CAD1;
-  --neu-shadow-light-night: #5a6068;
-  --neu-shadow-dark-night: #1d2228;
   --glass-bg-day: rgba(245, 246, 248, 0.75);
   --glass-border-day: rgba(255, 255, 255, 0.5);
   --glass-bg-night: rgba(45, 50, 56, 0.75);

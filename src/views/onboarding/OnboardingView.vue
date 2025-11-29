@@ -228,30 +228,47 @@ html[data-theme="night"] .onboarding-description {
   padding: 0.75rem 2.5rem;
   font-size: 1rem;
   font-weight: 600;
-  border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
+  background: var(--nav-btn-bg-day, rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  box-shadow: var(--nav-btn-shadow-day);
+  transition: var(--nav-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
-/* Primary Button (다음/시작하기) - Neumorphic */
+.nav-button:hover:not(:disabled) {
+  box-shadow: var(--nav-btn-shadow-day-hover);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.nav-button:active:not(:disabled) {
+  box-shadow: var(--nav-btn-press-shadow-day);
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Primary Button (다음/시작하기) - Glass CTA */
 .nav-button.primary {
-  background: var(--brand-accent);
-  color: white;
-  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
-  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
+  );
+  color: #ffffff;
+  box-shadow:
+    var(--nav-btn-shadow-day),
+    0 10px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.18);
 }
 
 .nav-button.primary:hover:not(:disabled) {
-  background: var(--brand-accent-hover);
-  box-shadow: 0 6px 16px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
-  transform: translateY(-2px);
+  box-shadow:
+    var(--nav-btn-shadow-day-hover),
+    0 14px 32px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.24);
 }
 
 .nav-button.primary:active:not(:disabled) {
-  background: var(--brand-accent-press);
-  box-shadow: 0 2px 8px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
-  transform: translateY(0);
+  box-shadow: var(--nav-btn-press-shadow-day);
 }
 
 .nav-button.primary:disabled {
@@ -260,44 +277,43 @@ html[data-theme="night"] .onboarding-description {
 }
 
 html[data-theme="night"] .nav-button.primary {
-  background: var(--showroom-accent-night, #D4A574);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.16) 100%
+  );
+  border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
   box-shadow:
-    4px 4px 8px rgba(0, 0, 0, 0.3),
-    -4px -4px 8px rgba(255, 255, 255, 0.05);
+    var(--nav-btn-shadow-night),
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    0 0 36px var(--glass-glow-night, rgba(212, 165, 116, 0.5));
 }
 
-/* Secondary Button (이전) - Solid Beige Style */
+/* Secondary Button (이전) - Glass Neutral */
 .nav-button.secondary {
-  background: #E8DFD5;
+  background: var(--glass-bg-day, rgba(255, 255, 255, 0.85));
   color: var(--showroom-text-day, #5D4037);
-  border: 1px solid rgba(93, 64, 55, 0.15);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-color: var(--glass-border-day, rgba(255, 255, 255, 0.4));
 }
 
 .nav-button.secondary:hover {
-  background: #DDD4CA;
-  border-color: rgba(93, 64, 55, 0.25);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  border-color: var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
 }
 
 .nav-button.secondary:active {
-  background: #D2C9BF;
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--nav-btn-press-shadow-day);
 }
 
 html[data-theme="night"] .nav-button.secondary {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--glass-bg-night, rgba(255, 255, 255, 0.08));
   color: var(--showroom-text-night, #F5EDE3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
+  box-shadow: var(--nav-btn-shadow-night);
 }
 
 html[data-theme="night"] .nav-button.secondary:hover {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Slide Fade Transition */

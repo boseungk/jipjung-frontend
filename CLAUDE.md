@@ -22,7 +22,7 @@ npm preview          # Preview production build
 **Stack**: Vue 3.4 (Composition API) + Vite 5 + Pinia 2.1 + Vue Router 4 + Tailwind CSS 3.4
 
 **Key Systems**:
-- **Design**: 3-way hybrid (Neumorphism for Day/buttons, Glassmorphism for Night/containers, Minimalism for text)
+- **Design**: Glass/jelly CTAs + Glass containers + Minimal text
 - **State**: 5 Pinia stores (auth, user, dreamHome, dsr, gamification) using setup pattern
 - **Auth**: JWT with auto-refresh interceptor in `src/api/client.js`
 - **Routing**: Meta-based guards (`requiresAuth`, `public`, `hideNavbar`)
@@ -225,11 +225,11 @@ export function formatDate(date, format = 'short') {
 
 ## Design System Rules
 
-### Neumorphism (Day Mode)
-- Buttons/Cards: `shadow-neu`, `shadow-neu-inset` for pressed state
-- Always dual shadows (light + dark)
+### Glass/Jelly CTAs (Day & Night)
+- Buttons/Cards: nav glass tokens (`--nav-btn-blur-*`, `--nav-btn-shadow-*`) + brand accent gradient
+- Hover: lift with `--nav-btn-shadow-*-hover`; Active: cushioned press `--nav-btn-press-shadow-*`
 
-### Glassmorphism (Night Mode)
+### Glassmorphism Containers
 - Containers: `backdrop-blur-glass` + `bg-opacity-10` + `border border-white/20`
 - Shadows: `shadow-glass`, `shadow-glass-lg`
 

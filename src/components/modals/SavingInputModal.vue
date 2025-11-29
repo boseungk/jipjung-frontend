@@ -288,14 +288,14 @@ html[data-theme="night"] .input-suffix {
   color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
-/* Inputs - Neumorphism Inset */
+/* Inputs - Glass Cushioned */
 .form-input,
 .form-select,
 .form-textarea {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: none;
   border-radius: 12px;
+  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
   font-size: 1rem;
   font-family: 'Noto Sans KR', sans-serif;
   transition: all 0.3s ease;
@@ -304,36 +304,41 @@ html[data-theme="night"] .input-suffix {
 html[data-theme="day"] .form-input,
 html[data-theme="day"] .form-select,
 html[data-theme="day"] .form-textarea {
-  background: var(--showroom-card-bg-day, #F5EDE3);
+  background: var(--nav-btn-bg-day, rgba(255, 255, 255, 0.85));
   color: var(--showroom-text-day, #5D4037);
-  box-shadow:
-    inset 3px 3px 6px var(--showroom-shadow-dark-day, #D4C8BD),
-    inset -3px -3px 6px var(--showroom-shadow-light-day, #FFFFFF);
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  box-shadow: var(--nav-btn-shadow-day);
 }
 
 html[data-theme="day"] .form-input:focus,
 html[data-theme="day"] .form-select:focus,
 html[data-theme="day"] .form-textarea:focus {
-  outline: 2px solid var(--showroom-accent-day, #D4A574);
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--brand-accent);
+  box-shadow:
+    0 0 0 4px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.14),
+    var(--nav-btn-shadow-day-hover);
 }
 
 html[data-theme="night"] .form-input,
 html[data-theme="night"] .form-select,
 html[data-theme="night"] .form-textarea {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--nav-btn-bg-night, rgba(255, 255, 255, 0.08));
   color: var(--showroom-text-night, #F5EDE3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
+  box-shadow: var(--nav-btn-shadow-night);
+  backdrop-filter: blur(var(--nav-btn-blur-night, 16px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-night, 16px));
 }
 
 html[data-theme="night"] .form-input:focus,
 html[data-theme="night"] .form-select:focus,
 html[data-theme="night"] .form-textarea:focus {
   border-color: var(--showroom-accent-night, #D4A574);
-  box-shadow: 
-    inset 0 2px 8px rgba(0, 0, 0, 0.3),
-    0 0 0 3px rgba(212, 165, 116, 0.2);
+  box-shadow:
+    0 0 0 4px rgba(212, 165, 116, 0.16),
+    var(--nav-btn-shadow-night-hover, 0 12px 40px rgba(0, 0, 0, 0.5));
 }
 
 .form-input::placeholder,
@@ -357,14 +362,14 @@ html[data-theme="night"] .form-textarea::placeholder {
   cursor: pointer;
 }
 
-/* Submit Button - Neumorphism Raised */
+/* Submit Button - Glass CTA */
 .submit-button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  border: none;
+  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
   border-radius: 16px;
   font-size: 1.0625rem;
   font-weight: 600;
@@ -374,25 +379,29 @@ html[data-theme="night"] .form-textarea::placeholder {
 }
 
 html[data-theme="day"] .submit-button {
-  background: var(--showroom-accent-day, #D4A574);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
+  );
   color: white;
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
   box-shadow:
-    6px 6px 16px var(--showroom-shadow-dark-day, #D4C8BD),
-    -3px -3px 10px var(--showroom-shadow-light-day, #FFFFFF);
+    var(--nav-btn-shadow-day),
+    0 12px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
 }
 
 html[data-theme="day"] .submit-button:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow:
-    8px 8px 20px var(--showroom-shadow-dark-day, #D4C8BD),
-    -4px -4px 12px var(--showroom-shadow-light-day, #FFFFFF);
+    var(--nav-btn-shadow-day-hover),
+    0 14px 36px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26);
 }
 
 html[data-theme="day"] .submit-button:active {
   transform: translateY(2px) scale(0.98);
-  box-shadow:
-    inset 4px 4px 12px rgba(0, 0, 0, 0.2),
-    inset -2px -2px 8px rgba(255, 255, 255, 0.3);
+  box-shadow: var(--nav-btn-press-shadow-day);
 }
 
 html[data-theme="night"] .submit-button {

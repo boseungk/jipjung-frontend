@@ -109,8 +109,8 @@ jipjung-frontend/
 - ⏳ 저축 통계 차트 (placeholder - Chart.js 설치 후 구현)
 
 ### 디자인 시스템
-- ✅ Neumorphism (Day 모드)
-- ✅ Glassmorphism (Night 모드)
+- ✅ Glass/Jelly CTAs (Day & Night)
+- ✅ Glassmorphism (컨테이너)
 - ✅ 4가지 컬러 테마
 - ✅ 완벽한 반응형 레이아웃
 
@@ -213,7 +213,7 @@ jipjung-frontend/
 ## ✨ 주요 기능
 
 ### 🎨 디자인 시스템
-- **Neumorphism** (Day 모드): 부드러운 입체 효과
+- **Glass/Jelly CTA** (Day/Night): 반투명 탄성 있는 버튼/카드
 - **Glassmorphism** (Night 모드): 반투명 유리 효과
 - **2가지 컬러 테마**:
   - 🏠 Warm Beige (따뜻한 베이지)

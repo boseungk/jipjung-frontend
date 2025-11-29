@@ -2,7 +2,7 @@
 
 ## 📖 개요
 
-전체 앱에서 사용할 통일된 버튼 스타일 시스템입니다. 기존 **Neumorphism** 디자인을 **Glassmorphism**으로 대체하여, Day/Night 모드 모두에서 일관된 디자인 언어를 제공합니다.
+전체 앱에서 사용할 통일된 버튼 스타일 시스템입니다. 기존 입체(레거시) 디자인을 **Glassmorphism**으로 대체하여, Day/Night 모드 모두에서 일관된 디자인 언어를 제공합니다.
 
 ---
 
@@ -202,7 +202,7 @@ transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
 ---
 
-## ✅ 체크리스트 (기존 Neumorphism 교체 시)
+## ✅ 체크리스트 (기존 입체 스타일 교체 시)
 
 ### 1. CSS 변수 확인
 - [ ] `variables.css`에 glassmorphism 변수 정의 확인
@@ -265,9 +265,9 @@ backdrop-filter: blur(var(--nav-btn-blur-day));
 
 ---
 
-## 🎯 마이그레이션 가이드 (Neumorphism → Glassmorphism)
+## 🎯 마이그레이션 가이드 (레거시 입체 → Glassmorphism)
 
-### Before (Neumorphism)
+### Before (레거시 입체 스타일)
 ```css
 .neu-btn {
   background: var(--showroom-bg-day);

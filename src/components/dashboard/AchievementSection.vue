@@ -318,43 +318,51 @@ html[data-theme="night"] .dday-text {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Day Mode Buttons - Enhanced Neumorphism */
+/* Day Mode Buttons - Glass CTA */
 html[data-theme="day"] .cta-primary {
-  background: var(--showroom-accent-day, #d4a574);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
+    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
+  );
   color: white;
-  box-shadow: 6px 6px 16px var(--showroom-shadow-dark-day),
-    -3px -3px 10px var(--showroom-shadow-light-day);
+  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  box-shadow:
+    var(--nav-btn-shadow-day),
+    0 12px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
 }
 
 html[data-theme="day"] .cta-primary:hover {
   transform: translateY(-4px);
-  box-shadow: 8px 8px 20px var(--showroom-shadow-dark-day),
-    -4px -4px 12px var(--showroom-shadow-light-day);
+  box-shadow:
+    var(--nav-btn-shadow-day-hover),
+    0 16px 36px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26);
 }
 
 html[data-theme="day"] .cta-primary:active {
   transform: translateY(2px) scale(0.98);
-  box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.2),
-    inset -2px -2px 8px rgba(255, 255, 255, 0.3);
+  box-shadow: var(--nav-btn-press-shadow-day);
 }
 
 html[data-theme="day"] .cta-secondary {
-  background: var(--showroom-card-bg-day);
+  background: var(--glass-bg-day, rgba(255, 255, 255, 0.85));
   color: var(--showroom-text-day);
-  box-shadow: 5px 5px 10px var(--showroom-shadow-dark-day),
-    -5px -5px 10px var(--showroom-shadow-light-day);
+  border: 1px solid var(--glass-border-day, rgba(255, 255, 255, 0.4));
+  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
+  box-shadow: var(--nav-btn-shadow-day);
 }
 
 html[data-theme="day"] .cta-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 7px 7px 14px var(--showroom-shadow-dark-day),
-    -7px -7px 14px var(--showroom-shadow-light-day);
+  box-shadow: var(--nav-btn-shadow-day-hover);
 }
 
 html[data-theme="day"] .cta-secondary:active {
   transform: translateY(2px) scale(0.98);
-  box-shadow: inset 3px 3px 8px var(--showroom-shadow-dark-day),
-    inset -3px -3px 8px var(--showroom-shadow-light-day);
+  box-shadow: var(--nav-btn-press-shadow-day);
 }
 
 /* Night Mode Buttons - Enhanced Glassmorphism with Tactile Feedback */
