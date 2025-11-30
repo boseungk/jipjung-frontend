@@ -21,7 +21,9 @@
         >
           <span class="color-dot" :style="{ background: theme.color }"></span>
           <span class="color-label">{{ theme.label }}</span>
-          <PhCheck v-if="currentColorTheme === theme.value" :size="16" weight="bold" class="check-icon" />
+          <span class="check-slot">
+            <PhCheck v-if="currentColorTheme === theme.value" :size="16" weight="bold" class="check-icon" />
+          </span>
         </button>
       </DropdownMenu>
     </div>
@@ -117,6 +119,14 @@ defineExpose({ colorMenuEl: colorMenuRef })
 
 .color-label {
   flex: 1;
+}
+
+.check-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
 }
 
 .check-icon {
