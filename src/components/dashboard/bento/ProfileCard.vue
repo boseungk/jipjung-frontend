@@ -1,91 +1,71 @@
 <template>
   <div class="bento-card profile-card">
-    <!-- Level Badge - MOVED FROM HERO -->
-    <div class="level-badge">
-      <span class="level-icon"><AppIcon name="star" :size="16" :active="true" :is-major-cta="true" /></span>
-      <span class="level-text">Lv.{{ currentLevel }} {{ levelTitle }}</span>
-    </div>
-    
     <div class="card-layout">
       <!-- Avatar -->
       <div class="avatar-section">
-        <div class="avatar-circle">
-          <span class="avatar-emoji"><AppIcon name="user" :size="32" /></span>
+        <div class="avatar-circle" :aria-label="`${userName} 아바타`">
+          <span v-if="userInitial" class="avatar-initial">{{ userInitial }}</span>
+          <AppIcon v-else name="user" :size="28" />
         </div>
       </div>
       
       <!-- User Info -->
       <div class="user-info">
-        <div class="username">{{ userName }} 님</div>
-        <div class="exp-info">{{ experiencePoints }} / {{ nextLevelExp }} XP</div>
+        <div class="user-row">
+          <div class="username">{{ userName }} 님</div>
+          <span class="level-chip">
+            <AppIcon name="star" :size="14" :active="true" :is-major-cta="true" class="level-icon" aria-hidden="true" />
+            Lv.{{ currentLevel }} · {{ levelTitle }}
+          </span>
+        </div>
+        <div class="exp-row">
+          <div class="exp-info">{{ experiencePoints }} / {{ nextLevelExp }} XP</div>
+          <div class="exp-remaining">다음 레벨까지 {{ remainingExp }} XP</div>
+        </div>
       </div>
     </div>
     
     <!-- XP Bar -->
-    <div class="xp-bar-container">
+    <div class="xp-bar-container" role="progressbar" :aria-valuenow="Number(expProgress)" aria-valuemin="0" aria-valuemax="100">
       <div class="xp-bar" :style="{ width: expProgress + '%' }">
         <span class="xp-text">{{ expProgress }}%</span>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
 import { useAuthStore } from '../../../stores/authStore'
 
 const gamificationStore = useGamificationStore()
-const { currentLevel, levelTitle, expProgress, experiencePoints, nextLevelExp } = storeToRefs(gamificationStore)
+const { currentLevel, levelTitle, expProgress, experiencePoints, nextLevelExp, remainingExp } = storeToRefs(gamificationStore)
 
 const authStore = useAuthStore()
 const { userName } = storeToRefs(authStore)
+
+const userInitial = computed(() => {
+  const name = (userName.value || '').trim()
+  return name ? name[0] : ''
+})
 </script>
 
 <style scoped>
 .profile-card {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem; /* Increased gap slightly */
+  gap: 1.2rem;
   grid-area: profile;
-  padding: 1.75rem; /* Increased padding for airy feel */
-}
-
-/* Level Badge - ACCENT COLOR - CENTERED CONTENT */
-.level-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.75rem;
-  position: relative;
-  background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent-strong)); /* LIVING CORAL */
-  color: white;
-  font-size: 0.875rem;
-  font-weight: 700;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3);
-  align-self: flex-start;
-  text-align: center;
-}
-
-.level-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-}
-
-.level-text {
-  white-space: nowrap;
-  text-align: center;
+  padding: 1.75rem 1.75rem 1.5rem;
 }
 
 .card-layout {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 /* Avatar */
@@ -94,87 +74,128 @@ const { userName } = storeToRefs(authStore)
 }
 
 .avatar-circle {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 107, 61, 0.12), rgba(255, 154, 117, 0.08));
+  border: 1px solid var(--border-soft, #e5e7eb);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  filter: drop-shadow(0 2px 8px rgba(255, 127, 80, 0.2)); /* CORAL shadow */
+  padding: 10px;
 }
 
 html[data-theme="night"] .avatar-circle {
-  background: linear-gradient(135deg, rgba(255, 127, 80, 0.2), rgba(255, 127, 80, 0.1));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
+.avatar-initial {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--ink-base, #1f2937);
+}
 
 /* User Info */
 .user-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.1rem;
 }
 
 .username {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--bento-text, #2C2420);
+  color: var(--bento-text, #1f2937);
+}
+
+.level-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface-muted, #f3f4f6);
+  color: var(--ink-base, #1f2937);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: 1px solid var(--border-soft, #e5e7eb);
+}
+
+.level-icon {
+  margin-right: -0.05rem;
+}
+
+.exp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.1rem;
 }
 
 .exp-info {
   font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--bento-text-muted, #6D5D4F);
+  font-weight: 600;
+  color: var(--bento-text-muted, #6b7280);
 }
 
-/* XP Bar - Thick Capsule Shape with CORAL */
+.exp-remaining {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--brand-accent, #ff6b3d);
+}
+
+/* XP Bar */
 .xp-bar-container {
   width: 100%;
-  height: 20px;
-  border-radius: 7px;
+  height: 16px;
+  border-radius: 12px;
   overflow: hidden;
-}
-
-html[data-theme="day"] .xp-bar-container {
-  background: var(--showroom-card-bg-day, #F5EDE3);
-  box-shadow: 
-    inset 2px 2px 4px var(--showroom-shadow-dark-day, #D4C8BD),
-    inset -2px -2px 4px var(--showroom-shadow-light-day, #FFFFFF);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--border-soft, #e5e7eb);
+  margin-top: 0.35rem;
 }
 
 html[data-theme="night"] .xp-bar-container {
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .xp-bar {
   position: relative;
   height: 100%;
-  border-radius: 7px;
+  border-radius: 12px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-html[data-theme="day"] .xp-bar {
-  background: linear-gradient(90deg, var(--brand-accent), var(--brand-accent-soft)); /* LIVING CORAL gradient */
-  box-shadow: 0 2px 6px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4);
-}
-
-html[data-theme="night"] .xp-bar {
+  overflow: hidden;
   background: linear-gradient(90deg, var(--brand-accent), var(--brand-accent-soft));
-  box-shadow: 0 0 12px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.5);
+  box-shadow: 0 6px 14px -8px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.6);
+}
+
+.xp-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.18));
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 .xp-text {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 </style>

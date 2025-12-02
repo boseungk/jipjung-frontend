@@ -10,8 +10,8 @@
    --cursor-size: 30px;
 
    /* 타이포그래피 */
-   --font-family-display: 'Fredoka', sans-serif;
-   --font-family-body: 'Noto Sans KR', sans-serif;
+   --font-family-display: 'Space Grotesk', 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+   --font-family-body: 'Noto Sans KR', 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
    --font-size-hero: 2.5rem;
    --font-size-title: 1.75rem;
@@ -50,6 +50,15 @@
    --border-radius-md: 24px;
    --border-radius-lg: 32px;
    --border-radius-full: 50%;
+
+   /* Unified Surfaces & Shadows */
+   --surface-card-bg: var(--showroom-card-bg-day);
+   --surface-card-border: rgba(0, 0, 0, 0.04);
+   --surface-card-shadow: 0 12px 36px -22px rgba(0, 0, 0, 0.24);
+   --surface-glass-bg: rgba(255, 255, 255, 0.06);
+   --surface-glass-border: rgba(0, 0, 0, 0.05);
+   --surface-glass-blur: 12px;
+   --surface-radius: 20px;
 
    /* 전환 효과 (Transitions) */
    --transition-fast: 0.3s;
@@ -112,9 +121,9 @@
    --nav-btn-transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
    /* Day Mode - Navbar Background */
-   --nav-bg-day: #f0eeec;
-   --nav-border-day: #E0DAD3;
-   --nav-shadow-day: 0 4px 20px rgba(88, 60, 50, 0.08);
+   --nav-bg-day: rgba(255, 255, 255, 0.9);
+   --nav-border-day: #e5e7eb;
+   --nav-shadow-day: 0 10px 30px -18px rgba(17, 24, 39, 0.18);
 
    /* Night Mode - Navbar Background */
    --nav-bg-night: rgba(58, 53, 48, 0.85);
@@ -122,15 +131,15 @@
    --nav-shadow-night: 0 4px 20px rgba(0, 0, 0, 0.3);
 
    /* Day Mode - Button Glassmorphism (Option A: Soft Glass) */
-   --nav-btn-bg-day: rgba(255, 255, 255, 0.75);
-   --nav-btn-blur-day: 10px;
-   --nav-btn-border-day: rgba(255, 255, 255, 0.6);
+   --nav-btn-bg-day: rgba(255, 255, 255, 0.82);
+   --nav-btn-blur-day: 8px;
+   --nav-btn-border-day: rgba(17, 24, 39, 0.06);
    --nav-btn-shadow-day:
-      0 4px 12px rgba(88, 60, 50, 0.08),
-      inset 0 1px 2px rgba(255, 255, 255, 0.8);
-   --nav-btn-shadow-day-hover:
-      0 6px 16px rgba(88, 60, 50, 0.12),
+      0 8px 20px -14px rgba(17, 24, 39, 0.18),
       inset 0 1px 2px rgba(255, 255, 255, 0.9);
+   --nav-btn-shadow-day-hover:
+      0 10px 24px -12px rgba(17, 24, 39, 0.24),
+      inset 0 1px 2px rgba(255, 255, 255, 0.95);
    --nav-btn-press-shadow-day: inset 0 3px 8px rgba(88, 60, 50, 0.15);
 
    /* Night Mode - Button Glassmorphism (Option A: Enhanced Glass) */
@@ -155,14 +164,14 @@
 
    /* Navigation Menu */
    --nav-menu-bg-day: #FFFFFF;
-   --nav-menu-border-day: rgba(255, 255, 255, 0.6);
-   --nav-menu-shadow-day: 0 4px 10px -2px rgba(88, 60, 50, 0.08);
+   --nav-menu-border-day: rgba(17, 24, 39, 0.06);
+   --nav-menu-shadow-day: 0 10px 30px -18px rgba(17, 24, 39, 0.18);
    --nav-menu-hover-bg-day: #FFFFFF;
-   --nav-menu-hover-shadow-day: 0 6px 14px rgba(88, 60, 50, 0.1), 0 2px 6px rgba(88, 60, 50, 0.05);
-   --nav-menu-active-bg-day: #FFE4D9;
-   --nav-menu-active-color-day: #E06538;
-   --nav-menu-active-border-day: rgba(255, 127, 80, 0.3);
-   --nav-menu-active-shadow-day: inset 0 2px 6px rgba(88, 60, 50, 0.1);
+   --nav-menu-hover-shadow-day: 0 10px 24px -16px rgba(17, 24, 39, 0.18), 0 2px 6px rgba(17, 24, 39, 0.05);
+   --nav-menu-active-bg-day: #fff2ec;
+   --nav-menu-active-color-day: #ff6b3d;
+   --nav-menu-active-border-day: rgba(255, 107, 61, 0.28);
+   --nav-menu-active-shadow-day: inset 0 2px 6px rgba(17, 24, 39, 0.06);
    --nav-menu-hover-bg-night: rgba(255, 255, 255, 0.08);
    --nav-menu-hover-shadow-night: 0 4px 12px rgba(0, 0, 0, 0.2);
    --nav-menu-active-bg-night: rgba(212, 165, 116, 0.2);
@@ -303,6 +312,18 @@
    --shadow-md-night: 0 2px 12px rgba(0, 0, 0, 0.3);
    --shadow-lg-night: 0 4px 16px rgba(0, 0, 0, 0.35);
    --shadow-xl-night: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ================================================
+   Night theme overrides for unified surfaces
+   ================================================ */
+html[data-theme="night"] {
+   --surface-card-bg: rgba(42, 37, 32, 0.88);
+   --surface-card-border: rgba(255, 255, 255, 0.08);
+   --surface-card-shadow: 0 16px 42px -20px rgba(0, 0, 0, 0.65);
+   --surface-glass-bg: rgba(255, 255, 255, 0.07);
+   --surface-glass-border: rgba(255, 255, 255, 0.08);
+   --surface-glass-blur: 14px;
 }
 
 /* ================================================

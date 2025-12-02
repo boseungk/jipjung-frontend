@@ -4,9 +4,14 @@
     <div class="equal-grid">
       <!-- LEFT: CSS Donut Chart -->
       <div class="chart-column">
+        <div class="chart-meta">
+          <span class="pill">목표 달성률</span>
+          <span class="meta-value">{{ achievementRate }}%</span>
+        </div>
         <div class="css-donut-chart">
           <div class="donut-ring" :style="{ '--progress': achievementRate + '%' }">
             <div class="donut-hole">
+              <div class="donut-label">진행도</div>
               <div class="donut-text">{{ achievementRate }}%</div>
             </div>
           </div>
@@ -17,10 +22,15 @@
       <div class="content-column">
         <div class="text-stack">
           <div class="context-small">입주까지</div>
-          <div class="amount-huge">{{ formatNumber(remainingAmount) }}<span class="unit-small">만원</span></div>
-          <div class="context-small">남음</div>
+          <div class="amount-row">
+            <div class="amount-huge">{{ formatNumber(remainingAmount) }}<span class="unit-small">만원</span></div>
+            <span class="pill ghost">남은 금액</span>
+          </div>
           <div class="subtitle-info">
             목표: {{ propertyName }} <span class="muted">(총 {{ formatNumber(targetAmount) }}만원)</span>
+          </div>
+          <div class="progress-note">
+            이번 달 목표 {{ formatNumber(monthlyGoal) }}만원 · 추천 {{ formatNumber(contributionAmount) }}만원
           </div>
         </div>
         
@@ -29,14 +39,13 @@
           <AppIcon name="floppyDisk" :size="20" :active="true" :is-major-cta="true" class="btn-icon" aria-hidden="true" />
           <span class="btn-text">저축하기</span>
         </button>
-        <p v-if="savingMessage" class="saving-feedback">{{ savingMessage }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '../../../stores/dreamHomeStore'
 import { useGamificationStore } from '../../../stores/gamificationStore'
@@ -55,8 +64,6 @@ const {
 const gamificationStore = useGamificationStore()
 const { remainingExp } = storeToRefs(gamificationStore)
 
-const savingMessage = ref('')
-
 const contributionAmount = computed(() => {
   const remaining = Math.max(0, remainingAmount.value)
   const goal = Number(monthlyGoal.value) || 0
@@ -71,20 +78,13 @@ const handleSaving = async () => {
   try {
     const contribution = contributionAmount.value
     if (contribution <= 0) {
-      savingMessage.value = '이미 목표를 달성했어요! 🎉'
       return
     }
 
     await dreamHomeStore.updateProgress(contribution)
     await gamificationStore.addExperience(XP_REWARD)
-
-    savingMessage.value = `+${formatNumber(contribution)}만원 저축, +${XP_REWARD} XP! 다음 단계까지 ${remainingExp.value} XP`
-    setTimeout(() => {
-      savingMessage.value = ''
-    }, 2000)
   } catch (error) {
     console.error('XP 적립/저축 실패', error)
-    savingMessage.value = '저축 처리 중 문제가 발생했어요'
   }
 }
 </script>
@@ -93,19 +93,14 @@ const handleSaving = async () => {
 .main-goal-card {
   grid-area: main;
   grid-row: auto;
-  padding: 2rem; /* Reduced from 2.5rem for better density */
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
-}
-
-html[data-theme="night"] .main-goal-card {
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  padding: 1.35rem 1.4rem;
 }
 
 /* TRUE 1:1 Grid Layout */
 .equal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem; /* Reduced from 2.5rem */
+  gap: 1.5rem; /* Reduced from 2.5rem */
   align-items: center;
   height: 100%;
 }
@@ -115,12 +110,28 @@ html[data-theme="night"] .main-goal-card {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chart-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.meta-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--ink-base, #1f2937);
 }
 
 /* CSS Donut Chart */
 .css-donut-chart {
   width: 100%;
-  max-width: 240px;
+  max-width: 200px;
   aspect-ratio: 1;
 }
 
@@ -129,10 +140,10 @@ html[data-theme="night"] .main-goal-card {
   height: 100%;
   border-radius: 50%;
   background: conic-gradient(
-    #fb923c 0%,
-    #fb923c var(--progress, 28%),
-    #E8E0D5 var(--progress, 28%),
-    #E8E0D5 100%
+    var(--brand-accent, #ff6b3d) 0%,
+    var(--brand-accent, #ff6b3d) var(--progress, 28%),
+    #e5e7eb var(--progress, 28%),
+    #e5e7eb 100%
   );
   display: flex;
   align-items: center;
@@ -142,36 +153,52 @@ html[data-theme="night"] .main-goal-card {
 }
 
 .donut-hole {
-  width: 65%;
-  height: 65%;
+  width: 60%;
+  height: 60%;
   border-radius: 50%;
-  background: white;
+  background: #ffffff;
+  border: 1px solid var(--border-soft, #e5e7eb);
   display: flex;
   align-items: center;
   justify-content: center;
   transform: rotate(90deg);
+  flex-direction: column;
 }
 
 html[data-theme="night"] .donut-hole {
-  background: rgba(58, 53, 48, 0.95);
+  background: rgba(32, 36, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.donut-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 .donut-text {
-  font-size: 2rem;
-  font-weight: 900;
-  color: #2C2420;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ink-base, #1f2937);
 }
 
 html[data-theme="night"] .donut-text {
-  color: #F5EDE3;
+  color: var(--showroom-text-night, #f5f6f7);
 }
 
 /* RIGHT: Content Column - Vertical Stack */
 .content-column {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Reduced from 2rem */
+  gap: 1.25rem; /* Reduced from 2rem */
   justify-content: center;
+}
+
+.amount-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* Text Stack */
@@ -185,15 +212,15 @@ html[data-theme="night"] .donut-text {
 .context-small {
   font-size: 0.9375rem;
   font-weight: 500;
-  color: var(--bento-text-muted, #6D5D4F);
+  color: var(--bento-text-muted, #6b7280);
   line-height: 1.2;
 }
 
 /* HUGE Amount - The Star */
 .amount-huge {
-  font-size: 2.75rem;
-  font-weight: 900;
-  color: #2C2420;
+  font-size: 2.15rem;
+  font-weight: 800;
+  color: var(--ink-base, #1f2937);
   letter-spacing: -0.03em;
   line-height: 1;
   margin: 0.4rem 0;
@@ -204,9 +231,9 @@ html[data-theme="night"] .amount-huge {
 }
 
 .unit-small {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--bento-text-muted, #6D5D4F);
+  color: var(--bento-text-muted, #6b7280);
   margin-left: 0.2rem;
 }
 
@@ -214,7 +241,7 @@ html[data-theme="night"] .amount-huge {
 .subtitle-info {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #2C2420;
+  color: var(--ink-base, #1f2937);
   margin-top: 0.5rem;
 }
 
@@ -224,7 +251,32 @@ html[data-theme="night"] .subtitle-info {
 
 .muted {
   font-weight: 400;
-  color: var(--bento-text-muted, #6D5D4F);
+  color: var(--bento-text-muted, #6b7280);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+  color: var(--brand-accent, #ff6b3d);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.pill.ghost {
+  background: var(--surface-muted, #f3f4f6);
+  color: var(--bento-text-muted, #6b7280);
+  border: 1px solid var(--border-soft, #e5e7eb);
+}
+
+.progress-note {
+  margin-top: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink-base, #1f2937);
 }
 
 /* Full-Width Savings Button */
@@ -232,40 +284,42 @@ html[data-theme="night"] .subtitle-info {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem;
+  gap: 0.55rem;
   width: 100%;
-  padding: 1rem 2rem;
+  padding: 0.95rem 1.6rem;
+  min-height: 52px;
   border: none;
   border-radius: 12px;
   font-weight: 700;
-  font-size: 1.0625rem;
+  font-size: 1.05rem;
+  line-height: 1.2;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(to right, #fb923c, #f97316);
-  color: white;
-  box-shadow: 0 10px 20px -5px rgba(251, 146, 60, 0.4);
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: #ffffff;
+  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
 .savings-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 30px -5px rgba(251, 146, 60, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
 }
 
 .savings-button:active {
-  transform: translateY(1px) scale(0.97);
-  opacity: 0.8;
-  box-shadow: inset 0 3px 8px rgba(251, 146, 60, 0.3);
+  transform: translateY(1px) scale(0.99);
+  opacity: 0.9;
+  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
 .saving-feedback {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--showroom-text-day, #5D4037);
+  color: var(--ink-base, #1f2937);
 }
 
 html[data-theme="night"] .saving-feedback {
-  color: var(--showroom-text-night, #F5EDE3);
+  color: var(--showroom-text-night, #f5f6f7);
 }
 
 
@@ -278,22 +332,14 @@ html[data-theme="night"] .saving-feedback {
 }
 
 /* Responsive */
-/* Desktop: grid-row span 2 */
-@media (min-width: 1040px) {
-  .main-goal-card {
-    grid-row: span 2;
-  }
-}
-
-/* Tablet/Mobile: layout adjustments */
 @media (max-width: 1039px) {
   .equal-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .css-donut-chart {
-    max-width: 200px; /* Smaller on tablet */
+    max-width: 180px; /* Smaller on tablet */
   }
 
   .text-stack {
@@ -301,7 +347,7 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .amount-huge {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
 }
 
@@ -311,11 +357,11 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .equal-grid {
-    gap: 1rem; /* Tighter gap */
+    gap: 1.25rem; /* Tighter gap */
   }
 
   .css-donut-chart {
-    max-width: 160px; /* Even smaller on mobile */
+    max-width: 140px; /* Even smaller on mobile */
   }
 
   .donut-text {
@@ -323,7 +369,7 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .content-column {
-    gap: 1.25rem; /* Tighter vertical gap */
+    gap: 1.1rem; /* Tighter vertical gap */
   }
 
   .context-small {
@@ -331,11 +377,11 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .amount-huge {
-    font-size: 2rem; /* Smaller huge text */
+    font-size: 1.75rem; /* Smaller huge text */
   }
 
   .unit-small {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 
   .subtitle-info {
@@ -343,8 +389,10 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .savings-button {
-    padding: 0.875rem 1.5rem;
+    padding: 0.85rem 1.35rem;
+    min-height: 48px;
     font-size: 1rem;
+    gap: 0.5rem;
   }
 
   .btn-icon {
@@ -355,11 +403,11 @@ html[data-theme="night"] .saving-feedback {
 /* Extra small devices */
 @media (max-width: 374px) {
   .amount-huge {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
   }
 
   .css-donut-chart {
-    max-width: 140px;
+    max-width: 130px;
   }
 }
 </style>

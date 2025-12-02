@@ -62,6 +62,7 @@ const isActive = computed(() => {
   transition: color 0.2s ease;
   border: none;
   background: none;
+  position: relative;
 }
 
 /* Day Mode */
@@ -80,6 +81,23 @@ html[data-theme="night"] .nav-menu-item {
 
 html[data-theme="night"] .nav-menu-item.active {
   color: var(--brand-accent);
+}
+
+.nav-menu-item.active::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -8px;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35), rgba(255, 255, 255, 0));
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.nav-menu-item.active {
+  text-shadow: 0 4px 18px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
 .menu-icon {

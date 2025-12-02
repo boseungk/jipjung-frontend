@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
 @import '../css/core/variables.css';
 @import './components/navigation.css';
 @import './components/onboarding.css';
@@ -18,38 +19,38 @@
     :root,
     :root[data-color-theme="warm-beige"] {
         /* Day Mode */
-        --showroom-bg-day: #E8E0D5;
-        --showroom-card-bg-day: #F5EDE3;
-        --showroom-shadow-light-day: #FFFFFF;
-        --showroom-shadow-dark-day: #D4C8BD;
-        --showroom-accent-day: #D4A574;
-        --showroom-text-day: #5D4037;
+        --showroom-bg-day: #f7f8fa;
+        --showroom-card-bg-day: #ffffff;
+        --showroom-shadow-light-day: #ffffff;
+        --showroom-shadow-dark-day: #e5e7eb;
+        --showroom-accent-day: #ff6b3d;
+        --showroom-text-day: #1f2937;
 
         /* Night Mode */
-        --showroom-bg-night: #3a3530;
-        --showroom-card-bg-night: #4a4540;
-        --showroom-shadow-light-night: #4f4a45;
-        --showroom-shadow-dark-night: #2a2520;
-        --showroom-accent-night: #D4A574;
-        --showroom-text-night: #F5EDE3;
-        --showroom-glow-night: rgba(212, 165, 116, 0.4);
+        --showroom-bg-night: #1a1c20;
+        --showroom-card-bg-night: #20242a;
+        --showroom-shadow-light-night: #2a2e35;
+        --showroom-shadow-dark-night: #0f1114;
+        --showroom-accent-night: #ff8a5c;
+        --showroom-text-night: #f5f6f7;
+        --showroom-glow-night: rgba(255, 138, 92, 0.35);
 
         /* Glassmorphism Specific */
-        --glass-bg-day: rgba(255, 255, 255, 0.75);
-        --glass-border-day: rgba(255, 255, 255, 0.4);
-        --glass-bg-night: rgba(58, 53, 48, 0.75);
-        --glass-border-night: rgba(212, 165, 116, 0.4);
-        --glass-glow-night: rgba(212, 165, 116, 0.5);
+        --glass-bg-day: rgba(255, 255, 255, 0.6);
+        --glass-border-day: rgba(255, 255, 255, 0.35);
+        --glass-bg-night: rgba(26, 28, 32, 0.65);
+        --glass-border-night: rgba(255, 255, 255, 0.1);
+        --glass-glow-night: rgba(255, 138, 92, 0.35);
 
         /* Minimal Text */
         --minimal-bg-day: rgba(255, 255, 255, 0.5);
-        --minimal-text-day: #5D4037;
-        --minimal-bg-night: rgba(30, 30, 30, 0.4);
-        --minimal-text-night: #F5EDE3;
+        --minimal-text-day: #1f2937;
+        --minimal-bg-night: rgba(20, 22, 25, 0.6);
+        --minimal-text-night: #f5f6f7;
 
         /* Lighting Effects */
-        --light-warm-glow: rgba(255, 200, 120, 0.6);
-        --light-ambient: rgba(212, 165, 116, 0.3);
+        --light-warm-glow: rgba(255, 138, 92, 0.35);
+        --light-ambient: rgba(255, 138, 92, 0.2);
         --light-spotlight: rgba(255, 255, 255, 0.8);
     }
 
@@ -93,12 +94,22 @@
         --mouse-y: 50%;
         /* Navigation variables are centralized in src/assets/css/core/variables.css */
         /* Brand Accent */
-        --brand-accent: #FF7F50;
-        --brand-accent-rgb: 255, 127, 80;
-        --brand-accent-hover: #FF6A3D;
-        --brand-accent-press: #FF5A2D;
-        --brand-accent-strong: #FF6347;
-        --brand-accent-soft: #FF6B6B;
+        --brand-accent: #ff6b3d;
+        --brand-accent-rgb: 255, 107, 61;
+        --brand-accent-hover: #ff804f;
+        --brand-accent-press: #f2552c;
+        --brand-accent-strong: #ff8557;
+        --brand-accent-soft: #ff9a75;
+
+        /* Neutral System */
+        --ink-strong: #111827;
+        --ink-base: #1f2937;
+        --ink-muted: #6b7280;
+        --ink-subtle: #9ca3af;
+        --surface-muted: #f3f4f6;
+        --surface-soft: #eef1f5;
+        --border-soft: #e5e7eb;
+        --border-strong: #d1d5db;
     }
 
     /* Body Styles - NO transition for instant theme switching */
@@ -110,6 +121,12 @@
     html[data-theme="night"] body {
         background-color: var(--showroom-bg-night);
         color: var(--showroom-text-night);
+    }
+
+    body {
+        font-family: var(--font-family-body);
+        -webkit-font-smoothing: antialiased;
+        letter-spacing: -0.01em;
     }
 }
 

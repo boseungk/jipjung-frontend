@@ -10,26 +10,26 @@
 
 <style scoped>
 .header {
-  padding: 2rem;
+  padding: 1.5rem 1.25rem 0.5rem;
   text-align: center;
   position: relative;
   z-index: 10;
 }
 
 .header h1 {
-  font-family: "Fredoka", sans-serif;
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-family: var(--font-family-display);
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
   letter-spacing: -0.02em;
-  transition: color 0.5s ease;
+  transition: color 0.35s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 html[data-theme="day"] .header h1 {
-  color: var(--minimal-text-day);
+  color: var(--ink-base, var(--minimal-text-day));
 }
 
 html[data-theme="night"] .header h1 {
@@ -37,15 +37,16 @@ html[data-theme="night"] .header h1 {
 }
 
 .header p {
-  font-size: 1.125rem;
+  font-family: var(--font-family-body);
+  font-size: 1rem;
   line-height: 1.6;
-  opacity: 0.75;
-  letter-spacing: 0.01em;
-  transition: color 0.5s ease;
+  opacity: 0.85;
+  letter-spacing: 0.005em;
+  transition: color 0.35s ease;
 }
 
 html[data-theme="day"] .header p {
-  color: var(--minimal-text-day);
+  color: var(--ink-muted, var(--minimal-text-day));
 }
 
 html[data-theme="night"] .header p {
@@ -54,11 +55,11 @@ html[data-theme="night"] .header p {
 
 @media (max-width: 768px) {
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .header p {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 }
 </style>

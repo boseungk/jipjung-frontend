@@ -183,6 +183,20 @@ onUnmounted(() => {
   padding: 0 2rem;
   z-index: 10000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible;
+}
+
+.top-nav::after {
+  content: '';
+  position: absolute;
+  left: 35%;
+  right: 35%;
+  bottom: -10px;
+  height: 16px;
+  background: radial-gradient(55% 70% at 50% 0%, rgba(var(--brand-accent-rgb, 255, 107, 61), 0.22), rgba(255, 255, 255, 0));
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Day Mode - Beige Tone-on-Tone */
@@ -224,7 +238,7 @@ html[data-theme="night"] .top-nav {
 }
 
 .logo-text {
-  font-family: 'Fredoka', sans-serif;
+  font-family: var(--font-family-display);
   font-size: 1.375rem;
   font-weight: 600;
   color: var(--showroom-text-day, #5D4037);
