@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/api/services/authService'
+import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
 
 export const useAuthStore = defineStore('auth', () => {
     // State
@@ -12,6 +13,13 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = computed(() => !!accessToken.value && !!user.value)
     const onboardingCompleted = computed(() => user.value?.onboardingCompleted || false)
     const userName = computed(() => user.value?.name || '사용자')
+    const userId = computed(() => user.value?.id ?? null)
+    const userAnnualIncome = computed(() => Number(user.value?.annualIncome) || 0)
+    const userExistingLoanMonthly = computed(() => Number(user.value?.existingLoanMonthly) || 0)
+    const userBirthYear = computed(() => user.value?.birthYear ?? null)
+    const userPreferredAreas = computed(() => user.value?.preferredAreas || [])
+    const userDreamHome = computed(() => user.value?.dreamHome || DEFAULT_DREAM_HOME)
+    const userGamification = computed(() => user.value?.gamification || DEFAULT_GAMIFICATION)
 
     // Actions
 
@@ -151,6 +159,13 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated,
         onboardingCompleted,
         userName,
+        userId,
+        userAnnualIncome,
+        userExistingLoanMonthly,
+        userBirthYear,
+        userPreferredAreas,
+        userDreamHome,
+        userGamification,
         // Actions
         register,
         login,

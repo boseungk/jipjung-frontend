@@ -72,3 +72,9 @@ npm preview          # Preview production build
 8. **Computed for derived state** - Never calculate in template
 9. **DRY utilities** - Centralize formatters/validators
 10. **Performance-first** - GPU acceleration, lazy loading
+
+## User Data Single Source
+- 모든 사용자 데이터는 `authStore.user` 단일 소스에서 읽고, 업데이트는 `authService`/`mockAuthService`를 거친다.
+- 기본 mock 필드: `src/constants/user.js` (`DEFAULT_DREAM_HOME`, `DEFAULT_GAMIFICATION`)을 user 객체의 `dreamHome`, `gamification`에 포함.
+- 스토어/컴포넌트는 `authStore`의 computed(`userDreamHome`, `userGamification`, `userAnnualIncome` 등)를 사용한다. 별도 `userStore`는 없다.
+- 진행률/XP 등 변경 시 `authStore.updateProfile`을 호출해 mock/실 API 모두 호환되게 유지한다.

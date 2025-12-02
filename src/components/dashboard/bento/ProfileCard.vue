@@ -33,12 +33,13 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
+import { useAuthStore } from '../../../stores/authStore'
 
 const gamificationStore = useGamificationStore()
 const { currentLevel, levelTitle, expProgress, experiencePoints, nextLevelExp } = storeToRefs(gamificationStore)
 
-// TODO: Replace with actual user store
-const userName = '홍길동'
+const authStore = useAuthStore()
+const { userName } = storeToRefs(authStore)
 </script>
 
 <style scoped>

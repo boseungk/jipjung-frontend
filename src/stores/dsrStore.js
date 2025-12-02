@@ -1,24 +1,27 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useUserStore } from './userStore'
+import { useAuthStore } from './authStore'
 import { useDreamHomeStore } from './dreamHomeStore'
 
 /**
  * DSR (Debt Service Ratio) 관련 상태 및 계산을 관리하는 Store
  */
 export const useDsrStore = defineStore('dsr', () => {
-    const userStore = useUserStore()
+    const authStore = useAuthStore()
     const dreamHomeStore = useDreamHomeStore()
 
     // State
-    const existingLoanMonthly = ref(50) // 만원 - 기존 대출 월 상환액
     const loanInterestRate = ref(0.04) // 연이율 4%
     const loanPeriodYears = ref(20) // 대출 기간 20년
 
     // Getters
     const monthlyIncome = computed(() => {
-        return Math.floor(userStore.annualIncome / 12)
+        const annualIncome = authStore.userAnnualIncome
+        if (!annualIncome) return 0
+        return Math.floor(annualIncome / 12)
     })
+
+    const existingLoanMonthly = computed(() => authStore.userExistingLoanMonthly || 0)
 
     const monthlyRepaymentCapacity = computed(() => {
         // DSR 40% 기준으로 월 상환 가능액 계산
@@ -71,8 +74,13 @@ export const useDsrStore = defineStore('dsr', () => {
     }))
 
     // Actions
-    function updateExistingLoan(amount) {
-        existingLoanMonthly.value = amount
+    async function updateExistingLoan(amount) {
+        try {
+            await authStore.updateProfile({ existingLoanMonthly: amount })
+        } catch (error) {
+            console.error('Failed to update existing loan amount:', error)
+            throw error
+        }
     }
 
     function updateLoanConditions(interestRate, periodYears) {
@@ -82,11 +90,11 @@ export const useDsrStore = defineStore('dsr', () => {
 
     return {
         // State
-        existingLoanMonthly,
         loanInterestRate,
         loanPeriodYears,
         // Getters
         monthlyIncome,
+        existingLoanMonthly,
         monthlyRepaymentCapacity,
         dsrRatio,
         dsrStatus,

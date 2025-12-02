@@ -1,32 +1,29 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
+import { useAuthStore } from './authStore'
+import { DEFAULT_GAMIFICATION, LEVEL_TITLES } from '@/constants/user'
 
 export const useGamificationStore = defineStore('gamification', () => {
-    // State
-    const currentLevel = ref(3)
-    const levelTitle = ref('꾸준한 실천가')
-    const experiencePoints = ref(320)
-    const nextLevelExp = ref(500)
-    const currentStreak = ref(7)
-    const longestStreak = ref(15)
-    const treesCollected = ref(3)
+    const authStore = useAuthStore()
+    const gamification = computed(() => authStore.userGamification || DEFAULT_GAMIFICATION)
 
-    // Level titles mapping
-    const levelTitles = {
-        1: '꿈나무',
-        2: '새싹',
-        3: '꾸준한 실천가',
-        4: '전문가',
-        5: '집나무 숲지기'
-    }
+    // State derived from user data
+    const currentLevel = computed(() => gamification.value.currentLevel ?? DEFAULT_GAMIFICATION.currentLevel)
+    const levelTitle = computed(() => gamification.value.levelTitle || LEVEL_TITLES[currentLevel.value] || DEFAULT_GAMIFICATION.levelTitle)
+    const experiencePoints = computed(() => Number(gamification.value.experiencePoints) || 0)
+    const nextLevelExp = computed(() => Number(gamification.value.nextLevelExp) || DEFAULT_GAMIFICATION.nextLevelExp)
+    const currentStreak = computed(() => Number(gamification.value.currentStreak) || 0)
+    const longestStreak = computed(() => Number(gamification.value.longestStreak) || 0)
+    const treesCollected = computed(() => Number(gamification.value.treesCollected) || 0)
 
     // Getters
     const expProgress = computed(() => {
+        if (!nextLevelExp.value) return '0.0'
         return ((experiencePoints.value / nextLevelExp.value) * 100).toFixed(1)
     })
 
     const remainingExp = computed(() => {
-        return nextLevelExp.value - experiencePoints.value
+        return Math.max(0, nextLevelExp.value - experiencePoints.value)
     })
 
     const gamificationInfo = computed(() => ({
@@ -41,26 +38,7 @@ export const useGamificationStore = defineStore('gamification', () => {
         treesCollected: treesCollected.value
     }))
 
-    // Actions
-    function addExperience(exp) {
-        experiencePoints.value += exp
-
-        // Check for level up
-        if (experiencePoints.value >= nextLevelExp.value) {
-            levelUp()
-        }
-    }
-
-    function levelUp() {
-        if (currentLevel.value < 5) {
-            currentLevel.value++
-            levelTitle.value = levelTitles[currentLevel.value]
-            experiencePoints.value = experiencePoints.value - nextLevelExp.value
-            nextLevelExp.value = calculateNextLevelExp()
-        }
-    }
-
-    function calculateNextLevelExp() {
+    function calculateNextLevelExp(level) {
         const expThresholds = {
             1: 100,
             2: 300,
@@ -68,18 +46,69 @@ export const useGamificationStore = defineStore('gamification', () => {
             4: 1000,
             5: 2000
         }
-        return expThresholds[currentLevel.value] || 2000
+        return expThresholds[level] || 2000
     }
 
-    function incrementStreak() {
-        currentStreak.value++
-        if (currentStreak.value > longestStreak.value) {
-            longestStreak.value = currentStreak.value
+    async function saveGamification(updatedGamification) {
+        try {
+            await authStore.updateProfile({ gamification: updatedGamification })
+        } catch (error) {
+            console.error('Failed to update gamification data:', error)
+            throw error
         }
     }
 
-    function resetStreak() {
-        currentStreak.value = 0
+    // Actions
+    async function addExperience(exp) {
+        let updated = {
+            ...gamification.value,
+            experiencePoints: experiencePoints.value + exp,
+            currentLevel: currentLevel.value,
+            levelTitle: levelTitle.value,
+            nextLevelExp: nextLevelExp.value
+        }
+
+        while (updated.experiencePoints >= updated.nextLevelExp && updated.currentLevel < 5) {
+            updated.experiencePoints = updated.experiencePoints - updated.nextLevelExp
+            updated.currentLevel += 1
+            updated.levelTitle = LEVEL_TITLES[updated.currentLevel] || updated.levelTitle
+            updated.nextLevelExp = calculateNextLevelExp(updated.currentLevel)
+        }
+
+        await saveGamification(updated)
+    }
+
+    async function levelUp() {
+        if (currentLevel.value >= 5) return
+
+        const updated = {
+            ...gamification.value,
+            currentLevel: currentLevel.value + 1,
+            levelTitle: LEVEL_TITLES[currentLevel.value + 1] || levelTitle.value,
+            experiencePoints: Math.max(0, experiencePoints.value - nextLevelExp.value),
+            nextLevelExp: calculateNextLevelExp(currentLevel.value + 1)
+        }
+
+        await saveGamification(updated)
+    }
+
+    async function incrementStreak() {
+        const nextCurrentStreak = currentStreak.value + 1
+        const nextLongestStreak = Math.max(nextCurrentStreak, longestStreak.value)
+        const updated = {
+            ...gamification.value,
+            currentStreak: nextCurrentStreak,
+            longestStreak: nextLongestStreak
+        }
+        await saveGamification(updated)
+    }
+
+    async function resetStreak() {
+        const updated = {
+            ...gamification.value,
+            currentStreak: 0
+        }
+        await saveGamification(updated)
     }
 
     return {

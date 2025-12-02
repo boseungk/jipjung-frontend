@@ -34,4 +34,10 @@
 
 ## Agent-Specific Instructions
 - When adding navigation UI, reuse `nav-btn-base`/`dropdown-item-base` classes from `src/assets/css/components/navigation.css`.
-- Avoid introducing new color tokens; extend existing CSS variables in `src/assets/css/input.css` for theme-aware styling.***
+- Avoid introducing new color tokens; extend existing CSS variables in `src/assets/css/input.css` for theme-aware styling.
+
+## User Data Single Source
+- 모든 사용자 데이터는 `authStore.user`에서 읽고 업데이트 (`authService`/`mockAuthService` 경유).
+- 모의 데이터 기본값은 `src/constants/user.js` (`DEFAULT_DREAM_HOME`, `DEFAULT_GAMIFICATION`); user 객체에 `dreamHome`, `gamification` 포함.
+- UI/스토어는 `authStore` computed(`userDreamHome`, `userGamification`, `userAnnualIncome` 등) 사용. `userStore`는 제거됨.
+- 목표/XP 업데이트는 `authStore.updateProfile`로 반영해 mock/실제 API 모두 대응.***

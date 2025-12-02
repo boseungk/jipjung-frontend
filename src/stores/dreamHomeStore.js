@@ -1,24 +1,30 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
+import { useAuthStore } from './authStore'
+import { DEFAULT_DREAM_HOME } from '@/constants/user'
 
 export const useDreamHomeStore = defineStore('dreamHome', () => {
-    // State
-    const dreamHomeId = ref(1)
-    const propertyName = ref('래미안 아파트')
-    const location = ref('서울 강남구')
-    const price = ref(50000) // 만원 (5억)
-    const targetAmount = ref(15000) // 계약금 30% (1.5억)
-    const monthlyGoal = ref(100) // 만원
-    const targetDate = ref('2026-12-31')
-    const currentAmount = ref(4250) // 만원 (425만원 저축)
+    const authStore = useAuthStore()
+    const dreamHome = computed(() => authStore.userDreamHome || DEFAULT_DREAM_HOME)
+
+    // State derived from user data
+    const dreamHomeId = computed(() => dreamHome.value.dreamHomeId ?? DEFAULT_DREAM_HOME.dreamHomeId)
+    const propertyName = computed(() => dreamHome.value.propertyName || DEFAULT_DREAM_HOME.propertyName)
+    const location = computed(() => dreamHome.value.location || DEFAULT_DREAM_HOME.location)
+    const price = computed(() => Number(dreamHome.value.price) || DEFAULT_DREAM_HOME.price)
+    const targetAmount = computed(() => Number(dreamHome.value.targetAmount) || DEFAULT_DREAM_HOME.targetAmount)
+    const monthlyGoal = computed(() => Number(dreamHome.value.monthlyGoal) || DEFAULT_DREAM_HOME.monthlyGoal)
+    const targetDate = computed(() => dreamHome.value.targetDate || DEFAULT_DREAM_HOME.targetDate)
+    const currentAmount = computed(() => Number(dreamHome.value.currentAmount) || 0)
 
     // Getters
     const achievementRate = computed(() => {
+        if (!targetAmount.value) return '0.0'
         return ((currentAmount.value / targetAmount.value) * 100).toFixed(1)
     })
 
     const daysRemaining = computed(() => {
-        const target = new Date(targetDate.value)
+        const target = new Date(targetDate.value || DEFAULT_DREAM_HOME.targetDate)
         const today = new Date()
         const diff = target - today
         return Math.ceil(diff / (1000 * 60 * 60 * 24))
@@ -43,15 +49,37 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
     }))
 
     // Actions
-    function updateProgress(amount) {
-        currentAmount.value += amount
+    async function updateProgress(amount) {
+        const nextAmount = Math.max(0, currentAmount.value + amount)
+        try {
+            await authStore.updateProfile({
+                dreamHome: {
+                    ...dreamHome.value,
+                    currentAmount: nextAmount
+                }
+            })
+        } catch (error) {
+            console.error('Failed to update dream home progress:', error)
+            throw error
+        }
     }
 
-    function changeDreamHome(newDreamHome) {
-        propertyName.value = newDreamHome.propertyName
-        location.value = newDreamHome.location
-        price.value = newDreamHome.price
-        targetAmount.value = newDreamHome.price * 0.3
+    async function changeDreamHome(newDreamHome) {
+        const nextDreamHome = {
+            ...dreamHome.value,
+            ...newDreamHome
+        }
+
+        if (newDreamHome.price && !newDreamHome.targetAmount) {
+            nextDreamHome.targetAmount = Math.floor(newDreamHome.price * 0.3)
+        }
+
+        try {
+            await authStore.updateProfile({ dreamHome: nextDreamHome })
+        } catch (error) {
+            console.error('Failed to change dream home:', error)
+            throw error
+        }
     }
 
     return {

@@ -74,6 +74,16 @@ const routes = [
         }
     },
     {
+        path: '/ai-manager',
+        name: 'AiManager',
+        component: () => import('../views/AiManagerView.vue'),
+        meta: {
+            title: '집-중 - AI 관리실',
+            requiresAuth: true,
+            requiresOnboarding: true
+        }
+    },
+    {
         path: '/profile',
         name: 'Profile',
         component: ProfileSettingsView,

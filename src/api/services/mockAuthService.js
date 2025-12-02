@@ -4,6 +4,8 @@
  * 실제 백엔드 준비 시 authService.js로 교체
  */
 
+import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
+
 // Mock 사용자 데이터베이스 (localStorage)
 const USERS_KEY = 'jipjung_mock_users'
 const SESSIONS_KEY = 'jipjung_mock_sessions'
@@ -19,6 +21,8 @@ const INITIAL_MOCK_USERS = [
         annualIncome: 5000,
         existingLoanMonthly: 50,
         onboardingCompleted: true,
+        dreamHome: DEFAULT_DREAM_HOME,
+        gamification: DEFAULT_GAMIFICATION,
         preferredAreas: [
             { sido: '서울특별시', sigungu: '강남구' },
             { sido: '경기도', sigungu: '성남시' }
@@ -27,14 +31,29 @@ const INITIAL_MOCK_USERS = [
     }
 ]
 
+function ensureDefaults(user) {
+    if (!user) return user
+    return {
+        ...user,
+        dreamHome: {
+            ...DEFAULT_DREAM_HOME,
+            ...(user.dreamHome || {})
+        },
+        gamification: {
+            ...DEFAULT_GAMIFICATION,
+            ...(user.gamification || {})
+        }
+    }
+}
+
 // Helper: 사용자 목록 가져오기
 function getUsers() {
     const users = localStorage.getItem(USERS_KEY)
     if (!users) {
         localStorage.setItem(USERS_KEY, JSON.stringify(INITIAL_MOCK_USERS))
-        return INITIAL_MOCK_USERS
+        return INITIAL_MOCK_USERS.map(ensureDefaults)
     }
-    return JSON.parse(users)
+    return JSON.parse(users).map(ensureDefaults)
 }
 
 // Helper: 사용자 목록 저장
@@ -86,6 +105,27 @@ function delay(ms = 300) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function mergeUserData(existingUser, updates) {
+    const merged = { ...existingUser }
+
+    Object.entries(updates).forEach(([key, value]) => {
+        if (
+            value &&
+            typeof value === 'object' &&
+            !Array.isArray(value)
+        ) {
+            merged[key] = {
+                ...(existingUser[key] || {}),
+                ...value
+            }
+        } else {
+            merged[key] = value
+        }
+    })
+
+    return merged
+}
+
 export const mockAuthService = {
     /**
      * 회원가입
@@ -106,7 +146,7 @@ export const mockAuthService = {
         }
 
         // 새 사용자 생성
-        const newUser = {
+        const newUser = ensureDefaults({
             id: users.length + 1,
             email: userData.email,
             password: userData.password, // 실제로는 해시되어야 함
@@ -117,7 +157,7 @@ export const mockAuthService = {
             onboardingCompleted: false,
             preferredAreas: [],
             createdAt: new Date().toISOString()
-        }
+        })
 
         users.push(newUser)
         saveUsers(users)
@@ -162,7 +202,7 @@ export const mockAuthService = {
 
         saveSession(user.id, { accessToken, refreshToken })
 
-        const { password: _, ...userWithoutPassword } = user
+        const { password: _, ...userWithoutPassword } = ensureDefaults(user)
 
         return {
             accessToken,
@@ -229,7 +269,7 @@ export const mockAuthService = {
             }
         }
 
-        const { password, ...userWithoutPassword } = user
+        const { password, ...userWithoutPassword } = ensureDefaults(user)
         return userWithoutPassword
     },
 
@@ -262,19 +302,18 @@ export const mockAuthService = {
         }
 
         // 사용자 정보 업데이트
-        users[userIndex] = {
-            ...users[userIndex],
+        users[userIndex] = mergeUserData(users[userIndex], {
             birthYear: onboardingData.birthYear,
             annualIncome: onboardingData.annualIncome,
             existingLoanMonthly: onboardingData.existingLoanMonthly,
             preferredAreas: onboardingData.preferredAreas,
             onboardingCompleted: true,
             updatedAt: new Date().toISOString()
-        }
+        })
 
         saveUsers(users)
 
-        const { password, ...userWithoutPassword } = users[userIndex]
+        const { password, ...userWithoutPassword } = ensureDefaults(users[userIndex])
 
         return {
             user: userWithoutPassword
@@ -312,15 +351,14 @@ export const mockAuthService = {
         // 연소득 변경 횟수 체크 (7일 내 3회 이상)
         // TODO: 실제 구현 시 변경 이력 테이블 필요
 
-        users[userIndex] = {
-            ...users[userIndex],
+        users[userIndex] = mergeUserData(users[userIndex], {
             ...profileData,
             updatedAt: new Date().toISOString()
-        }
+        })
 
         saveUsers(users)
 
-        const { password, ...userWithoutPassword } = users[userIndex]
+        const { password, ...userWithoutPassword } = ensureDefaults(users[userIndex])
 
         return {
             user: userWithoutPassword
