@@ -10,6 +10,32 @@
 
 ---
 
+## API 요약
+
+### 카테고리별 엔드포인트 (24개)
+
+| 카테고리 | 개수 | 엔드포인트 | 설명 |
+|---------|------|----------|------|
+| **인증** | 5 | POST /auth/register, POST /auth/login, POST /auth/refresh, GET /auth/me, POST /auth/logout | 회원가입, 로그인, 토큰 관리 |
+| **온보딩 & 프로필** | 2 | PUT /auth/onboarding, PUT /users/profile | 초기 설정, 사용자 정보 관리 |
+| **대시보드** | 1 | GET /users/dashboard | 통합 대시보드 데이터 |
+| **매물** | 6 | GET /properties, GET /properties/{id}, GET /users/saved-properties, GET /users/saved-properties/ids, POST /users/saved-properties/{id}/toggle, DELETE /users/saved-properties/{id} | 부동산 매물 조회 및 저장 |
+| **영수증/지출** | 3 | GET /receipts, POST /receipts, PUT /receipts/{id}/process | AI 심문 기능 |
+| **드림홈** | 2 | PUT /users/dream-home, POST /users/dream-home/progress | 목표 설정 및 저축 추적 |
+| **게임화** | 2 | POST /users/gamification/experience, POST /users/gamification/streak | 경험치 및 스트릭 관리 |
+| **통계** | 2 | GET /users/statistics/monthly-spending, GET /users/statistics/profile | 데이터 분석 및 성적 |
+| **컬렉션** | 1 | GET /users/collections | 저장된 드림홈 목록 |
+
+### 개발 우선순위
+
+| Phase | API 개수 | 포함 항목 | 설명 |
+|-------|---------|---------|------|
+| **Phase 1 (MVP)** | 8개 | 인증(5) + 온보딩(1) + 대시보드(1) + 프로필(1) | 필수 기능 |
+| **Phase 2 (핵심)** | 6개 | 매물조회(2) + 드림홈(2) + 게임화(2) | 핵심 기능 |
+| **Phase 3 (확장)** | 10개 | 매물저장(4) + 영수증(3) + 통계(2) + 컬렉션(1) | 확장 기능 |
+
+---
+
 ## 인증 설정
 
 모든 API 요청은 다음 헤더를 포함합니다:
