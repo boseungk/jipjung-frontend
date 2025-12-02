@@ -12,11 +12,15 @@ export const DEFAULT_DREAM_HOME = {
 export const DEFAULT_GAMIFICATION = {
   currentLevel: 3,
   levelTitle: '꾸준한 실천가',
-  experiencePoints: 320,
-  nextLevelExp: 500,
+  experiencePoints: 80,
+  nextLevelExp: 150,
   currentStreak: 7,
   longestStreak: 15,
-  treesCollected: 3
+  treesCollected: 3,
+  buildTrack: 'house', // 'house' | 'furniture'
+  houseStage: 1,       // 1~7 (phase7.svg)
+  furnitureStage: 0,   // 0~5 (figure.svg layers)
+  badges: []
 }
 
 export const LEVEL_TITLES = {

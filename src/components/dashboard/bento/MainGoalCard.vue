@@ -29,24 +29,63 @@
           <AppIcon name="floppyDisk" :size="20" :active="true" :is-major-cta="true" class="btn-icon" aria-hidden="true" />
           <span class="btn-text">저축하기</span>
         </button>
+        <p v-if="savingMessage" class="saving-feedback">{{ savingMessage }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '../../../stores/dreamHomeStore'
+import { useGamificationStore } from '../../../stores/gamificationStore'
 import { formatNumber } from '../../../utils/formatters'
+import AppIcon from '../../common/AppIcon.vue'
 
 const dreamHomeStore = useDreamHomeStore()
-const { currentAmount, targetAmount, propertyName, achievementRate } = storeToRefs(dreamHomeStore)
+const {
+  currentAmount,
+  targetAmount,
+  propertyName,
+  achievementRate,
+  remainingAmount,
+  monthlyGoal
+} = storeToRefs(dreamHomeStore)
+const gamificationStore = useGamificationStore()
+const { remainingExp } = storeToRefs(gamificationStore)
 
-const remainingAmount = computed(() => targetAmount.value - currentAmount.value)
+const savingMessage = ref('')
 
-const handleSaving = () => {
-  console.log('저축하기 클릭')
+const contributionAmount = computed(() => {
+  const remaining = Math.max(0, remainingAmount.value)
+  const goal = Number(monthlyGoal.value) || 0
+  if (!remaining) return 0
+  if (!goal) return remaining
+  return Math.min(goal, remaining)
+})
+
+const XP_REWARD = 60
+
+const handleSaving = async () => {
+  try {
+    const contribution = contributionAmount.value
+    if (contribution <= 0) {
+      savingMessage.value = '이미 목표를 달성했어요! 🎉'
+      return
+    }
+
+    await dreamHomeStore.updateProgress(contribution)
+    await gamificationStore.addExperience(XP_REWARD)
+
+    savingMessage.value = `+${formatNumber(contribution)}만원 저축, +${XP_REWARD} XP! 다음 단계까지 ${remainingExp.value} XP`
+    setTimeout(() => {
+      savingMessage.value = ''
+    }, 2000)
+  } catch (error) {
+    console.error('XP 적립/저축 실패', error)
+    savingMessage.value = '저축 처리 중 문제가 발생했어요'
+  }
 }
 </script>
 
@@ -216,6 +255,17 @@ html[data-theme="night"] .subtitle-info {
   transform: translateY(1px) scale(0.97);
   opacity: 0.8;
   box-shadow: inset 0 3px 8px rgba(251, 146, 60, 0.3);
+}
+
+.saving-feedback {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--showroom-text-day, #5D4037);
+}
+
+html[data-theme="night"] .saving-feedback {
+  color: var(--showroom-text-night, #F5EDE3);
 }
 
 

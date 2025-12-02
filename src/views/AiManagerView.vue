@@ -55,7 +55,7 @@
       <main class="chat-area">
         <!-- Time Indicator -->
         <div class="time-indicator">
-          오늘 {{ currentTime }}
+          오늘 {{ currentTimeDisplay }}
         </div>
 
         <!-- Chat Messages -->
@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useReceiptStore } from '@/stores/receiptStore'
 import AppIcon from '@/components/common/AppIcon.vue'
 
@@ -120,6 +120,8 @@ const userInput = ref('')
 const userResponded = ref(false)
 const messages = ref([])
 const messagesContainer = ref(null)
+const currentTimeDisplay = ref('')
+let clockTimer = null
 
 // Quick Reply Chips
 const quickReplyChips = [
@@ -158,14 +160,27 @@ const inputPlaceholder = computed(() => {
   return hasPendingReceipts.value ? '변명을 입력하세요...' : '메시지를 입력하세요...'
 })
 
-const currentTime = computed(() => {
-  const now = new Date()
-  return `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
-})
-
 // Methods
 const formatAmount = (amount) => {
   return amount.toLocaleString()
+}
+
+const formatTime = (date = new Date()) => {
+  return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const startClock = () => {
+  currentTimeDisplay.value = formatTime()
+  clockTimer = setInterval(() => {
+    currentTimeDisplay.value = formatTime()
+  }, 60000)
+}
+
+const stopClock = () => {
+  if (clockTimer) {
+    clearInterval(clockTimer)
+    clockTimer = null
+  }
 }
 
 const initializeChat = () => {
@@ -173,18 +188,20 @@ const initializeChat = () => {
   userResponded.value = false
   userInput.value = ''
 
+  const timestamp = formatTime()
+
   if (hasPendingReceipts.value && currentReceipt.value) {
     const receipt = currentReceipt.value
     messages.value.push({
       sender: 'ai',
       text: `아, 지금 일일 돈 거 뭐야? ${formatAmount(receipt.amount)}원? 이번 달 돈표 자숙액까지 12만 원 남았는데, 진짜 괜찮겠어?`,
-      time: currentTime.value
+      time: timestamp
     })
   } else {
     messages.value.push({
       sender: 'ai',
       text: '오, 대단한데? 처리할 지출이 하나도 없네. 너 진짜 계획적으로 사는구나. 보상으로 경험치 +50 줄게!',
-      time: currentTime.value
+      time: timestamp
     })
   }
 
@@ -202,7 +219,7 @@ const handleSendMessage = (customText) => {
   messages.value.push({
     sender: 'user',
     text: text,
-    time: currentTime.value
+    time: formatTime()
   })
 
   userInput.value = ''
@@ -235,7 +252,7 @@ const handleSendMessage = (customText) => {
     messages.value.push({
       sender: 'ai',
       text: aiResponse,
-      time: currentTime.value
+      time: formatTime()
     })
 
     const hasMoreReceipts = hasPendingReceipts.value
@@ -263,7 +280,12 @@ const scrollToBottom = () => {
 }
 
 onMounted(() => {
+  startClock()
   initializeChat()
+})
+
+onUnmounted(() => {
+  stopClock()
 })
 </script>
 

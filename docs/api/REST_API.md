@@ -26,15 +26,7 @@
 | **통계** | 2 | GET /users/statistics/monthly-spending, GET /users/statistics/profile | 데이터 분석 및 성적 |
 | **컬렉션** | 1 | GET /users/collections | 저장된 드림홈 목록 |
 
-### 개발 우선순위
 
-| Phase | API 개수 | 포함 항목 | 설명 |
-|-------|---------|---------|------|
-| **Phase 1 (MVP)** | 8개 | 인증(5) + 온보딩(1) + 대시보드(1) + 프로필(1) | 필수 기능 |
-| **Phase 2 (핵심)** | 6개 | 매물조회(2) + 드림홈(2) + 게임화(2) | 핵심 기능 |
-| **Phase 3 (확장)** | 10개 | 매물저장(4) + 영수증(3) + 통계(2) + 컬렉션(1) | 확장 기능 |
-
----
 
 ## 인증 설정
 
@@ -79,8 +71,7 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "password": "password123",
-  "name": "홍길동",
-  "birthYear": 1995
+  "name": "홍길동"
 }
 ```
 
@@ -90,7 +81,6 @@ Content-Type: application/json
 | email | string | O | 이메일 (유일) | user@example.com |
 | password | string | O | 비밀번호 (8자 이상) | password123 |
 | name | string | O | 사용자 이름 | 홍길동 |
-| birthYear | number | O | 출생년도 | 1995 |
 
 ### 응답 (201 Created)
 ```json
@@ -101,7 +91,6 @@ Content-Type: application/json
     "id": 1,
     "email": "user@example.com",
     "name": "홍길동",
-    "birthYear": 1995,
     "onboardingCompleted": false,
     "createdAt": "2025-12-02T10:00:00Z"
   }

@@ -31,7 +31,7 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
     })
 
     const remainingAmount = computed(() => {
-        return targetAmount.value - currentAmount.value
+        return Math.max(0, targetAmount.value - currentAmount.value)
     })
 
     const dreamHomeInfo = computed(() => ({
