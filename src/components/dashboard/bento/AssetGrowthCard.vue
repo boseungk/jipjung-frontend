@@ -87,8 +87,7 @@ const chartOptions = computed(() => {
       },
       sparkline: {
         enabled: false
-      },
-      fontFamily: "'Noto Sans KR', sans-serif"
+      }
     },
     stroke: {
       curve: 'smooth',

@@ -1,38 +1,11 @@
 <template>
   <div class="gamified-hero">
     <div class="hero-card">
-      <div class="floating-chip">
-        <span class="chip-dot"></span>
-        <span class="chip-text">Live Render</span>
-      </div>
-
-      <div class="hero-header">
-        <div class="badge-chip">
-          <div class="icon-circle">
-            <AppIcon
-              :name="isHouseTrack ? 'house' : 'armchair'"
-              :size="24"
-              :active="true"
-              :is-major-cta="true"
-            />
-          </div>
-          <div class="badge-text">
-            <p class="eyebrow">{{ trackLabel }}</p>
-            <p class="title">{{ currentStep.title }}</p>
-            <p class="subtitle">스텝 {{ activeStage }} / {{ totalStages }}</p>
-          </div>
-        </div>
-
-        <div class="hero-actions">
-          <span class="dday-chip">D-{{ daysRemaining }}</span>
-          <button class="reset-btn" type="button" @click="resetHouseProgress">
-            진행 초기화
-          </button>
-        </div>
-      </div>
+      <button class="reset-btn" type="button" @click="resetHouseProgress">
+        진행 초기화
+      </button>
 
       <div class="scene-card">
-        <div class="ambient-glow"></div>
         <div class="scene-inner">
           <div
             v-if="isHouseTrack"
@@ -58,7 +31,7 @@
         </div>
 
         <div class="stage-message">
-          <p class="stage-eyebrow">{{ currentStep.label }}</p>
+          <p class="stage-eyebrow">{{ currentStep.label }} · Step {{ activeStage }}/{{ totalStages }}</p>
           <p class="stage-text">{{ currentStep.message }}</p>
           <p v-if="latestBadge" class="badge-inline">
             <AppIcon name="star" :size="16" :active="true" :is-major-cta="true" />
@@ -263,7 +236,7 @@ onMounted(async () => {
 <style scoped>
 .gamified-hero {
   width: 100%;
-  padding: 1rem 0 1.5rem;
+  padding: 0 0 1rem;
   display: flex;
   justify-content: center;
 }
@@ -271,65 +244,26 @@ onMounted(async () => {
 .hero-card {
   width: 100%;
   max-width: 920px;
-  background: linear-gradient(135deg, #ffffff, #f9fafb);
+  background: transparent;
   border-radius: 16px;
-  padding: 1.1rem 1.1rem 1rem;
-  box-shadow: 0 18px 38px -24px rgba(17, 24, 39, 0.18);
-  border: 1px solid #edf0f4;
+  padding: 0.5rem 0.5rem 0.5rem;
+  box-shadow: none;
+  border: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 html[data-theme='night'] .hero-card {
-  background: linear-gradient(135deg, rgba(32, 36, 42, 0.94), rgba(26, 28, 32, 0.92));
-  box-shadow: 0 20px 48px -20px rgba(0, 0, 0, 0.62);
-  border: 1.25px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  box-shadow: none;
+  border: none;
 }
 
-.floating-chip {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.6rem;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border-radius: 999px;
-  box-shadow: 0 12px 24px -14px rgba(17, 24, 39, 0.22);
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--ink-base, #1f2937);
-}
 
-.chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ff6b3d;
-  box-shadow: 0 0 0 6px rgba(255, 107, 61, 0.12);
-}
 
-.chip-text {
-  letter-spacing: 0.02em;
-}
 
-.hero-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
 
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+
 
 .badge-chip {
   display: flex;
@@ -351,21 +285,11 @@ html[data-theme='night'] .hero-card {
   box-shadow: 0 12px 24px -10px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
-.badge-text .eyebrow {
-  font-size: 0.82rem;
-  color: var(--ink-muted, #6b7280);
-  letter-spacing: 0.02em;
-}
-
-html[data-theme='night'] .badge-text .eyebrow {
-  color: rgba(245, 246, 247, 0.8);
-}
-
 .badge-text .title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--ink-base, #1f2937);
-  margin: 0.1rem 0;
+  margin: 0;
   letter-spacing: -0.01em;
 }
 
@@ -373,24 +297,20 @@ html[data-theme='night'] .badge-text .title {
   color: var(--showroom-text-night, #f5f6f7);
 }
 
-.badge-text .subtitle {
-  font-size: 0.85rem;
-  color: var(--ink-muted, #6b7280);
-}
-
-html[data-theme='night'] .badge-text .subtitle {
-  color: rgba(245, 246, 247, 0.75);
-}
-
 .reset-btn {
-  padding: 0.42rem 0.78rem;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.4rem 0.7rem;
   border-radius: 10px;
   border: 1px solid var(--border-soft, #e5e7eb);
   background: #f7f8fa;
   color: var(--ink-base, #1f2937);
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
+  z-index: 10;
 }
 
 html[data-theme='night'] .reset-btn {
@@ -408,38 +328,26 @@ html[data-theme='night'] .reset-btn {
 .scene-card {
   position: relative;
   border-radius: 16px;
-  overflow: hidden;
-  margin-top: 0.55rem;
-  padding: 1.05rem 0.95rem 0.9rem;
-  background: #ffffff;
-  border: 1px solid #edf0f4;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 16px 32px -20px rgba(17, 24, 39, 0.18);
+  overflow: visible;
+  margin-top: 0;
+  padding: 0.1rem 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 html[data-theme='night'] .scene-card {
-  background: rgba(32, 36, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 14px 32px -18px rgba(0, 0, 0, 0.65);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-.ambient-glow {
-  position: absolute;
-  inset: 10%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
-  filter: blur(42px);
-  pointer-events: none;
-  z-index: 0;
-}
 
-html[data-theme='night'] .ambient-glow {
-  background: radial-gradient(circle, rgba(255, 138, 92, 0.2), rgba(255, 138, 92, 0));
-  filter: blur(52px);
-}
 
 .scene-inner {
   position: relative;
-  min-height: 220px;
+  min-height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -449,7 +357,11 @@ html[data-theme='night'] .ambient-glow {
 .svg-stage {
   width: 100%;
   max-width: 540px;
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.08));
+  filter: none;
+}
+
+html[data-theme='night'] .svg-stage {
+  filter: none;
 }
 
 .svg-loader,
@@ -466,17 +378,19 @@ html[data-theme='night'] .svg-fallback {
 
 .stage-message {
   margin-top: 0.75rem;
-  text-align: left;
+  text-align: center;
 }
 
 .stage-eyebrow {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--ink-muted, #6b7280);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 html[data-theme='night'] .stage-eyebrow {
-  color: rgba(245, 246, 247, 0.75);
+  color: rgba(245, 246, 247, 0.7);
 }
 
 .stage-text {
@@ -505,7 +419,7 @@ html[data-theme='night'] .badge-inline {
 
 .progress-dots {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0.5rem;
   margin-top: 0.9rem;
 }
@@ -652,7 +566,7 @@ html[data-theme='night'] .xp-meta .muted {
 :deep(.phase-visible) {
   opacity: 1;
   transform: translateY(0);
-  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.12));
+  filter: none;
 }
 
 :deep(.phase-hidden) {

@@ -1,13 +1,15 @@
 <template>
   <div class="dashboard-view">
     <!-- Header -->
-    <ShowroomHeader />
-    
-    <section class="page-intro">
-      <p class="intro-eyebrow">대시보드</p>
-      <h2 class="intro-title">반가워요, {{ userName }}님</h2>
-      <p class="intro-sub">목표까지 차근차근 나아가고 있어요. 오늘도 한 걸음 더 가까워집니다.</p>
-    </section>
+    <header class="page-header">
+      <div class="header-content">
+        <div class="header-left">
+          <AppIcon name="house" :size="28" weight="fill" />
+          <h1>라이프스타일 쇼룸</h1>
+        </div>
+        <p class="subtitle">당신의 저축을 아름다운 공간으로 전시하세요</p>
+      </div>
+    </header>
 
     <div class="dashboard-shell">
       <!-- Zone A: Hero Section (Isometric Room) -->
@@ -20,14 +22,9 @@
 </template>
 
 <script setup>
-import ShowroomHeader from '../components/ShowroomHeader.vue'
+import AppIcon from '../components/common/AppIcon.vue'
 import IsometricRoomHero from '../components/dashboard/IsometricRoomHero.vue'
 import BentoGrid from '../components/dashboard/BentoGrid.vue'
-import { useAuthStore } from '@/stores/authStore'
-import { storeToRefs } from 'pinia'
-
-const authStore = useAuthStore()
-const { userName } = storeToRefs(authStore)
 </script>
 
 <style scoped>
@@ -38,33 +35,50 @@ const { userName } = storeToRefs(authStore)
   background: #f5f6f8;
 }
 
-.page-intro {
+html[data-theme='night'] .dashboard-view {
+  background: var(--minimal-bg-night, #1a1c1e);
+}
+
+.page-header {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem 0.75rem;
+  padding: 1.25rem 1rem 0.2rem;
 }
 
-.intro-eyebrow {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--ink-muted, #6b7280);
-  text-transform: uppercase;
-  margin: 0 0 0.2rem;
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.intro-title {
-  font-size: 1.95rem;
-  font-weight: 800;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.header-left h1 {
+  font-family: var(--font-family-display);
+  font-size: 1.75rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ink-base, #1f2937);
   margin: 0;
 }
 
-.intro-sub {
-  margin: 0.35rem 0 0;
-  font-size: 0.98rem;
-  color: var(--ink-muted, #6b7280);
+html[data-theme='night'] .header-left h1 {
+  color: var(--minimal-text-night, #f5f6f7);
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink-base, #1f2937);
+  margin: 0;
+}
+
+html[data-theme='night'] .subtitle {
+  color: rgba(245, 246, 247, 0.7);
 }
 
 .dashboard-shell {
@@ -74,5 +88,20 @@ const { userName } = storeToRefs(authStore)
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1rem 1rem 0.65rem;
+  }
+
+  .header-left h1 {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.88rem;
+    padding-left: 2.1rem;
+  }
 }
 </style>

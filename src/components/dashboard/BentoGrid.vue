@@ -96,7 +96,7 @@ import AssetGrowthCard from './bento/AssetGrowthCard.vue'
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   box-shadow: 0 14px 28px -20px rgba(17, 24, 39, 0.16);
   border: 1px solid var(--bento-card-border);
   backdrop-filter: none;

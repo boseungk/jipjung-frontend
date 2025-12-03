@@ -4,9 +4,8 @@
     <div class="equal-grid">
       <!-- LEFT: CSS Donut Chart -->
       <div class="chart-column">
-        <div class="chart-meta">
-          <span class="pill">목표 달성률</span>
-          <span class="meta-value">{{ achievementRate }}%</span>
+        <div class="card-heading">
+          <h3 class="card-title">목표 달성률</h3>
         </div>
         <div class="css-donut-chart">
           <div class="donut-ring" :style="{ '--progress': achievementRate + '%' }">
@@ -28,9 +27,6 @@
           </div>
           <div class="subtitle-info">
             목표: {{ propertyName }} <span class="muted">(총 {{ formatNumber(targetAmount) }}만원)</span>
-          </div>
-          <div class="progress-note">
-            이번 달 목표 {{ formatNumber(monthlyGoal) }}만원 · 추천 {{ formatNumber(contributionAmount) }}만원
           </div>
         </div>
         
@@ -114,12 +110,12 @@ const handleSaving = async () => {
   gap: 0.35rem;
 }
 
-.chart-meta {
+.card-heading {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .meta-value {
@@ -150,6 +146,17 @@ const handleSaving = async () => {
   justify-content: center;
   position: relative;
   transform: rotate(-90deg);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.donut-ring:hover {
+  background: conic-gradient(
+    #ff8559 0%,
+    #ff8559 var(--progress, 28%),
+    #e5e7eb var(--progress, 28%),
+    #e5e7eb 100%
+  );
 }
 
 .donut-hole {
@@ -325,6 +332,7 @@ html[data-theme="night"] .saving-feedback {
 
 .btn-icon {
   font-size: 1.375rem;
+  color: #ffffff;
 }
 
 .btn-text {
@@ -344,6 +352,10 @@ html[data-theme="night"] .saving-feedback {
 
   .text-stack {
     text-align: center;
+  }
+
+  .amount-row {
+    justify-content: center;
   }
 
   .amount-huge {
@@ -397,6 +409,7 @@ html[data-theme="night"] .saving-feedback {
 
   .btn-icon {
     font-size: 1.25rem;
+    color: #ffffff;
   }
 }
 

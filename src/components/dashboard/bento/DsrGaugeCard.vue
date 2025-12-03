@@ -12,7 +12,7 @@
         type="radialBar"
         :options="chartOptions"
         :series="[displayRatio]"
-        height="180"
+        height="150"
       />
     </div>
     
@@ -73,33 +73,32 @@ const chartOptions = computed(() => ({
   chart: {
     type: 'radialBar',
     toolbar: { show: false },
-    sparkline: { enabled: true },
-    fontFamily: "'Space Grotesk','Noto Sans KR',sans-serif"
+    sparkline: { enabled: true }
   },
   plotOptions: {
     radialBar: {
       startAngle: -110,
       endAngle: 110,
       hollow: {
-        size: '52%',
+        size: '68%',
         background: 'transparent'
       },
       track: {
         background: chartPalette.value.track,
-        strokeWidth: '100%'
+        strokeWidth: '78%'
       },
       dataLabels: {
         name: {
           show: true,
           offsetY: -6,
-          fontSize: '13px',
-          fontWeight: 600,
+          fontSize: '20px',
+          fontWeight: 700,
           color: chartPalette.value.muted
         },
         value: {
           offsetY: 4,
           fontSize: '26px',
-          fontWeight: 'bold',
+          fontWeight: '800',
           color: gaugeColor.value,
           formatter: () => `${Number(dsrRatio.value || 0).toFixed(1)}%`
         }
@@ -134,7 +133,7 @@ onMounted(() => {
   grid-area: dsr;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.5rem;
 }
 
 .card-heading {
@@ -172,11 +171,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0.15rem 0.25rem;
 }
 
 .status-info {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.65rem 0.75rem;
   background: var(--surface-muted, #f3f4f6);
