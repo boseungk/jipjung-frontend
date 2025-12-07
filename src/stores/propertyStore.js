@@ -233,12 +233,16 @@ export const usePropertyStore = defineStore('property', () => {
     /**
      * 저장된 매물 ID 목록 조회
      */
+    /**
+     * 저장된 매물 ID 목록 조회
+     * JWT 토큰으로 사용자 식별 (userId 불필요)
+     */
     async function fetchSavedPropertyIds() {
         const authStore = useAuthStore()
-        if (!authStore.user) return
+        if (!authStore.isAuthenticated) return
 
         try {
-            const ids = await propertyService.getSavedPropertyIds(authStore.user.id)
+            const ids = await propertyService.getSavedPropertyIds()
             savedPropertyIds.value = ids
         } catch (err) {
             console.error('Failed to fetch saved property ids:', err)
@@ -248,15 +252,19 @@ export const usePropertyStore = defineStore('property', () => {
     /**
      * 저장된 매물 목록 조회
      */
+    /**
+     * 저장된 매물 목록 조회
+     * JWT 토큰으로 사용자 식별 (userId 불필요)
+     */
     async function fetchSavedProperties() {
         const authStore = useAuthStore()
-        if (!authStore.user) return
+        if (!authStore.isAuthenticated) return
 
         loading.value = true
         error.value = null
 
         try {
-            const saved = await propertyService.getSavedProperties(authStore.user.id)
+            const saved = await propertyService.getSavedProperties()
             properties.value = saved
             await fetchSavedPropertyIds()
         } catch (err) {
@@ -271,18 +279,19 @@ export const usePropertyStore = defineStore('property', () => {
      * 매물 저장/저장 취소 토글
      * @param {number|string} propertyId - 매물 ID
      */
+    /**
+     * 매물 저장/저장 취소 토글
+     * @param {number|string} propertyId - 매물 ID
+     */
     async function toggleSaveProperty(propertyId) {
         const authStore = useAuthStore()
-        if (!authStore.user) {
+        if (!authStore.isAuthenticated) {
             error.value = '로그인이 필요합니다.'
             return
         }
 
         try {
-            const isSaved = await propertyService.toggleSaveProperty(
-                authStore.user.id,
-                propertyId
-            )
+            const isSaved = await propertyService.toggleSaveProperty(propertyId)
 
             // savedPropertyIds 업데이트
             if (isSaved) {

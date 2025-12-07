@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e6b5a06d-35e0-4bc6-9ca2-26fd64f84e64" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/client.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/client.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/services/authService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/services/authService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/services/propertyService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/services/propertyService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/stores/authStore.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/stores/authStore.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/stores/dreamHomeStore.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/stores/dreamHomeStore.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/stores/propertyStore.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/stores/propertyStore.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/DashboardView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/DashboardView.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "boseungk"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/boseungk/jipjung-frontend.git",
+    "accountId": "6aae4c13-aa26-44d1-ae33-f71b8e328221"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="36VbGDx0313idkxYqUbjKujSu50" />
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.23892.409" />
+        <option value="bundled-js-predefined-d6986cc7102b-e03c56caf84a-JavaScript-IU-252.23892.409" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e6b5a06d-35e0-4bc6-9ca2-26fd64f84e64" name="Changes" comment="" />
+      <created>1765094597269</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1765094597269</updated>
+      <workItem from="1765094601497" duration="21000" />
+    </task>
+    <servers />
+  </component>
+</project>

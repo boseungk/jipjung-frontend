@@ -1,100 +1,169 @@
 /**
- * Auth Service
- * Mock API를 사용하는 인증 서비스
- * 실제 백엔드 준비 시 mockAuthService를 실제 API 호출로 교체
+ * Authentication Service
+ * 
+ * 인증 관련 API 호출을 담당하는 서비스 레이어.
+ * REST_API.md 명세에 따라 구현됨.
+ * 
+ * @module api/services/authService
  */
 
-import { mockAuthService } from './mockAuthService'
-
-export const authService = {
-    /**
-     * 회원가입
-     */
-    async register(userData) {
-        return await mockAuthService.register(userData)
-    },
-
-    /**
-     * 로그인
-     */
-    async login(email, password) {
-        return await mockAuthService.login(email, password)
-    },
-
-    /**
-     * 토큰 갱신
-     */
-    async refreshToken(refreshToken) {
-        return await mockAuthService.refreshToken(refreshToken)
-    },
-
-    /**
-     * 현재 사용자 정보 조회
-     */
-    async getCurrentUser(token) {
-        return await mockAuthService.getCurrentUser(token)
-    },
-
-    /**
-     * 온보딩 정보 저장
-     */
-    async completeOnboarding(token, onboardingData) {
-        return await mockAuthService.completeOnboarding(token, onboardingData)
-    },
-
-    /**
-     * 프로필 수정
-     */
-    async updateProfile(token, profileData) {
-        return await mockAuthService.updateProfile(token, profileData)
-    },
-
-    /**
-     * 로그아웃
-     */
-    async logout(token) {
-        return await mockAuthService.logout(token)
-    }
-}
-
-// 실제 백엔드 API 사용 시 아래와 같이 교체:
-/*
 import apiClient from '@/api/client'
+import { AUTH_ENDPOINTS, USER_ENDPOINTS } from '@/api/endpoints'
+
+/**
+ * @typedef {Object} RegisterRequest
+ * @property {string} email - 이메일 (유일)
+ * @property {string} password - 비밀번호 (8자 이상)
+ * @property {string} name - 사용자 이름
+ */
+
+/**
+ * @typedef {Object} LoginResponse
+ * @property {string} accessToken - JWT 액세스 토큰
+ * @property {string} refreshToken - JWT 리프레시 토큰
+ * @property {User} user - 사용자 정보
+ */
+
+/**
+ * @typedef {Object} OnboardingRequest
+ * @property {number} birthYear - 출생년도
+ * @property {number} annualIncome - 연소득 (원 단위)
+ * @property {number} existingLoanMonthly - 월 대출 상환액 (원 단위)
+ * @property {string[]} preferredAreas - 선호 지역 배열
+ */
+
+/**
+ * @typedef {Object} ProfileUpdateRequest
+ * @property {string} name - 사용자 이름
+ * @property {number} birthYear - 출생년도
+ * @property {number} annualIncome - 연소득 (원 단위)
+ * @property {number} existingLoanMonthly - 월 대출 상환액 (원 단위)
+ */
 
 export const authService = {
+  /**
+   * 회원가입
+   * 
+   * @param {RegisterRequest} userData - 회원가입 정보
+   * @returns {Promise<LoginResponse>} 토큰 및 사용자 정보
+   * @throws {ApiError} 이메일 중복(400), 유효성 검증 실패(400)
+   * 
+   * @example
+   * const result = await authService.register({
+   *   email: 'user@example.com',
+   *   password: 'password123',
+   *   name: '홍길동'
+   * })
+   */
   async register(userData) {
-    const response = await apiClient.post('/auth/register', userData)
+    const response = await apiClient.post(AUTH_ENDPOINTS.REGISTER, userData)
     return response.data
   },
 
+  /**
+   * 로그인
+   * 
+   * 백엔드는 JWT 토큰을 Authorization 헤더로 반환합니다.
+   * 응답 body에는 nickname만 포함됩니다.
+   * 
+   * @param {string} email - 이메일
+   * @param {string} password - 비밀번호
+   * @returns {Promise<{accessToken: string, nickname: string}>} 토큰 및 닉네임
+   * @throws {ApiError} 인증 실패(401), 유효성 검증 실패(400)
+   * 
+   * @example
+   * const result = await authService.login('user@example.com', 'password123')
+   */
   async login(email, password) {
-    const response = await apiClient.post('/auth/login', { email, password })
-    return response.data
+    const response = await apiClient.post(AUTH_ENDPOINTS.LOGIN, { email, password })
+
+    // 헤더에서 토큰 추출 (Bearer 제거)
+    const authHeader = response.headers['authorization'] || response.headers['Authorization']
+    const accessToken = authHeader?.replace('Bearer ', '') || null
+
+    // body의 data에서 nickname 추출
+    const { nickname } = response.data.data || response.data || {}
+
+    return {
+      accessToken,
+      nickname
+    }
   },
 
+  /**
+   * 토큰 갱신
+   * 
+   * @param {string} refreshToken - 리프레시 토큰
+   * @returns {Promise<{accessToken: string}>} 새로운 액세스 토큰
+   * @throws {ApiError} 토큰 만료/유효하지 않음(401)
+   */
   async refreshToken(refreshToken) {
-    const response = await apiClient.post('/auth/refresh', { refreshToken })
+    const response = await apiClient.post(AUTH_ENDPOINTS.REFRESH, { refreshToken })
     return response.data
   },
 
+  /**
+   * 현재 사용자 정보 조회
+   * 
+   * apiClient 인터셉터에서 토큰을 자동으로 첨부하므로
+   * 별도의 토큰 파라미터가 필요하지 않음
+   * 
+   * @returns {Promise<User>} 사용자 정보
+   * @throws {ApiError} 인증 필요(401), 사용자 없음(404)
+   */
   async getCurrentUser() {
-    const response = await apiClient.get('/auth/me')
+    const response = await apiClient.get(AUTH_ENDPOINTS.ME)
     return response.data
   },
 
+  /**
+   * 온보딩 정보 저장
+   * 
+   * @param {OnboardingRequest} onboardingData - 온보딩 데이터
+   * @returns {Promise<{user: User}>} 업데이트된 사용자 정보
+   * @throws {ApiError} 인증 필요(401), 유효성 검증 실패(400)
+   * 
+   * @example
+   * const result = await authService.completeOnboarding({
+   *   birthYear: 1995,
+   *   annualIncome: 50000000,
+   *   existingLoanMonthly: 500000,
+   *   preferredAreas: ['강남구', '서초구']
+   * })
+   */
   async completeOnboarding(onboardingData) {
-    const response = await apiClient.put('/auth/onboarding', onboardingData)
+    const response = await apiClient.post(USER_ENDPOINTS.ONBOARDING, onboardingData)
     return response.data
   },
 
+  /**
+   * 프로필 수정
+   * 
+   * @param {ProfileUpdateRequest} profileData - 프로필 데이터
+   * @returns {Promise<{user: User}>} 업데이트된 사용자 정보
+   * @throws {ApiError} 인증 필요(401), 유효성 검증 실패(400)
+   * 
+   * @example
+   * const result = await authService.updateProfile({
+   *   name: '홍길동',
+   *   birthYear: 1995,
+   *   annualIncome: 55000000,
+   *   existingLoanMonthly: 450000
+   * })
+   */
   async updateProfile(profileData) {
-    const response = await apiClient.put('/auth/profile', profileData)
+    // REST_API.md 명세: PUT /users/profile
+    const response = await apiClient.put(USER_ENDPOINTS.PROFILE, profileData)
     return response.data
   },
 
+  /**
+   * 로그아웃
+   * 
+   * @returns {Promise<{message: string}>} 성공 메시지
+   */
   async logout() {
-    const response = await apiClient.post('/auth/logout')
+    const response = await apiClient.post(AUTH_ENDPOINTS.LOGOUT)
     return response.data
   }
 }
-*/

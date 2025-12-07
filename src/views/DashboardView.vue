@@ -22,9 +22,46 @@
 </template>
 
 <script setup>
+/**
+ * Dashboard View
+ *
+ * 메인 대시보드 페이지.
+ * 마운트 시 대시보드 API를 호출하여 최신 데이터를 로드합니다.
+ */
+import { onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
 import AppIcon from '../components/common/AppIcon.vue'
 import IsometricRoomHero from '../components/dashboard/IsometricRoomHero.vue'
 import BentoGrid from '../components/dashboard/BentoGrid.vue'
+
+const authStore = useAuthStore()
+
+/** @type {import('vue').Ref<string|null>} 에러 메시지 */
+const error = ref(null)
+
+/**
+ * 대시보드 데이터 로드
+ *
+ * API 호출 실패 시에도 기존 캐시된 데이터로 UI를 표시합니다.
+ * (Graceful Degradation)
+ */
+async function loadDashboardData() {
+    try {
+        error.value = null
+        await authStore.loadDashboard()
+    } catch (err) {
+        console.error('Failed to load dashboard:', err)
+        // 에러 발생해도 기존 데이터로 렌더링 (graceful degradation)
+        error.value = '데이터를 불러오는 중 오류가 발생했습니다. 일부 정보가 최신이 아닐 수 있습니다.'
+    }
+}
+
+onMounted(() => {
+    // 인증된 사용자만 대시보드 데이터 로드
+    if (authStore.isAuthenticated) {
+        loadDashboardData()
+    }
+})
 </script>
 
 <style scoped>

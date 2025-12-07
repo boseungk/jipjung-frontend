@@ -1,28 +1,73 @@
+/**
+ * Dream Home Store
+ * 
+ * 드림홈 상태 관리를 담당하는 Pinia 스토어.
+ * authStore의 사용자 데이터와 동기화됩니다.
+ * 
+ * @module stores/dreamHomeStore
+ */
+
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from './authStore'
+import { dreamHomeService } from '@/api/services/dreamHomeService'
 import { DEFAULT_DREAM_HOME } from '@/constants/user'
 
 export const useDreamHomeStore = defineStore('dreamHome', () => {
     const authStore = useAuthStore()
+
+    // ============================================
+    // State
+    // ============================================
+
+    /** @type {import('vue').Ref<boolean>} 로딩 상태 */
+    const isLoading = ref(false)
+
+    /** @type {import('vue').Ref<string|null>} 에러 메시지 */
+    const error = ref(null)
+
+    // ============================================
+    // Computed (AuthStore 데이터 기반)
+    // ============================================
+
+    /** 드림홈 데이터 (기본값 포함) */
     const dreamHome = computed(() => authStore.userDreamHome || DEFAULT_DREAM_HOME)
 
-    // State derived from user data
+    /** 드림홈 ID */
     const dreamHomeId = computed(() => dreamHome.value.dreamHomeId ?? DEFAULT_DREAM_HOME.dreamHomeId)
+
+    /** 매물명 */
     const propertyName = computed(() => dreamHome.value.propertyName || DEFAULT_DREAM_HOME.propertyName)
+
+    /** 위치 */
     const location = computed(() => dreamHome.value.location || DEFAULT_DREAM_HOME.location)
+
+    /** 가격 */
     const price = computed(() => Number(dreamHome.value.price) || DEFAULT_DREAM_HOME.price)
+
+    /** 목표 금액 */
     const targetAmount = computed(() => Number(dreamHome.value.targetAmount) || DEFAULT_DREAM_HOME.targetAmount)
+
+    /** 월 목표 저축액 */
     const monthlyGoal = computed(() => Number(dreamHome.value.monthlyGoal) || DEFAULT_DREAM_HOME.monthlyGoal)
+
+    /** 목표 날짜 */
     const targetDate = computed(() => dreamHome.value.targetDate || DEFAULT_DREAM_HOME.targetDate)
+
+    /** 현재 저축 금액 */
     const currentAmount = computed(() => Number(dreamHome.value.currentAmount) || 0)
 
+    // ============================================
     // Getters
+    // ============================================
+
+    /** 달성률 (%) */
     const achievementRate = computed(() => {
         if (!targetAmount.value) return '0.0'
         return ((currentAmount.value / targetAmount.value) * 100).toFixed(1)
     })
 
+    /** 남은 일수 */
     const daysRemaining = computed(() => {
         const target = new Date(targetDate.value || DEFAULT_DREAM_HOME.targetDate)
         const today = new Date()
@@ -30,10 +75,12 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         return Math.ceil(diff / (1000 * 60 * 60 * 24))
     })
 
+    /** 남은 금액 */
     const remainingAmount = computed(() => {
         return Math.max(0, targetAmount.value - currentAmount.value)
     })
 
+    /** 드림홈 정보 객체 */
     const dreamHomeInfo = computed(() => ({
         dreamHomeId: dreamHomeId.value,
         propertyName: propertyName.value,
@@ -48,42 +95,95 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         remainingAmount: remainingAmount.value
     }))
 
+    // ============================================
     // Actions
-    async function updateProgress(amount) {
-        const nextAmount = Math.max(0, currentAmount.value + amount)
+    // ============================================
+
+    /**
+     * 저축 진행률 업데이트
+     * 
+     * @param {number} amount - 저축 금액 (양수: 추가, 음수: 차감)
+     * @param {string} [memo=''] - 메모
+     * @returns {Promise<Object>} 업데이트 결과
+     */
+    async function updateProgress(amount, memo = '') {
+        isLoading.value = true
+        error.value = null
+
         try {
-            await authStore.updateProfile({
+            const response = await dreamHomeService.updateProgress(amount, memo)
+
+            // authStore의 사용자 데이터 업데이트
+            authStore.updateUserData({
                 dreamHome: {
-                    ...dreamHome.value,
-                    currentAmount: nextAmount
+                    ...authStore.userDreamHome,
+                    currentAmount: response.dreamHome.currentAmount,
+                    achievementRate: response.dreamHome.achievementRate
                 }
             })
-        } catch (error) {
-            console.error('Failed to update dream home progress:', error)
-            throw error
+
+            // 경험치도 함께 업데이트
+            if (response.gamification) {
+                authStore.updateUserData({
+                    gamification: {
+                        ...authStore.userGamification,
+                        experiencePoints: response.gamification.experiencePoints
+                    }
+                })
+            }
+
+            return response
+        } catch (err) {
+            error.value = err.message || '저축 업데이트에 실패했습니다.'
+            console.error('Failed to update dream home progress:', err)
+            throw err
+        } finally {
+            isLoading.value = false
         }
     }
 
+    /**
+     * 드림홈 변경
+     * 
+     * @param {Object} newDreamHome - 새 드림홈 데이터
+     * @returns {Promise<Object>} 업데이트 결과
+     */
     async function changeDreamHome(newDreamHome) {
-        const nextDreamHome = {
-            ...dreamHome.value,
-            ...newDreamHome
-        }
-
-        if (newDreamHome.price && !newDreamHome.targetAmount) {
-            nextDreamHome.targetAmount = Math.floor(newDreamHome.price * 0.3)
-        }
+        isLoading.value = true
+        error.value = null
 
         try {
-            await authStore.updateProfile({ dreamHome: nextDreamHome })
-        } catch (error) {
-            console.error('Failed to change dream home:', error)
-            throw error
+            const response = await dreamHomeService.changeDreamHome(newDreamHome)
+
+            // authStore의 사용자 데이터 업데이트
+            authStore.updateUserData({
+                dreamHome: response.dreamHome
+            })
+
+            return response
+        } catch (err) {
+            error.value = err.message || '드림홈 변경에 실패했습니다.'
+            console.error('Failed to change dream home:', err)
+            throw err
+        } finally {
+            isLoading.value = false
         }
     }
 
+    /**
+     * 에러 상태 초기화
+     */
+    function clearError() {
+        error.value = null
+    }
+
+    // ============================================
+    // Return
+    // ============================================
     return {
         // State
+        isLoading,
+        error,
         dreamHomeId,
         propertyName,
         location,
@@ -92,13 +192,16 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         monthlyGoal,
         targetDate,
         currentAmount,
+
         // Getters
         achievementRate,
         daysRemaining,
         remainingAmount,
         dreamHomeInfo,
+
         // Actions
         updateProgress,
-        changeDreamHome
+        changeDreamHome,
+        clearError
     }
 })

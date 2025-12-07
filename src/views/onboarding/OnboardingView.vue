@@ -91,6 +91,7 @@ const onboardingData = ref({
   birthYear: null,
   annualIncome: VALIDATION.ANNUAL_INCOME.DEFAULT,
   existingLoanMonthly: VALIDATION.EXISTING_LOAN.DEFAULT,
+  currentAssets: 0,
   preferredAreas: []
 })
 
@@ -126,7 +127,15 @@ async function handleComplete() {
   isSubmitting.value = true
 
   try {
-    await authStore.completeOnboarding(onboardingData.value)
+    // preferredAreas를 백엔드 형식(문자열 배열)으로 변환
+    const requestData = {
+      ...onboardingData.value,
+      preferredAreas: onboardingData.value.preferredAreas.map(
+        area => `${area.sido} ${area.sigungu}`
+      )
+    }
+    
+    await authStore.completeOnboarding(requestData)
     showSuccess(MESSAGES.SUBMIT_SUCCESS)
     
     // Delay navigation to show success toast

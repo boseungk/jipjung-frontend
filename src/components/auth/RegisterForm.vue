@@ -1,20 +1,20 @@
 <template>
   <form @submit.prevent="handleSubmit" class="auth-form">
     <div class="form-group">
-      <label for="name">이름</label>
+      <label for="nickname">닉네임</label>
       <input
-        id="name"
-        v-model="formData.name"
+        id="nickname"
+        v-model="formData.nickname"
         type="text"
         placeholder="홍길동"
         class="glass-input"
-        :class="{ 'error': validation.hasError('name') }"
-        @blur="() => validation.validateField('name', formData.name, validation.validateName)"
-        @input="() => validation.clearFieldError('name')"
+        :class="{ 'error': validation.hasError('nickname') }"
+        @blur="() => validation.validateField('nickname', formData.nickname, validation.validateName)"
+        @input="() => validation.clearFieldError('nickname')"
         required
       />
-      <span v-if="validation.hasError('name')" class="error-message">
-        {{ validation.getError('name') }}
+      <span v-if="validation.hasError('nickname')" class="error-message">
+        {{ validation.getError('nickname') }}
       </span>
     </div>
 
@@ -37,32 +37,12 @@
     </div>
 
     <div class="form-group">
-      <label for="birthYear">출생연도</label>
-      <input
-        id="birthYear"
-        v-model.number="formData.birthYear"
-        type="number"
-        placeholder="1995"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('birthYear') }"
-        @blur="() => validation.validateField('birthYear', formData.birthYear, validation.validateBirthYear)"
-        @input="() => validation.clearFieldError('birthYear')"
-        min="1900"
-        :max="currentYear"
-        required
-      />
-      <span v-if="validation.hasError('birthYear')" class="error-message">
-        {{ validation.getError('birthYear') }}
-      </span>
-    </div>
-
-    <div class="form-group">
       <label for="password">비밀번호</label>
       <input
         id="password"
         v-model="formData.password"
         type="password"
-        placeholder="••••••••"
+        placeholder="8자 이상, 영문+숫자+특수문자"
         class="glass-input"
         :class="{ 'error': validation.hasError('password') }"
         @blur="() => validation.validateField('password', formData.password, validation.validatePassword)"
@@ -111,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormValidation } from '@/composables/useFormValidation'
 
@@ -119,12 +99,9 @@ const emit = defineEmits(['register-success'])
 const authStore = useAuthStore()
 const validation = useFormValidation()
 
-const currentYear = computed(() => new Date().getFullYear())
-
 const formData = ref({
-  name: '',
+  nickname: '',
   email: '',
-  birthYear: null,
   password: '',
   passwordConfirm: ''
 })
@@ -142,9 +119,8 @@ function validatePasswordConfirmField() {
 
 async function handleSubmit() {
   // 모든 필드 검증
-  const nameValid = validation.validateField('name', formData.value.name, validation.validateName)
+  const nicknameValid = validation.validateField('nickname', formData.value.nickname, validation.validateName)
   const emailValid = validation.validateField('email', formData.value.email, validation.validateEmail)
-  const birthYearValid = validation.validateField('birthYear', formData.value.birthYear, validation.validateBirthYear)
   const passwordValid = validation.validateField('password', formData.value.password, validation.validatePassword)
   const passwordConfirmValid = validation.validateField(
     'passwordConfirm',
@@ -152,7 +128,7 @@ async function handleSubmit() {
     (value) => validation.validatePasswordConfirm(formData.value.password, value)
   )
 
-  if (!nameValid || !emailValid || !birthYearValid || !passwordValid || !passwordConfirmValid) {
+  if (!nicknameValid || !emailValid || !passwordValid || !passwordConfirmValid) {
     return
   }
 
@@ -163,8 +139,7 @@ async function handleSubmit() {
     await authStore.register({
       email: formData.value.email,
       password: formData.value.password,
-      name: formData.value.name,
-      birthYear: formData.value.birthYear
+      nickname: formData.value.nickname
     })
     emit('register-success')
   } catch (error) {

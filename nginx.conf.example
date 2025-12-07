@@ -1,0 +1,81 @@
+# Jipjung Nginx Configuration
+# 
+# 사용법:
+# 1. 이 파일을 /etc/nginx/sites-available/jipjung 에 복사
+# 2. sudo ln -s /etc/nginx/sites-available/jipjung /etc/nginx/sites-enabled/
+# 3. sudo nginx -t && sudo systemctl reload nginx
+
+upstream backend {
+    server localhost:8080;
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    server_name localhost;  # 실제 도메인으로 변경
+
+    # Vue 빌드 파일 경로
+    root /var/www/jipjung/dist;
+    index index.html;
+
+    # Gzip 압축
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;
+    gzip_min_length 1000;
+
+    # 정적 파일 캐싱 (JS, CSS, 이미지 등)
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # API 요청을 Spring Boot로 프록시
+    location /api/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        
+        # 클라이언트 정보 전달
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # 연결 유지
+        proxy_set_header Connection "";
+        
+        # 타임아웃
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # 버퍼 설정
+        proxy_buffer_size 4k;
+        proxy_buffers 8 16k;
+        proxy_busy_buffers_size 24k;
+    }
+
+    # Vue Router History 모드 지원
+    # 모든 경로를 index.html로 fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 헬스 체크 엔드포인트
+    location /health {
+        access_log off;
+        return 200 "OK";
+        add_header Content-Type text/plain;
+    }
+
+    # 에러 페이지
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
