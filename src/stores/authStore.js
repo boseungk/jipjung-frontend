@@ -21,7 +21,8 @@ import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
  */
 const STORAGE_KEYS = {
     ACCESS_TOKEN: 'accessToken',
-    REFRESH_TOKEN: 'refreshToken'
+    REFRESH_TOKEN: 'refreshToken',
+    ONBOARDING_COMPLETED: 'onboardingCompleted'
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -100,6 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
         refreshTokenValue.value = null
         localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+        localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
     }
 
     // ============================================
@@ -145,10 +147,16 @@ export const useAuthStore = defineStore('auth', () => {
             localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken)
         }
 
-        // 사용자 정보 설정 (현재는 nickname만 있음)
+        // onboardingCompleted 상태 localStorage에 저장
+        const isOnboardingCompleted = data.onboardingCompleted ?? false
+        localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, String(isOnboardingCompleted))
+
+        // 사용자 정보 설정 (onboardingCompleted 포함)
         user.value = {
+            ...data.user,
             nickname: data.nickname,
-            email: email  // 로그인 시 입력한 이메일 저장
+            email: email,
+            onboardingCompleted: isOnboardingCompleted
         }
 
         return data
@@ -206,7 +214,9 @@ export const useAuthStore = defineStore('auth', () => {
 
         if (userData) {
             // 기존 사용자 정보와 병합
-            user.value = { ...user.value, ...userData }
+            user.value = { ...user.value, ...userData, onboardingCompleted: true }
+            // localStorage에도 저장
+            localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true')
         }
 
         return response
@@ -232,18 +242,34 @@ export const useAuthStore = defineStore('auth', () => {
      * 
      * localStorage에 토큰이 있으면 사용자 정보를 조회하여
      * 세션 유효성을 확인합니다.
+     * 
+     * 대시보드 API 실패 시에도 토큰이 유효하면 기본 user 정보를 설정합니다.
      */
     async function checkAuth() {
         if (!accessToken.value) {
             return
         }
 
+        // 토큰이 있으면 일단 기본 user 정보 설정 (isAuthenticated가 true가 되도록)
+        // localStorage에서 onboardingCompleted 복원
+        if (!user.value) {
+            const storedOnboardingCompleted = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
+            user.value = {
+                onboardingCompleted: storedOnboardingCompleted === 'true'
+            }
+        }
+
         try {
-            const userData = await authService.getCurrentUser()
-            user.value = userData
+            // 대시보드 API로 사용자 정보 조회 시도
+            await loadDashboard()
         } catch (error) {
             console.error('Auth check failed:', error)
-            clearAuth()
+            // 401/403 에러인 경우만 로그아웃 처리
+            if (error?.response?.status === 401 || error?.response?.status === 403) {
+                clearAuth()
+            }
+            // 다른 에러 (네트워크, 500, 온보딩 미완료 등)는 
+            // 기본 user 정보 유지하여 인증 상태 유지
         }
     }
 
@@ -251,7 +277,7 @@ export const useAuthStore = defineStore('auth', () => {
      * 대시보드 데이터 로드
      * 
      * 대시보드 진입 시 호출하여 통합 데이터를 가져옵니다.
-     * 사용자, 드림홈, 게임화, DSR 정보를 한 번에 업데이트합니다.
+     * 백엔드 응답을 프론트엔드 구조로 변환합니다.
      * 
      * @returns {Promise<Object>} 대시보드 데이터
      */
@@ -263,17 +289,62 @@ export const useAuthStore = defineStore('auth', () => {
         isDashboardLoading.value = true
 
         try {
-            const dashboard = await dashboardService.getDashboard()
+            const dashboardResponse = await dashboardService.getDashboard()
 
-            // 사용자 정보 업데이트 (드림홈, 게임화 정보 포함)
-            user.value = {
-                ...user.value,
-                ...dashboard.user,
-                dreamHome: dashboard.dreamHome,
-                gamification: dashboard.gamification
+            // 백엔드 응답 구조: { code, status, message, data: { profile, goal, streak, dsr, assets, showroom, gapAnalysis } }
+            const response = dashboardResponse.data || dashboardResponse
+
+            // 사용자 정보 매핑 (profile -> user)
+            const mappedUser = {
+                nickname: response.profile?.nickname,
+                name: response.profile?.nickname,  // 하위 호환성
+                onboardingCompleted: true
             }
 
-            return dashboard
+            // 드림홈 정보 매핑 (goal -> dreamHome)
+            const mappedDreamHome = {
+                propertyName: response.goal?.targetPropertyName || '목표를 설정해주세요',
+                targetAmount: response.goal?.totalAmount || 0,
+                currentAmount: response.goal?.savedAmount || 0,
+                remainingAmount: response.goal?.remainingAmount || 0,
+                achievementRate: response.goal?.achievementRate || 0,
+                isCompleted: response.goal?.isCompleted || false
+            }
+
+            // 게임화 정보 매핑 (profile + streak -> gamification)
+            const mappedGamification = {
+                currentLevel: response.profile?.level || 1,
+                levelTitle: response.profile?.title || '신입 건축가',
+                experiencePoints: response.profile?.levelProgress?.currentExp || 0,
+                nextLevelExp: response.profile?.levelProgress?.targetExp || 100,
+                expProgress: response.profile?.levelProgress?.percent || 0,
+                remainingExp: response.profile?.levelProgress?.remainingExp || 0,
+                currentStreak: response.streak?.currentStreak || 0,
+                longestStreak: response.streak?.maxStreak || 0,
+                isTodayParticipated: response.streak?.isTodayParticipated || false,
+                rewardAvailable: response.streak?.rewardAvailable || false,
+                weeklyStatus: response.streak?.weeklyStatus || []
+            }
+
+            // 사용자 정보 업데이트
+            user.value = {
+                ...user.value,
+                ...mappedUser,
+                dreamHome: mappedDreamHome,
+                gamification: mappedGamification,
+                // 원본 백엔드 응답 보존 (컴포넌트에서 직접 접근 가능)
+                _raw: {
+                    profile: response.profile,
+                    goal: response.goal,
+                    streak: response.streak,
+                    dsr: response.dsr,
+                    assets: response.assets,
+                    showroom: response.showroom,
+                    gapAnalysis: response.gapAnalysis
+                }
+            }
+
+            return response
         } finally {
             isDashboardLoading.value = false
         }

@@ -28,7 +28,8 @@ export function useOnboardingValidation(onboardingData, currentStep) {
             case 2:
                 return validateIncome(onboardingData.value.annualIncome)
             case 3:
-                return validateLoan(onboardingData.value.existingLoanMonthly)
+                return validateLoan(onboardingData.value.existingLoanMonthly) &&
+                    validateAssets(onboardingData.value.currentAssets)
             case 4:
                 return validateAreas(onboardingData.value.preferredAreas)
             default:
@@ -83,6 +84,17 @@ export function useOnboardingValidation(onboardingData, currentStep) {
     }
 
     /**
+     * Validate current assets
+     * @param {number} assets - Current assets in 만원
+     * @returns {boolean} True if valid (0 is valid)
+     */
+    function validateAssets(assets) {
+        if (assets === null || assets === undefined) return true // Allow undefined for backwards compat
+        return assets >= VALIDATION.CURRENT_ASSETS.MIN &&
+            assets <= VALIDATION.CURRENT_ASSETS.MAX
+    }
+
+    /**
      * Validate preferred areas
      * @param {Array} areas - Array of {sido, sigungu} objects
      * @returns {boolean} True if valid
@@ -116,6 +128,7 @@ export function useOnboardingValidation(onboardingData, currentStep) {
         validateBirthYear,
         validateIncome,
         validateLoan,
+        validateAssets,
         validateAreas,
 
         // Error message helpers

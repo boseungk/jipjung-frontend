@@ -93,24 +93,26 @@ export const propertyService = {
         ...filters,
         sortBy,
         sortOrder,
-        page,
-        limit
+        page: Math.max(0, page - 1), // 백엔드는 0-based, 프론트엔드는 1-based
+        size: limit // 백엔드는 size 사용
       }
     })
 
-    return response.data
+    // 백엔드 ApiResponse 구조: { code, status, message, data: { apartments, totalCount, ... } }
+    return response.data.data || response.data
   },
 
   /**
    * 단일 매물 상세 조회
    * 
-   * @param {number|string} id - 매물 ID
+   * @param {number|string} id - 매물 ID (aptSeq)
    * @returns {Promise<Property>} 매물 상세 정보
    * @throws {ApiError} 매물 없음(404)
    */
   async getPropertyById(id) {
     const response = await apiClient.get(PROPERTY_ENDPOINTS.DETAIL(id))
-    return response.data
+    // 백엔드 ApiResponse 구조: { code, status, message, data: { aptSeq, aptNm, ... } }
+    return response.data.data || response.data
   },
 
   /**

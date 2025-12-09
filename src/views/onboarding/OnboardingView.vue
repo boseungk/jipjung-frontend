@@ -21,7 +21,7 @@
           <transition name="slide-fade" mode="out-in">
             <component
               :is="currentStepComponent"
-              v-model="onboardingData[stepDataKeys[currentStep - 1]]"
+              v-model="currentStepModel"
               @next="handleNext"
             />
           </transition>
@@ -95,7 +95,7 @@ const onboardingData = ref({
   preferredAreas: []
 })
 
-const stepDataKeys = ['birthYear', 'annualIncome', 'existingLoanMonthly', 'preferredAreas']
+const stepDataKeys = ['birthYear', 'annualIncome', 'financialInfo', 'preferredAreas']
 
 const stepComponents = {
   1: markRaw(OnboardingStep1),
@@ -106,8 +106,36 @@ const stepComponents = {
 
 const currentStepComponent = computed(() => stepComponents[currentStep.value])
 
-// Use validation composable
 const { canProceed } = useOnboardingValidation(onboardingData, currentStep)
+
+// Computed for Step 3 (financial info object binding)
+const financialInfo = computed({
+  get: () => ({
+    existingLoanMonthly: onboardingData.value.existingLoanMonthly,
+    currentAssets: onboardingData.value.currentAssets
+  }),
+  set: (val) => {
+    onboardingData.value.existingLoanMonthly = val.existingLoanMonthly ?? 0
+    onboardingData.value.currentAssets = val.currentAssets ?? 0
+  }
+})
+
+// Unified model for v-model binding based on current step
+const currentStepModel = computed({
+  get: () => {
+    if (currentStep.value === 3) {
+      return financialInfo.value
+    }
+    return onboardingData.value[stepDataKeys[currentStep.value - 1]]
+  },
+  set: (val) => {
+    if (currentStep.value === 3) {
+      financialInfo.value = val
+    } else {
+      onboardingData.value[stepDataKeys[currentStep.value - 1]] = val
+    }
+  }
+})
 
 function handleNext() {
   if (canProceed.value && currentStep.value < TOTAL_STEPS) {

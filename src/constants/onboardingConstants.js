@@ -58,6 +58,24 @@ export const VALIDATION = {
         ERROR_MIN: '최소 1개 지역을 선택해주세요',
         ERROR_MAX: '최대 3개 지역까지 선택 가능합니다',
         SUCCESS_MAX: '최대 3개 지역까지 선택하셨습니다'
+    },
+
+    /**
+     * Current Assets (in 만원)
+     */
+    CURRENT_ASSETS: {
+        MIN: 0,
+        MAX: 100000,         // 100억원
+        DEFAULT: 0,
+        STEP: 100,           // 100만원 단위
+        QUICK_AMOUNTS: [0, 1000, 3000, 5000, 10000],
+        QUICK_LABELS: {
+            0: '없음',
+            1000: '1천만원',
+            3000: '3천만원',
+            5000: '5천만원',
+            10000: '1억원'
+        }
     }
 }
 

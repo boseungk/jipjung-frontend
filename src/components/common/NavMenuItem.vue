@@ -6,13 +6,6 @@
     :aria-current="isActive ? 'page' : null"
     @click="$emit('click')"
   >
-    <AppIcon 
-      :name="icon" 
-      :size="18" 
-      :active="isActive" 
-      :is-major-cta="true" 
-      class="menu-icon" 
-    />
     <span class="menu-label">{{ label }}</span>
   </router-link>
 </template>
@@ -63,6 +56,7 @@ const isActive = computed(() => {
   border: none;
   background: none;
   position: relative;
+  white-space: nowrap;
 }
 
 /* Day Mode */

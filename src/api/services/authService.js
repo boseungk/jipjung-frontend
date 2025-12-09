@@ -14,7 +14,7 @@ import { AUTH_ENDPOINTS, USER_ENDPOINTS } from '@/api/endpoints'
  * @typedef {Object} RegisterRequest
  * @property {string} email - 이메일 (유일)
  * @property {string} password - 비밀번호 (8자 이상)
- * @property {string} name - 사용자 이름
+ * @property {string} nickname - 닉네임 (2-20자)
  */
 
 /**
@@ -29,13 +29,13 @@ import { AUTH_ENDPOINTS, USER_ENDPOINTS } from '@/api/endpoints'
  * @property {number} birthYear - 출생년도
  * @property {number} annualIncome - 연소득 (원 단위)
  * @property {number} existingLoanMonthly - 월 대출 상환액 (원 단위)
+ * @property {number} currentAssets - 현재 보유 자산 (원 단위)
  * @property {string[]} preferredAreas - 선호 지역 배열
  */
 
 /**
  * @typedef {Object} ProfileUpdateRequest
- * @property {string} name - 사용자 이름
- * @property {number} birthYear - 출생년도
+ * @property {string} nickname - 닉네임 (2-20자)
  * @property {number} annualIncome - 연소득 (원 단위)
  * @property {number} existingLoanMonthly - 월 대출 상환액 (원 단위)
  */
@@ -51,8 +51,8 @@ export const authService = {
    * @example
    * const result = await authService.register({
    *   email: 'user@example.com',
-   *   password: 'password123',
-   *   name: '홍길동'
+   *   password: 'Test1234!@',
+   *   nickname: '홍길동'
    * })
    */
   async register(userData) {
@@ -81,12 +81,15 @@ export const authService = {
     const authHeader = response.headers['authorization'] || response.headers['Authorization']
     const accessToken = authHeader?.replace('Bearer ', '') || null
 
-    // body의 data에서 nickname 추출
-    const { nickname } = response.data.data || response.data || {}
+    // body의 data에서 user 정보 추출 (onboardingCompleted 포함)
+    const responseData = response.data.data || response.data || {}
+    const user = responseData.user || {}
 
     return {
       accessToken,
-      nickname
+      nickname: user.nickname,
+      onboardingCompleted: user.onboardingCompleted,
+      user // 전체 user 객체도 반환
     }
   },
 
@@ -128,6 +131,7 @@ export const authService = {
    *   birthYear: 1995,
    *   annualIncome: 50000000,
    *   existingLoanMonthly: 500000,
+   *   currentAssets: 30000000,
    *   preferredAreas: ['강남구', '서초구']
    * })
    */
@@ -145,15 +149,14 @@ export const authService = {
    * 
    * @example
    * const result = await authService.updateProfile({
-   *   name: '홍길동',
-   *   birthYear: 1995,
+   *   nickname: '건축왕2세',
    *   annualIncome: 55000000,
    *   existingLoanMonthly: 450000
    * })
    */
   async updateProfile(profileData) {
-    // REST_API.md 명세: PUT /users/profile
-    const response = await apiClient.put(USER_ENDPOINTS.PROFILE, profileData)
+    // 백엔드 명세: POST /api/users/profile
+    const response = await apiClient.post(USER_ENDPOINTS.PROFILE, profileData)
     return response.data
   },
 

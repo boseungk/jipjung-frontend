@@ -10,7 +10,9 @@ import { ref, computed } from 'vue'
 import { propertyService } from '@/api/services/propertyService'
 import { useDreamHomeStore } from './dreamHomeStore'
 import { useAuthStore } from './authStore'
+import { Property } from '@/models/Property'
 import { SEOUL_CENTER, MAP_ZOOM_LEVELS } from '@/constants/properties'
+import { validateCoordinates } from '@/utils/kakaoMapHelpers'
 
 export const usePropertyStore = defineStore('property', () => {
     // State
@@ -185,10 +187,11 @@ export const usePropertyStore = defineStore('property', () => {
                 ...options
             })
 
-            properties.value = response.properties
-            totalProperties.value = response.total
-            totalPages.value = response.totalPages
-            currentPage.value = response.page
+            // 백엔드 데이터를 프론트엔드 형식으로 변환
+            properties.value = (response.apartments || []).map(mapApartmentToProperty)
+            totalProperties.value = response.totalCount || 0
+            totalPages.value = response.totalPages || 1
+            currentPage.value = response.page || 0
         } catch (err) {
             error.value = err.message || '매물 목록을 불러오는데 실패했습니다.'
             console.error('Failed to fetch properties:', err)
@@ -198,19 +201,92 @@ export const usePropertyStore = defineStore('property', () => {
     }
 
     /**
+     * 백엔드 아파트 데이터를 프론트엔드 Property 형식으로 변환
+     * @param {Object} apt - 백엔드 ApartmentListResponse
+     * @returns {Object} - 프론트엔드 Property 객체
+     */
+    function mapApartmentToProperty(apt) {
+        // 백엔드 ApartmentListResponse는 aptSeq를 직접 필드로 가짐
+        const aptId = apt.aptSeq || apt.id
+        const aptName = apt.aptNm || apt.title || '아파트'
+        const price = Number(apt.dealAmount ?? apt.recentPrice ?? apt.price) || 0
+        const exclusiveArea = Number(apt.exclusiveArea ?? apt.area) || 0
+        const areaPyeong = exclusiveArea ? Math.round(exclusiveArea * 0.3025) : 0
+        const coordinates = buildCoordinates(apt)
+
+        const property = new Property({
+            id: aptId,
+            title: aptName,
+            propertyType: '아파트',
+            transactionType: '매매',
+            price,
+            area: areaPyeong,
+            sqm: exclusiveArea,
+            rooms: apt.rooms ?? apt.roomCnt ?? 0,
+            bathrooms: apt.bathrooms ?? apt.bathCnt ?? 0,
+            floor: apt.floor || '-',
+            buildYear: apt.buildYear,
+            sido: '서울특별시',
+            sigungu: apt.umdNm || '',
+            address: `${apt.umdNm || ''} ${apt.roadNm || ''}`.trim(),
+            coordinates,
+            images: [{ url: null, alt: aptName }],
+            features: buildFeatures(apt, areaPyeong),
+            description: apt.description || '',
+            agentInfo: apt.agentInfo || {},
+            createdAt: apt.dealDate || apt.createdAt || new Date().toISOString()
+        })
+
+        // 기존 UI 포맷 유지
+        property.priceFormatted = formatPrice(price)
+        property.getFormattedPrice = () => formatPrice(price)
+
+        // 호환성을 위해 개별 좌표도 보관
+        if (coordinates) {
+            property.latitude = coordinates.lat
+            property.longitude = coordinates.lng
+        }
+
+        return property
+    }
+
+    /**
+     * 가격 포맷팅 (만원 → "X억 Y천만원" 형식)
+     */
+    function formatPrice(priceInManwon) {
+        if (!priceInManwon) return '가격 미정'
+        const eok = Math.floor(priceInManwon / 10000)
+        const remainder = priceInManwon % 10000
+        const chun = Math.floor(remainder / 1000)
+
+        if (eok > 0 && chun > 0) {
+            return `${eok}억 ${chun}천만원`
+        } else if (eok > 0) {
+            return `${eok}억원`
+        } else if (chun > 0) {
+            return `${chun}천만원`
+        } else {
+            return `${priceInManwon}만원`
+        }
+    }
+
+    /**
      * 단일 매물 조회 및 선택
-     * @param {number|string} id - 매물 ID
+     * @param {number|string} id - 매물 ID (aptSeq)
      */
     async function selectProperty(id) {
         loading.value = true
         error.value = null
 
         try {
-            const property = await propertyService.getPropertyById(id)
+            const aptDetail = await propertyService.getPropertyById(id)
+
+            // 백엔드 상세 데이터를 프론트엔드 형식으로 변환
+            const property = mapApartmentDetailToProperty(aptDetail)
             selectedProperty.value = property
 
             // 지도 중심을 선택된 매물 위치로 이동
-            if (property && property.coordinates) {
+            if (property?.coordinates) {
                 mapCenter.value = { ...property.coordinates }
                 mapZoom.value = MAP_ZOOM_LEVELS.DETAIL
             }
@@ -220,6 +296,100 @@ export const usePropertyStore = defineStore('property', () => {
         } finally {
             loading.value = false
         }
+    }
+
+    /**
+     * 백엔드 아파트 상세 데이터를 프론트엔드 Property 형식으로 변환
+     */
+    function mapApartmentDetailToProperty(apt) {
+        const { info, deals } = normalizeAptDetail(apt)
+
+        const latestDeal = deals && deals.length > 0 ? deals[0] : null
+        const price = Number(latestDeal?.dealAmount ?? info?.recentPrice ?? 0) || 0
+        const exclusiveArea =
+            Number(latestDeal?.exclusiveArea ?? info?.area ?? info?.exclusiveArea) || 0
+        const areaPyeong = exclusiveArea ? Math.round(exclusiveArea * 0.3025) : 0
+        const coordinates = buildCoordinates(info || apt)
+
+        const property = new Property({
+            id: info?.aptSeq,
+            title: info?.aptNm || '아파트',
+            propertyType: '아파트',
+            transactionType: '매매',
+            price,
+            area: areaPyeong,
+            sqm: exclusiveArea,
+            rooms: info?.rooms ?? info?.roomCnt ?? 0,
+            bathrooms: info?.bathrooms ?? info?.bathCnt ?? 0,
+            floor: latestDeal?.floor || info?.floor || '-',
+            buildYear: info?.buildYear,
+            sido: '서울특별시',
+            sigungu: info?.umdNm || '',
+            address: info?.jibun || `${info?.umdNm || ''} ${info?.roadNm || ''}`.trim(),
+            coordinates,
+            images: apt.images?.length
+                ? apt.images
+                : [{ url: null, alt: info?.aptNm || '아파트' }],
+            features: buildFeatures(info || apt, areaPyeong),
+            description: apt.description || '',
+            agentInfo: apt.agentInfo || {},
+            createdAt:
+                latestDeal?.dealDate || apt.dealDate || apt.createdAt || new Date().toISOString()
+        })
+
+        property.priceFormatted = formatPrice(price)
+        property.getFormattedPrice = () => formatPrice(price)
+        property.roadAddress = `${info?.roadNm || ''} ${info?.roadNmBonbun || ''}${info?.roadNmBubun ? '-' + info.roadNmBubun : ''
+            }`.trim()
+        property.deals = deals || [] // 거래 이력 전체
+        property.dealCount = deals?.length || 0
+
+        if (coordinates) {
+            property.latitude = coordinates.lat
+            property.longitude = coordinates.lng
+        }
+
+        return property
+    }
+
+    function normalizeAptDetail(apt) {
+        const data = apt?.data || apt
+        const info = getAptInfo(data) || data?.aptInfo || data
+        const deals = data?.deals || apt?.deals || []
+        return { info, deals }
+    }
+
+    function getAptInfo(apt) {
+        if (!apt) return null
+        if (apt.aptSeq) return apt
+        if (apt.aptInfo) return apt.aptInfo
+        return null
+    }
+
+    function buildFeatures(apt, areaPyeong) {
+        const features = []
+        if (apt?.buildYear) {
+            features.push(`${apt.buildYear}년 건축`)
+        }
+        if (areaPyeong) {
+            features.push(`${areaPyeong}평`)
+        }
+        if (Array.isArray(apt?.features)) {
+            features.push(...apt.features)
+        }
+        return features
+    }
+
+    function buildCoordinates(apt) {
+        if (!apt) return null
+        const lat = parseFloat(apt.latitude ?? apt.lat)
+        const lng = parseFloat(apt.longitude ?? apt.lng)
+
+        if (validateCoordinates(lat, lng)) {
+            return { lat, lng }
+        }
+
+        return null
     }
 
     /**

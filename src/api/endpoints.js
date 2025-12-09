@@ -39,11 +39,11 @@ export const GAMIFICATION_ENDPOINTS = {
 }
 
 /**
- * 매물 관련 엔드포인트
+ * 매물(아파트) 관련 엔드포인트
  */
 export const PROPERTY_ENDPOINTS = {
-    LIST: '/properties',
-    DETAIL: (id) => `/properties/${id}`
+    LIST: '/apartments',
+    DETAIL: (id) => `/apartments/${id}`
 }
 
 /**
@@ -68,4 +68,11 @@ export const STATISTICS_ENDPOINTS = {
 export const savedPropertyEndpoints = {
     toggle: (propertyId) => `/users/saved-properties/${propertyId}/toggle`,
     delete: (propertyId) => `/users/saved-properties/${propertyId}`
+}
+
+/**
+ * DSR 시뮬레이션 관련 엔드포인트
+ */
+export const DSR_ENDPOINTS = {
+    SIMULATION: '/simulation/dsr'
 }

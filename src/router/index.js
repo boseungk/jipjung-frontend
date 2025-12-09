@@ -92,6 +92,26 @@ const routes = [
             requiresAuth: true,
             requiresOnboarding: true
         }
+    },
+    {
+        path: '/dsr-simulation',
+        name: 'DsrSimulation',
+        component: () => import('../views/DsrSimulationView.vue'),
+        meta: {
+            title: '집-중 - DSR 시뮬레이션',
+            requiresAuth: true,
+            requiresOnboarding: true
+        }
+    },
+    {
+        path: '/savings',
+        name: 'Savings',
+        component: () => import('../views/SavingsView.vue'),
+        meta: {
+            title: '집-중 - 저축하기',
+            requiresAuth: true,
+            requiresOnboarding: true
+        }
     }
 ]
 
