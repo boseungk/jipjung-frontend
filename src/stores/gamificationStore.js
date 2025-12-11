@@ -276,6 +276,35 @@ export const useGamificationStore = defineStore('gamification', () => {
     await saveGamification(updated)
   }
 
+  /**
+   * 성장 결과 반영 (저축 API 응답에서 사용)
+   * 
+   * 백엔드 SavingsRecordResponse.GrowthResult 필드:
+   * - resultType: 'SUCCESS' | 'LEVEL_UP'
+   * - expChange: 획득 경험치
+   * - currentExp: 현재 총 경험치
+   * - maxExp: 다음 레벨까지 필요 경험치
+   * - level: 현재 레벨
+   * - isLevelUp: 레벨업 여부
+   * - levelLabel: 레벨 타이틀 (예: "2층 골조 공사")
+   * 
+   * @param {Object} growth - SavingsRecordResponse.growth
+   */
+  function applyGrowthResult(growth) {
+    if (!growth) return
+
+    authStore.updateUserData({
+      gamification: {
+        ...authStore.userGamification,
+        // 필드명 매핑 (백엔드 → 프론트엔드)
+        experiencePoints: growth.currentExp,  // currentExp → experiencePoints
+        currentLevel: growth.level,           // level → currentLevel
+        nextLevelExp: growth.maxExp,          // maxExp → nextLevelExp
+        levelTitle: growth.levelLabel         // levelLabel → levelTitle
+      }
+    })
+  }
+
   return {
     // State
     currentLevel,
@@ -304,6 +333,7 @@ export const useGamificationStore = defineStore('gamification', () => {
     incrementStreak,
     resetStreak,
     resetFurnitureProgress,
-    resetHouseProgress
+    resetHouseProgress,
+    applyGrowthResult
   }
 })

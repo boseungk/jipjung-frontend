@@ -6,7 +6,7 @@
  */
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { propertyService } from '@/api/services/propertyService'
 import { useDreamHomeStore } from './dreamHomeStore'
 import { useAuthStore } from './authStore'
@@ -20,7 +20,10 @@ export const usePropertyStore = defineStore('property', () => {
     const selectedProperty = ref(null) // 선택된 매물
     const loading = ref(false) // 로딩 상태
     const error = ref(null) // 에러 메시지
-    const savedPropertyIds = ref([]) // 저장된 매물 ID 목록
+    const authStore = useAuthStore()
+
+    // 관심 아파트 (백엔드 /api/apartments/favorites 연동)
+    const favorites = ref([]) // FavoriteResponse 배열: [{id, aptSeq, apartmentInfo...}]
 
     // 필터 상태
     const filters = ref({
@@ -35,7 +38,8 @@ export const usePropertyStore = defineStore('property', () => {
         rooms: null, // 방 개수
         bathrooms: null, // 욕실 개수
         features: [], // 특징
-        keyword: '' // 검색어
+        keyword: '', // 검색어
+        favoritesOnly: false // 관심 아파트만 표시
     })
 
     // 정렬 상태
@@ -52,6 +56,12 @@ export const usePropertyStore = defineStore('property', () => {
     const totalProperties = ref(0)
     const itemsPerPage = ref(50)
 
+    // Computed: 관심 아파트 aptSeq 목록
+    const favoriteAptSeqs = computed(() => favorites.value.map(f => f.aptSeq))
+
+    // 하위 호환성을 위한 savedPropertyIds computed
+    const savedPropertyIds = computed(() => favoriteAptSeqs.value)
+
     // Getters (Computed)
 
     /**
@@ -59,6 +69,11 @@ export const usePropertyStore = defineStore('property', () => {
      */
     const filteredProperties = computed(() => {
         let result = [...properties.value]
+
+        // 관심 아파트 필터
+        if (filters.value.favoritesOnly) {
+            result = result.filter(p => favoriteAptSeqs.value.includes(p.aptSeq || p.id))
+        }
 
         // 매물 타입 필터
         if (filters.value.propertyType) {
@@ -124,10 +139,10 @@ export const usePropertyStore = defineStore('property', () => {
     })
 
     /**
-     * 저장된 매물 목록
+     * 저장된 (관심) 매물 목록
      */
     const savedProperties = computed(() => {
-        return properties.value.filter((p) => savedPropertyIds.value.includes(p.id))
+        return properties.value.filter((p) => favoriteAptSeqs.value.includes(p.aptSeq || p.id))
     })
 
     /**
@@ -400,87 +415,96 @@ export const usePropertyStore = defineStore('property', () => {
     }
 
     /**
-     * 저장된 매물 ID 목록 조회
+     * 관심 아파트 목록 조회 (백엔드 연동)
      */
-    /**
-     * 저장된 매물 ID 목록 조회
-     * JWT 토큰으로 사용자 식별 (userId 불필요)
-     */
-    async function fetchSavedPropertyIds() {
-        const authStore = useAuthStore()
+    async function fetchFavorites() {
         if (!authStore.isAuthenticated) return
 
         try {
-            const ids = await propertyService.getSavedPropertyIds()
-            savedPropertyIds.value = ids
+            const response = await propertyService.getFavorites()
+            favorites.value = response  // [{id, aptSeq, ...}]
         } catch (err) {
-            console.error('Failed to fetch saved property ids:', err)
+            console.error('Failed to fetch favorites:', err)
         }
     }
 
-    /**
-     * 저장된 매물 목록 조회
-     */
+    // 하위 호환성을 위한 별칭
+    const fetchSavedPropertyIds = fetchFavorites
+
     /**
      * 저장된 매물 목록 조회
      * JWT 토큰으로 사용자 식별 (userId 불필요)
+     * @deprecated 구 API(/users/saved-properties) 사용 - fetchFavorites()로 대체 권장
      */
     async function fetchSavedProperties() {
-        const authStore = useAuthStore()
         if (!authStore.isAuthenticated) return
 
-        loading.value = true
-        error.value = null
-
-        try {
-            const saved = await propertyService.getSavedProperties()
-            properties.value = saved
-            await fetchSavedPropertyIds()
-        } catch (err) {
-            error.value = err.message || '저장된 매물 목록을 불러오는데 실패했습니다.'
-            console.error('Failed to fetch saved properties:', err)
-        } finally {
-            loading.value = false
-        }
+        await fetchFavorites()
     }
 
     /**
-     * 매물 저장/저장 취소 토글
-     * @param {number|string} propertyId - 매물 ID
+     * 관심 아파트 토글 (추가/삭제)
+     * @param {string} aptSeq - 아파트 고유 ID
+     * @returns {Promise<boolean>} 저장 여부 (true: 저장됨, false: 저장 해제됨)
      */
-    /**
-     * 매물 저장/저장 취소 토글
-     * @param {number|string} propertyId - 매물 ID
-     */
-    async function toggleSaveProperty(propertyId) {
-        const authStore = useAuthStore()
+    async function toggleFavorite(aptSeq) {
         if (!authStore.isAuthenticated) {
             error.value = '로그인이 필요합니다.'
             return
         }
 
+        const existing = favorites.value.find(f => f.aptSeq === aptSeq)
+
         try {
-            const isSaved = await propertyService.toggleSaveProperty(propertyId)
-
-            // savedPropertyIds 업데이트
-            if (isSaved) {
-                if (!savedPropertyIds.value.includes(propertyId)) {
-                    savedPropertyIds.value.push(propertyId)
-                }
+            if (existing) {
+                // 삭제 (favoriteId 사용)
+                await propertyService.deleteFavorite(existing.id)
+                favorites.value = favorites.value.filter(f => f.id !== existing.id)
+                return false  // 저장 해제됨
             } else {
-                const index = savedPropertyIds.value.indexOf(propertyId)
-                if (index > -1) {
-                    savedPropertyIds.value.splice(index, 1)
-                }
+                // 추가
+                const newFav = await propertyService.addFavorite(aptSeq)
+                favorites.value.push(newFav)
+                return true  // 저장됨
             }
-
-            return isSaved
         } catch (err) {
-            error.value = err.message || '매물 저장에 실패했습니다.'
-            console.error('Failed to toggle save property:', err)
+            error.value = err.message || '관심 아파트 저장에 실패했습니다.'
+            console.error('Failed to toggle favorite:', err)
             throw err
         }
     }
+
+    // 하위 호환성을 위한 별칭
+    const toggleSaveProperty = toggleFavorite
+
+    /**
+     * 관심 아파트 필터 토글
+     */
+    function toggleFavoritesFilter() {
+        filters.value.favoritesOnly = !filters.value.favoritesOnly
+    }
+
+    /**
+     * 특정 아파트가 관심 목록에 있는지 확인
+     * @param {string} aptSeq
+     * @returns {boolean}
+     */
+    function isFavorite(aptSeq) {
+        return favoriteAptSeqs.value.includes(aptSeq)
+    }
+
+    // 로그인 상태 변화에 맞춰 관심 아파트 목록을 동기화
+    watch(
+        () => authStore.isAuthenticated,
+        async (isAuthed) => {
+            if (isAuthed) {
+                await fetchFavorites()
+            } else {
+                favorites.value = []
+            }
+        },
+        { immediate: true }
+    )
 
     /**
      * 필터 업데이트
@@ -594,6 +618,7 @@ export const usePropertyStore = defineStore('property', () => {
         selectedProperty,
         loading,
         error,
+        favorites,
         savedPropertyIds,
         filters,
         sortBy,
@@ -610,13 +635,18 @@ export const usePropertyStore = defineStore('property', () => {
         affordableProperties,
         hasActiveFilters,
         isSelectedPropertySaved,
+        favoriteAptSeqs,
         // Actions
         fetchProperties,
         selectProperty,
         clearSelection,
+        fetchFavorites,
         fetchSavedPropertyIds,
         fetchSavedProperties,
+        toggleFavorite,
         toggleSaveProperty,
+        toggleFavoritesFilter,
+        isFavorite,
         updateFilters,
         resetFilters,
         updateSort,

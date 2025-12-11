@@ -100,42 +100,39 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
     // ============================================
 
     /**
-     * 저축 진행률 업데이트
+     * 저축 기록 (백엔드 연동)
      * 
-     * @param {number} amount - 저축 금액 (양수: 추가, 음수: 차감)
+     * @param {number} amount - 저축 금액 (원 단위)
+     * @param {'DEPOSIT'|'WITHDRAW'} saveType - 저축 유형
      * @param {string} [memo=''] - 메모
-     * @returns {Promise<Object>} 업데이트 결과
+     * @returns {Promise<SavingsRecordResponse>} 저축 결과
      */
-    async function updateProgress(amount, memo = '') {
+    async function recordSavings(amount, saveType = 'DEPOSIT', memo = '') {
         isLoading.value = true
         error.value = null
 
         try {
-            const response = await dreamHomeService.updateProgress(amount, memo)
-
-            // authStore의 사용자 데이터 업데이트
-            authStore.updateUserData({
-                dreamHome: {
-                    ...authStore.userDreamHome,
-                    currentAmount: response.dreamHome.currentAmount,
-                    achievementRate: response.dreamHome.achievementRate
-                }
+            const response = await dreamHomeService.recordSavings({
+                amount,
+                saveType,
+                memo
             })
 
-            // 경험치도 함께 업데이트
-            if (response.gamification) {
+            // 드림홈 상태 업데이트
+            if (response.dreamHomeStatus) {
                 authStore.updateUserData({
-                    gamification: {
-                        ...authStore.userGamification,
-                        experiencePoints: response.gamification.experiencePoints
+                    dreamHome: {
+                        ...authStore.userDreamHome,
+                        currentAmount: response.dreamHomeStatus.currentSavedAmount,
+                        targetAmount: response.dreamHomeStatus.targetAmount,
+                        achievementRate: response.dreamHomeStatus.achievementRate
                     }
                 })
             }
 
             return response
         } catch (err) {
-            error.value = err.message || '저축 업데이트에 실패했습니다.'
-            console.error('Failed to update dream home progress:', err)
+            error.value = err.message || '저축 기록에 실패했습니다.'
             throw err
         } finally {
             isLoading.value = false
@@ -143,27 +140,28 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
     }
 
     /**
-     * 드림홈 변경
+     * 드림홈 설정 (백엔드 연동)
      * 
-     * @param {Object} newDreamHome - 새 드림홈 데이터
-     * @returns {Promise<Object>} 업데이트 결과
+     * @param {Object} data - { aptSeq, targetAmount, targetDate, monthlyGoal }
+     * @returns {Promise<DreamHomeSetResponse>} 설정 결과
      */
-    async function changeDreamHome(newDreamHome) {
+    async function setDreamHome(data) {
         isLoading.value = true
         error.value = null
 
         try {
-            const response = await dreamHomeService.changeDreamHome(newDreamHome)
+            const response = await dreamHomeService.setDreamHome(data)
 
             // authStore의 사용자 데이터 업데이트
-            authStore.updateUserData({
-                dreamHome: response.dreamHome
-            })
+            if (response.dreamHome) {
+                authStore.updateUserData({
+                    dreamHome: response.dreamHome
+                })
+            }
 
             return response
         } catch (err) {
-            error.value = err.message || '드림홈 변경에 실패했습니다.'
-            console.error('Failed to change dream home:', err)
+            error.value = err.message || '드림홈 설정에 실패했습니다.'
             throw err
         } finally {
             isLoading.value = false
@@ -200,8 +198,8 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         dreamHomeInfo,
 
         // Actions
-        updateProgress,
-        changeDreamHome,
+        recordSavings,
+        setDreamHome,
         clearError
     }
 })
