@@ -23,6 +23,7 @@ export const USER_ENDPOINTS = {
     ONBOARDING: '/users/onboarding',
     PROFILE: '/users/profile',
     DASHBOARD: '/users/dashboard',
+    DELETE_ACCOUNT: '/users/account',
     DREAM_HOME: '/users/dream-home',
     DREAM_HOME_PROGRESS: '/users/dream-home/progress',
     SAVED_PROPERTIES: '/users/saved-properties',
@@ -43,7 +44,8 @@ export const GAMIFICATION_ENDPOINTS = {
  */
 export const PROPERTY_ENDPOINTS = {
     LIST: '/apartments',
-    DETAIL: (id) => `/apartments/${id}`
+    DETAIL: (id) => `/apartments/${id}`,
+    REGION_COORDINATES: (regionName) => `/apartments/regions/${encodeURIComponent(regionName)}/coordinates`
 }
 
 /**
@@ -75,4 +77,21 @@ export const savedPropertyEndpoints = {
  */
 export const DSR_ENDPOINTS = {
     SIMULATION: '/simulation/dsr'
+}
+
+/**
+ * AI 관리인(레제) 관련 엔드포인트
+ * 
+ * @description 백엔드 /api/ai-manager/* 엔드포인트
+ * @see AI_MANAGER_FRONTEND_IMPLEMENTATION_PLAN.md 섹션 4
+ */
+export const AI_MANAGER_ENDPOINTS = {
+    /** 지출 분석 (MANUAL/IMAGE 모드) */
+    ANALYZE: '/ai-manager/analyze',
+    /** 이미지 추출 확인 */
+    CONFIRM: '/ai-manager/confirm',
+    /** 최종 판결 요청 */
+    JUDGMENT: '/ai-manager/judgment',
+    /** 분석 내역 조회 */
+    HISTORY: '/ai-manager/history'
 }

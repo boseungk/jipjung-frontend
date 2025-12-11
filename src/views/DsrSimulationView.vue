@@ -529,21 +529,31 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.95rem 1.6rem;
+  min-height: 52px;
   border: none;
   border-radius: 12px;
-  background: var(--brand-accent, #ff6b3d);
-  color: white;
-  font-size: 1rem;
   font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.2;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: #ffffff;
+  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
 .submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 61, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  opacity: 0.9;
+  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
 .submit-button:disabled {

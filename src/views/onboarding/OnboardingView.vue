@@ -159,7 +159,7 @@ async function handleComplete() {
     const requestData = {
       ...onboardingData.value,
       preferredAreas: onboardingData.value.preferredAreas.map(
-        area => `${area.sido} ${area.sigungu}`
+        area => `${area.sido} ${area.sigungu}`.trim()
       )
     }
     
@@ -287,22 +287,29 @@ async function handleComplete() {
   border-color: rgba(88, 60, 50, 0.15);
 }
 
-/* Primary Button (다음/시작하기) - Coral with Glow */
+/* Primary Button (다음/시작하기) - Unified Gradient Style */
 .nav-button.primary {
   flex: 1;
-  background: var(--onboarding-primary);
-  color: white;
-  box-shadow: var(--onboarding-shadow-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 52px;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: #ffffff;
+  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
 .nav-button.primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--onboarding-shadow-glow-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
 }
 
 .nav-button.primary:active:not(:disabled) {
-  transform: scale(0.98);
-  box-shadow: var(--onboarding-shadow-soft);
+  transform: translateY(1px) scale(0.99);
+  opacity: 0.9;
+  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
 .nav-button.primary:disabled {

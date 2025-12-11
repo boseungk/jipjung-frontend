@@ -1,12 +1,12 @@
 export const DEFAULT_DREAM_HOME = {
-  dreamHomeId: 1,
-  propertyName: '래미안 아파트',
-  location: '서울 강남구',
-  price: 50000, // 만원 단위 (5억)
-  targetAmount: 15000, // 계약금 30% (1.5억)
-  monthlyGoal: 100, // 만원
-  targetDate: '2026-12-31',
-  currentAmount: 4250 // 만원 (425만원 저축)
+  dreamHomeId: null, // null = 목표 미설정
+  propertyName: '목표를 설정해주세요',
+  location: '',
+  price: 0,
+  targetAmount: 0,
+  monthlyGoal: 0,
+  targetDate: '',
+  currentAmount: 0
 }
 
 export const DEFAULT_GAMIFICATION = {
