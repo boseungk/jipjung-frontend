@@ -22,11 +22,11 @@
         <div class="text-stack">
           <div class="context-small">입주까지</div>
           <div class="amount-row">
-            <div class="amount-huge">{{ formatNumber(remainingAmount) }}<span class="unit-small">만원</span></div>
+            <div class="amount-huge">{{ formatWon(remainingAmount) }}</div>
             <span class="pill ghost">남은 금액</span>
           </div>
           <div class="subtitle-info">
-            목표: {{ propertyName }} <span class="muted">(총 {{ formatNumber(targetAmount) }}만원)</span>
+            목표: {{ propertyName }} <span class="muted">(총 {{ formatWon(targetAmount) }})</span>
           </div>
         </div>
         
@@ -59,7 +59,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
-import { formatNumber } from '@/utils/formatters'
+import { formatWon } from '@/utils/formatters'
 import SavingInputModal from '@/components/modals/SavingInputModal.vue'
 
 const dreamHomeStore = useDreamHomeStore()

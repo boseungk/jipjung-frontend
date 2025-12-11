@@ -30,7 +30,7 @@
                 required
                 :disabled="isSubmitting"
               />
-              <span class="input-suffix">만원</span>
+              <span class="input-suffix">원</span>
             </div>
           </div>
 
@@ -126,9 +126,9 @@ const handleSubmit = async () => {
 
   try {
     // 백엔드 저축 API 호출 (항상 DEPOSIT)
-    // 만원 단위 입력을 원 단위로 변환
+    // 원 단위 입력을 그대로 전송
     const result = await dreamHomeStore.recordSavings(
-      formData.value.amount * 10000,
+      formData.value.amount,
       'DEPOSIT',
       formData.value.memo || ''
     )

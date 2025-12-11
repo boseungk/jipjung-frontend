@@ -18,7 +18,7 @@
       <div class="stats-grid">
         <div class="stat-item">
           <span class="stat-label">최대 대출 가능액</span>
-          <span class="stat-value">₩{{ formatNumber(maxLoanAmount) }}만</span>
+          <span class="stat-value">₩{{ formatWon(maxLoanAmount) }}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">승인 상태</span>
@@ -48,7 +48,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDsrStore } from '../../stores/dsrStore'
-import { formatNumber } from '../../utils/formatters'
+import { formatWon } from '../../utils/formatters'
 import DsrCalculatorModal from '../modals/DsrCalculatorModal.vue'
 import { PhChartLine, PhCheckCircle, PhXCircle } from '@phosphor-icons/vue'
 

@@ -18,7 +18,7 @@
     
     <div class="status-info">
       <AppIcon name="checkCircle" :size="18" :active="true" class="status-icon" aria-hidden="true" />
-      <span class="status-text">기존 상환 ₩{{ formatNumber(existingLoanMonthly) }}만 · 여력 ₩{{ formatNumber(monthlyRepaymentCapacity) }}만</span>
+      <span class="status-text">기존 상환 ₩{{ formatWon(existingLoanMonthly) }} · 여력 ₩{{ formatWon(monthlyRepaymentCapacity) }}</span>
     </div>
   </div>
 </template>
@@ -30,7 +30,7 @@ import { useDsrStore } from '../../../stores/dsrStore'
 import VueApexCharts from 'vue3-apexcharts'
 import { useTheme } from '@/composables/useTheme'
 import { CHART_PALETTE } from '@/constants/colors'
-import { formatNumber } from '@/utils/formatters'
+import { formatWon } from '@/utils/formatters'
 
 const apexchart = VueApexCharts
 

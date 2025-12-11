@@ -57,6 +57,7 @@ import { storeToRefs } from 'pinia'
 import AppIcon from '../common/AppIcon.vue'
 import { useGamificationStore } from '../../stores/gamificationStore'
 import { useDreamHomeStore } from '../../stores/dreamHomeStore'
+import { useAuthStore } from '../../stores/authStore'
 import { formatNumber } from '../../utils/formatters'
 
 const HOUSE_STEPS = [
@@ -100,6 +101,16 @@ const { resetHouseProgress } = gamificationStore
 const dreamHomeStore = useDreamHomeStore()
 const { currentAmount, targetAmount, daysRemaining } = storeToRefs(dreamHomeStore)
 
+const authStore = useAuthStore()
+
+/**
+ * 대시보드 응답의 showroom.imageUrl을 사용하여 동적 테마 URL 결정
+ */
+const themeImageUrl = computed(() => {
+  const showroom = authStore.user?._raw?.showroom
+  return showroom?.imageUrl || '/phase7.svg'
+})
+
 const isHouseTrack = computed(() => buildTrack.value === 'house')
 const activeStage = computed(() =>
   isHouseTrack.value ? houseStage.value : Math.max(1, furnitureStage.value || 1)
@@ -114,7 +125,9 @@ const trackLabel = computed(() => (isHouseTrack.value ? '집 짓기' : '가구 �
 async function loadHouseSvg() {
   if (houseSvgMarkup.value || svgError.value) return
   try {
-    const res = await fetch('/phase7.svg')
+    // 대시보드에서 받은 테마 이미지 URL 사용
+    const imageUrl = themeImageUrl.value
+    const res = await fetch(imageUrl)
     if (!res.ok) throw new Error('집 SVG를 불러오지 못했습니다')
     houseSvgMarkup.value = await res.text()
     await nextTick()

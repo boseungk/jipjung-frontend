@@ -18,11 +18,11 @@
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">매물가</span>
-            <span class="info-value">₩{{ formatNumber(price) }}만</span>
+            <span class="info-value">₩{{ formatWon(price) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">필요 계약금</span>
-            <span class="info-value">₩{{ formatNumber(targetAmount) }}만</span>
+            <span class="info-value">₩{{ formatWon(targetAmount) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">최근 시세</span>
@@ -40,7 +40,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '../../stores/dreamHomeStore'
-import { formatNumber } from '../../utils/formatters'
+import { formatWon } from '../../utils/formatters'
 import { PhTrendUp } from '@phosphor-icons/vue'
 
 const dreamHomeStore = useDreamHomeStore()

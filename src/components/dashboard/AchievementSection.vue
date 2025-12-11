@@ -26,12 +26,12 @@
     <div class="stats-row">
       <div class="stat-item">
         <span class="stat-label">현재 저축액</span>
-        <span class="stat-value">₩{{ formatNumber(currentAmount) }}만</span>
+        <span class="stat-value">₩{{ formatWon(currentAmount) }}</span>
       </div>
       <div class="stat-divider">/</div>
       <div class="stat-item">
         <span class="stat-label">목표 금액</span>
-        <span class="stat-value">₩{{ formatNumber(targetAmount) }}만</span>
+        <span class="stat-value">₩{{ formatWon(targetAmount) }}</span>
       </div>
     </div>
 
@@ -68,7 +68,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from "pinia";
 import { useDreamHomeStore } from "../../stores/dreamHomeStore";
-import { formatNumber } from "../../utils/formatters";
+import { formatWon } from "../../utils/formatters";
 import SavingInputModal from '../modals/SavingInputModal.vue'
 import { PhCalendarBlank } from '@phosphor-icons/vue'
 
