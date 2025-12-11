@@ -40,12 +40,28 @@ export const GAMIFICATION_ENDPOINTS = {
 }
 
 /**
+ * 드림홈(저축 목표) 관련 엔드포인트
+ * 
+ * @description 백엔드 /api/dream-home/* 엔드포인트
+ */
+export const DREAM_HOME_ENDPOINTS = {
+    /** 드림홈 설정 (POST) */
+    SET: '/dream-home',
+    /** 저축 기록 (POST) */
+    SAVINGS: '/dream-home/savings'
+}
+
+/**
  * 매물(아파트) 관련 엔드포인트
  */
 export const PROPERTY_ENDPOINTS = {
     LIST: '/apartments',
     DETAIL: (id) => `/apartments/${id}`,
-    REGION_COORDINATES: (regionName) => `/apartments/regions/${encodeURIComponent(regionName)}/coordinates`
+    REGION_COORDINATES: (regionName) => `/apartments/regions/${encodeURIComponent(regionName)}/coordinates`,
+    /** 관심 아파트 목록 (GET/POST) */
+    FAVORITES: '/apartments/favorites',
+    /** 관심 아파트 삭제 (DELETE) */
+    FAVORITE_DELETE: (id) => `/apartments/favorites/${id}`
 }
 
 /**

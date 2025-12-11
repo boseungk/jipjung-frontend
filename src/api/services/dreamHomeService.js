@@ -2,103 +2,98 @@
  * Dream Home Service
  * 
  * 드림홈 관련 API 호출을 담당하는 서비스 레이어.
- * REST_API.md 명세에 따라 구현됨.
+ * 백엔드 /api/dream-home/* 엔드포인트와 연동됩니다.
  * 
  * @module api/services/dreamHomeService
  */
 
 import apiClient from '@/api/client'
-import { USER_ENDPOINTS } from '@/api/endpoints'
+import { DREAM_HOME_ENDPOINTS } from '@/api/endpoints'
 
 /**
- * @typedef {Object} DreamHomeRequest
- * @property {string} dreamHomeId - 매물 ID
- * @property {string} propertyName - 매물명
- * @property {string} location - 위치
- * @property {number} price - 가격 (원 단위)
- * @property {number} targetAmount - 목표 금액 (원 단위)
- * @property {number} monthlyGoal - 월 목표 저축액 (원 단위)
- * @property {string} targetDate - 목표 날짜 (YYYY-MM-DD)
+ * @typedef {Object} DreamHomeSetRequest
+ * @property {string} aptSeq - 아파트 고유 ID
+ * @property {number} targetAmount - 목표 금액 (만원 단위)
+ * @property {string} targetDate - 목표 달성일 (YYYY-MM-DD)
+ * @property {number} monthlyGoal - 월 목표 저축액 (만원 단위)
  */
 
 /**
- * @typedef {Object} DreamHomeResponse
- * @property {Object} dreamHome - 드림홈 정보
- * @property {string} dreamHome.dreamHomeId - 매물 ID
- * @property {string} dreamHome.propertyName - 매물명
- * @property {string} dreamHome.location - 위치
- * @property {number} dreamHome.price - 가격
- * @property {number} dreamHome.targetAmount - 목표 금액
- * @property {number} dreamHome.currentAmount - 현재 금액
- * @property {number} dreamHome.monthlyGoal - 월 목표 저축액
- * @property {string} dreamHome.targetDate - 목표 날짜
+ * @typedef {Object} DreamHomeSetResponse
+ * @property {Object} dreamHome - 설정된 드림홈 정보
  */
 
 /**
- * @typedef {Object} ProgressUpdateRequest
- * @property {number} amount - 증가/감소 금액 (원 단위, 음수 가능)
- * @property {string} memo - 메모
+ * @typedef {Object} SavingsRecordRequest
+ * @property {number} amount - 저축 금액 (원 단위)
+ * @property {'DEPOSIT'|'WITHDRAW'} saveType - 저축 유형
+ * @property {string} [memo] - 메모
  */
 
 /**
- * @typedef {Object} ProgressUpdateResponse
- * @property {Object} dreamHome - 업데이트된 드림홈 정보
- * @property {number} dreamHome.currentAmount - 현재 저축 금액
- * @property {number} dreamHome.targetAmount - 목표 금액
- * @property {number} dreamHome.achievementRate - 달성률 (%)
- * @property {Object} gamification - 게임화 업데이트 정보
- * @property {number} gamification.experiencePoints - 현재 경험치
- * @property {number} gamification.gainedExp - 획득한 경험치
+ * @typedef {Object} SavingsRecordResponse
+ * @property {Object} dreamHomeStatus - 드림홈 상태
+ * @property {number} dreamHomeStatus.currentSavedAmount - 현재 저축 금액
+ * @property {number} dreamHomeStatus.targetAmount - 목표 금액
+ * @property {number} dreamHomeStatus.achievementRate - 달성률
+ * @property {Object} growth - 성장 결과
+ * @property {string} growth.resultType - 'SUCCESS' | 'LEVEL_UP'
+ * @property {number} growth.expChange - 획득 경험치
+ * @property {number} growth.currentExp - 현재 총 경험치
+ * @property {number} growth.maxExp - 다음 레벨까지 필요 경험치
+ * @property {number} growth.level - 현재 레벨
+ * @property {boolean} growth.isLevelUp - 레벨업 여부
+ * @property {string} growth.levelLabel - 레벨 타이틀
  */
 
 export const dreamHomeService = {
     /**
-     * 드림홈 변경
+     * 드림홈 설정
      * 
-     * 사용자의 목표 드림홈을 변경합니다.
-     * 매물 목록에서 선택하거나 직접 입력할 수 있습니다.
+     * 사용자의 목표 드림홈을 설정합니다.
+     * 매물 상세에서 "내 집으로 설정" 버튼 클릭 시 호출됩니다.
      * 
-     * @param {DreamHomeRequest} dreamHomeData - 드림홈 데이터
-     * @returns {Promise<DreamHomeResponse>} 업데이트된 드림홈 정보
+     * @호출부 PropertyActions.vue, DreamHomeSetModal.vue
+     * @param {DreamHomeSetRequest} data - 드림홈 설정 데이터
+     * @returns {Promise<DreamHomeSetResponse>} 설정된 드림홈 정보
      * @throws {ApiError} 인증 필요(401), 유효성 검증 실패(400)
      * 
      * @example
-     * const result = await dreamHomeService.changeDreamHome({
-     *   dreamHomeId: 'property_456',
-     *   propertyName: '부산 해운대 아파트',
-     *   location: '부산 해운대구',
-     *   price: 800000000,
-     *   targetAmount: 240000000,
-     *   monthlyGoal: 3000000,
-     *   targetDate: '2028-12-31'
+     * const result = await dreamHomeService.setDreamHome({
+     *   aptSeq: '12345',
+     *   targetAmount: 24000,  // 2억 4천만원 (만원 단위)
+     *   targetDate: '2028-12-31',
+     *   monthlyGoal: 300  // 300만원 (만원 단위)
      * })
      */
-    async changeDreamHome(dreamHomeData) {
-        const response = await apiClient.put(USER_ENDPOINTS.DREAM_HOME, dreamHomeData)
-        return response.data
+    async setDreamHome(data) {
+        const response = await apiClient.post(DREAM_HOME_ENDPOINTS.SET, data)
+        return response.data.data
     },
 
     /**
-     * 저축 진행률 업데이트
+     * 저축 기록
      * 
-     * 저축금을 추가하거나 차감합니다.
-     * 저축 완료 시 경험치도 함께 획득합니다.
+     * 저축금을 기록하고 경험치를 획득합니다.
+     * 대시보드에서 "저축하기" 버튼 클릭 시 모달을 통해 호출됩니다.
      * 
-     * @param {number} amount - 금액 (양수: 저축, 음수: 차감)
-     * @param {string} [memo=''] - 메모
-     * @returns {Promise<ProgressUpdateResponse>} 업데이트된 진행률 및 게임화 정보
-     * @throws {ApiError} 인증 필요(401)
+     * @호출부 SavingInputModal.vue, MainGoalCard.vue, dreamHomeStore.js
+     * @param {SavingsRecordRequest} data - 저축 기록 데이터
+     * @returns {Promise<SavingsRecordResponse>} 저축 결과 및 성장 정보
+     * @throws {ApiError} 인증 필요(401), 드림홈 미설정(400)
      * 
      * @example
-     * const result = await dreamHomeService.updateProgress(1000000, '월급 저축')
-     * console.log(result.dreamHome.achievementRate) // 21.25
-     * console.log(result.gamification.gainedExp) // 50
+     * const result = await dreamHomeService.recordSavings({
+     *   amount: 1000000,  // 100만원
+     *   saveType: 'DEPOSIT',
+     *   memo: '월급 저축'
+     * })
+     * console.log(result.growth.expChange) // 50
+     * console.log(result.growth.isLevelUp) // true
      */
-    async updateProgress(amount, memo = '') {
-        const response = await apiClient.post(USER_ENDPOINTS.DREAM_HOME_PROGRESS, {
-            amount,
-            memo
-        })
-        return response.data
+    async recordSavings(data) {
+        const response = await apiClient.post(DREAM_HOME_ENDPOINTS.SAVINGS, data)
+        return response.data.data
     }
 }
+

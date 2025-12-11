@@ -186,6 +186,39 @@ export const propertyService = {
   async getRegionCoordinates(regionName) {
     const response = await apiClient.get(PROPERTY_ENDPOINTS.REGION_COORDINATES(regionName))
     return response.data.data || response.data
+  },
+
+  // ============================================
+  // 관심 아파트 API (백엔드 /api/apartments/favorites)
+  // ============================================
+
+  /**
+   * 관심 아파트 목록 조회
+   * 
+   * @returns {Promise<FavoriteResponse[]>} 관심 아파트 목록
+   */
+  async getFavorites() {
+    const response = await apiClient.get(PROPERTY_ENDPOINTS.FAVORITES)
+    return response.data.data || []
+  },
+
+  /**
+   * 관심 아파트 등록
+   * 
+   * @param {string} aptSeq - 아파트 고유 ID
+   * @returns {Promise<FavoriteResponse>} 등록된 관심 아파트 정보
+   */
+  async addFavorite(aptSeq) {
+    const response = await apiClient.post(PROPERTY_ENDPOINTS.FAVORITES, { aptSeq })
+    return response.data.data
+  },
+
+  /**
+   * 관심 아파트 삭제
+   * 
+   * @param {number} favoriteId - 관심 아파트 ID
+   */
+  async deleteFavorite(favoriteId) {
+    await apiClient.delete(PROPERTY_ENDPOINTS.FAVORITE_DELETE(favoriteId))
   }
 }
-
