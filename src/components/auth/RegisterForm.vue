@@ -1,101 +1,114 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="auth-form">
-    <div class="form-group">
-      <label for="nickname">닉네임</label>
-      <input
-        id="nickname"
-        v-model="formData.nickname"
-        type="text"
-        placeholder="홍길동"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('nickname') }"
-        @blur="() => validation.validateField('nickname', formData.nickname, validation.validateName)"
-        @input="() => validation.clearFieldError('nickname')"
-        required
-      />
-      <span v-if="validation.hasError('nickname')" class="error-message">
-        {{ validation.getError('nickname') }}
-      </span>
-    </div>
+  <div>
+    <form @submit.prevent="handleSubmit" class="auth-form">
+      <div class="form-group">
+        <label for="nickname">닉네임</label>
+        <input
+          id="nickname"
+          v-model="formData.nickname"
+          type="text"
+          placeholder="홍길동"
+          class="glass-input"
+          :class="{ 'error': validation.hasError('nickname') }"
+          @blur="() => validation.validateField('nickname', formData.nickname, validation.validateName)"
+          @input="() => validation.clearFieldError('nickname')"
+          required
+        />
+        <span v-if="validation.hasError('nickname')" class="error-message">
+          {{ validation.getError('nickname') }}
+        </span>
+      </div>
 
-    <div class="form-group">
-      <label for="email">이메일</label>
-      <input
-        id="email"
-        v-model="formData.email"
-        type="email"
-        placeholder="example@email.com"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('email') }"
-        @blur="() => validation.validateField('email', formData.email, validation.validateEmail)"
-        @input="() => validation.clearFieldError('email')"
-        required
-      />
-      <span v-if="validation.hasError('email')" class="error-message">
-        {{ validation.getError('email') }}
-      </span>
-    </div>
+      <div class="form-group">
+        <label for="email">이메일</label>
+        <input
+          id="email"
+          v-model="formData.email"
+          type="email"
+          placeholder="example@email.com"
+          class="glass-input"
+          :class="{ 'error': validation.hasError('email') }"
+          @blur="() => validation.validateField('email', formData.email, validation.validateEmail)"
+          @input="() => validation.clearFieldError('email')"
+          required
+        />
+        <span v-if="validation.hasError('email')" class="error-message">
+          {{ validation.getError('email') }}
+        </span>
+      </div>
 
-    <div class="form-group">
-      <label for="password">비밀번호</label>
-      <input
-        id="password"
-        v-model="formData.password"
-        type="password"
-        placeholder="8자 이상, 영문+숫자+특수문자"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('password') }"
-        @blur="() => validation.validateField('password', formData.password, validation.validatePassword)"
-        @input="() => validation.clearFieldError('password')"
-        required
-      />
-      <span v-if=" validation.hasError('password')" class="error-message">
-        {{ validation.getError('password') }}
-      </span>
-    </div>
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input
+          id="password"
+          v-model="formData.password"
+          type="password"
+          placeholder="8자 이상, 영문+숫자+특수문자"
+          class="glass-input"
+          :class="{ 'error': validation.hasError('password') }"
+          @blur="() => validation.validateField('password', formData.password, validation.validatePassword)"
+          @input="() => validation.clearFieldError('password')"
+          required
+        />
+        <span v-if=" validation.hasError('password')" class="error-message">
+          {{ validation.getError('password') }}
+        </span>
+      </div>
 
-    <div class="form-group">
-      <label for="passwordConfirm">비밀번호 확인</label>
-      <input
-        id="passwordConfirm"
-        v-model="formData.passwordConfirm"
-        type="password"
-        placeholder="••••••••"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('passwordConfirm') }"
-        @blur="validatePasswordConfirmField"
-        @input="() => validation.clearFieldError('passwordConfirm')"
-        required
-      />
-      <span v-if="validation.hasError('passwordConfirm')" class="error-message">
-        {{ validation.getError('passwordConfirm') }}
-      </span>
-    </div>
+      <div class="form-group">
+        <label for="passwordConfirm">비밀번호 확인</label>
+        <input
+          id="passwordConfirm"
+          v-model="formData.passwordConfirm"
+          type="password"
+          placeholder="••••••••"
+          class="glass-input"
+          :class="{ 'error': validation.hasError('passwordConfirm') }"
+          @blur="validatePasswordConfirmField"
+          @input="() => validation.clearFieldError('passwordConfirm')"
+          required
+        />
+        <span v-if="validation.hasError('passwordConfirm')" class="error-message">
+          {{ validation.getError('passwordConfirm') }}
+        </span>
+      </div>
 
-    <div v-if="apiError" class="api-error-message">
-      {{ apiError }}
-    </div>
+      <div v-if="apiError" class="api-error-message">
+        {{ apiError }}
+      </div>
 
-    <button
-      type="submit"
-      class="glass-button primary"
-      :disabled="isLoading"
-    >
-      <span v-if="!isLoading">회원가입</span>
-      <span v-else class="loading">
-        <span class="spinner"></span>
-        가입 중...
-      </span>
-    </button>
-  </form>
+      <button
+        type="submit"
+        class="glass-button primary"
+        :disabled="isLoading"
+      >
+        <span v-if="!isLoading">회원가입</span>
+        <span v-else class="loading">
+          <span class="spinner"></span>
+          가입 중...
+        </span>
+      </button>
+    </form>
+
+    <!-- Success Modal -->
+    <SuccessModal
+      :isOpen="showSuccessModal"
+      title="회원가입 완료! 🎉"
+      message="환영합니다! 온보딩을 진행해주세요."
+      buttonText="시작하기"
+      @confirm="handleModalConfirm"
+    />
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormValidation } from '@/composables/useFormValidation'
+import SuccessModal from '@/components/modals/SuccessModal.vue'
 
 const emit = defineEmits(['register-success'])
+const showSuccessModal = ref(false)
 const authStore = useAuthStore()
 const validation = useFormValidation()
 
@@ -141,13 +154,18 @@ async function handleSubmit() {
       password: formData.value.password,
       nickname: formData.value.nickname
     })
-    emit('register-success')
+    showSuccessModal.value = true
   } catch (error) {
     apiError.value = error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
     console.error('Register error:', error)
   } finally {
     isLoading.value = false
   }
+}
+
+function handleModalConfirm() {
+  showSuccessModal.value = false
+  emit('register-success')
 }
 </script>
 

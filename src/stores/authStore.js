@@ -180,6 +180,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     /**
+     * 회원탈퇴
+     * 
+     * @param {string} password - 현재 비밀번호
+     * @throws {ApiError} API 오류 시 throw (호출자에서 처리)
+     */
+    async function deleteAccount(password) {
+        await authService.deleteAccount(password)
+        clearAuth()
+    }
+
+    /**
      * 토큰 갱신
      * 
      * @returns {Promise<Object>} 새로운 토큰 정보
@@ -214,12 +225,34 @@ export const useAuthStore = defineStore('auth', () => {
 
         if (userData) {
             // 기존 사용자 정보와 병합
-            user.value = { ...user.value, ...userData, onboardingCompleted: true }
+            const preferredAreas = normalizePreferredAreas(
+                userData.preferredAreas,
+                onboardingData?.preferredAreas
+            )
+            user.value = { ...user.value, ...userData, onboardingCompleted: true, preferredAreas }
             // localStorage에도 저장
             localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true')
         }
 
         return response
+    }
+
+    /**
+     * 선호 지역 배열을 문자열 배열로 정규화
+     * @param {Array} areas - 서버/클라이언트에서 받은 선호 지역 배열
+     * @param {Array} fallback - 대체 배열 (undefined일 때 사용)
+     * @returns {string[]} "시/도 시군구" 형태 문자열 배열
+     */
+    function normalizePreferredAreas(areas, fallback = []) {
+        const source = Array.isArray(areas) ? areas : Array.isArray(fallback) ? fallback : []
+        return source
+            .map((area) => {
+                if (!area) return null
+                if (typeof area === 'string') return area.trim()
+                if (area.sido && area.sigungu) return `${area.sido} ${area.sigungu}`.trim()
+                return null
+            })
+            .filter(Boolean)
     }
 
     /**
@@ -298,7 +331,8 @@ export const useAuthStore = defineStore('auth', () => {
             const mappedUser = {
                 nickname: response.profile?.nickname,
                 name: response.profile?.nickname,  // 하위 호환성
-                onboardingCompleted: true
+                onboardingCompleted: true,
+                preferredAreas: response.profile?.preferredAreas || []
             }
 
             // 드림홈 정보 매핑 (goal -> dreamHome)
@@ -390,6 +424,7 @@ export const useAuthStore = defineStore('auth', () => {
         register,
         login,
         logout,
+        deleteAccount,
         refreshToken,
         completeOnboarding,
         updateProfile,

@@ -1,74 +1,88 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="auth-form">
-    <div class="form-group">
-      <label for="email">이메일</label>
-      <input
-        id="email"
-        v-model="formData.email"
-        type="email"
-        placeholder="example@email.com"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('email') }"
-        @blur="() => validation.validateField('email', formData.email, validation.validateEmail)"
-        @input="() => validation.clearFieldError('email')"
-        required
-      />
-      <span v-if="validation.hasError('email')" class="error-message">
-        {{ validation.getError('email') }}
-      </span>
-    </div>
+  <div>
+    <form @submit.prevent="handleSubmit" class="auth-form">
+      <div class="form-group">
+        <label for="email">이메일</label>
+        <input
+          id="email"
+          v-model="formData.email"
+          type="email"
+          placeholder="example@email.com"
+          class="glass-input"
+          :class="{ 'error': validation.hasError('email') }"
+          @blur="() => validation.validateField('email', formData.email, validation.validateEmail)"
+          @input="() => validation.clearFieldError('email')"
+          required
+        />
+        <span v-if="validation.hasError('email')" class="error-message">
+          {{ validation.getError('email') }}
+        </span>
+      </div>
 
-    <div class="form-group">
-      <label for="password">비밀번호</label>
-      <input
-        id="password"
-        v-model="formData.password"
-        type="password"
-        placeholder="••••••••"
-        class="glass-input"
-        :class="{ 'error': validation.hasError('password') }"
-        @blur="() => validation.validateField('password', formData.password, validation.validatePassword)"
-        @input="() => validation.clearFieldError('password')"
-        required
-      />
-      <span v-if="validation.hasError('password')" class="error-message">
-        {{ validation.getError('password') }}
-      </span>
-    </div>
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input
+          id="password"
+          v-model="formData.password"
+          type="password"
+          placeholder="••••••••"
+          class="glass-input"
+          :class="{ 'error': validation.hasError('password') }"
+          @blur="() => validation.validateField('password', formData.password, validation.validatePassword)"
+          @input="() => validation.clearFieldError('password')"
+          required
+        />
+        <span v-if="validation.hasError('password')" class="error-message">
+          {{ validation.getError('password') }}
+        </span>
+      </div>
 
-    <div class="form-options">
-      <label class="checkbox-label">
-        <input v-model="formData.rememberMe" type="checkbox" />
-        <span>로그인 유지</span>
-      </label>
-    </div>
+      <div class="form-options">
+        <label class="checkbox-label">
+          <input v-model="formData.rememberMe" type="checkbox" />
+          <span>로그인 유지</span>
+        </label>
+      </div>
 
-    <div v-if="apiError" class="api-error-message">
-      {{ apiError }}
-    </div>
+      <div v-if="apiError" class="api-error-message">
+        {{ apiError }}
+      </div>
 
-    <button
-      type="submit"
-      class="glass-button primary"
-      :disabled="isLoading"
-    >
-      <span v-if="!isLoading">로그인</span>
-      <span v-else class="loading">
-        <span class="spinner"></span>
-        로그인 중...
-      </span>
-    </button>
-  </form>
+      <button
+        type="submit"
+        class="glass-button primary"
+        :disabled="isLoading"
+      >
+        <span v-if="!isLoading">로그인</span>
+        <span v-else class="loading">
+          <span class="spinner"></span>
+          로그인 중...
+        </span>
+      </button>
+    </form>
+
+    <!-- Success Modal -->
+    <SuccessModal
+      :isOpen="showSuccessModal"
+      title="로그인 성공! 👋"
+      :message="welcomeMessage"
+      buttonText="확인"
+      @confirm="handleModalConfirm"
+    />
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useFormValidation } from '@/composables/useFormValidation'
+import SuccessModal from '@/components/modals/SuccessModal.vue'
 
 const emit = defineEmits(['login-success'])
 const authStore = useAuthStore()
 const validation = useFormValidation()
+
+const showSuccessModal = ref(false)
 
 const formData = ref({
   email: '',
@@ -78,6 +92,11 @@ const formData = ref({
 
 const isLoading = ref(false)
 const apiError = ref('')
+
+const welcomeMessage = computed(() => {
+  const nickname = authStore.user?.nickname || '사용자'
+  return `${nickname}님, 환영합니다!`
+})
 
 async function handleSubmit() {
   // 폼 검증
@@ -93,13 +112,18 @@ async function handleSubmit() {
 
   try {
     await authStore.login(formData.value.email, formData.value.password)
-    emit('login-success')
+    showSuccessModal.value = true
   } catch (error) {
     apiError.value = error.response?.data?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.'
     console.error('Login error:', error)
   } finally {
     isLoading.value = false
   }
+}
+
+function handleModalConfirm() {
+  showSuccessModal.value = false
+  emit('login-success')
 }
 </script>
 

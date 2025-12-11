@@ -104,6 +104,26 @@
           </div>
         </section>
 
+        <!-- Account Actions Section -->
+        <section class="settings-section danger-zone">
+          <h2 class="section-title">
+            <AppIcon name="gear" :size="20" />
+            계정 관리
+          </h2>
+          
+          <div class="account-actions">
+            <button @click="handleLogout" class="btn btn-logout" :disabled="isLoggingOut">
+              <AppIcon name="boxArrowRight" :size="18" />
+              {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
+            </button>
+            
+            <button @click="showDeleteModal = true" class="btn btn-danger">
+              <AppIcon name="trash" :size="18" />
+              회원탈퇴
+            </button>
+          </div>
+        </section>
+
         <!-- Action Buttons -->
         <div class="action-buttons">
           <button
@@ -139,6 +159,13 @@
         <p>프로필 정보를 불러오는 중...</p>
       </div>
     </div>
+
+    <!-- Delete Account Modal -->
+    <DeleteAccountModal
+      v-if="showDeleteModal"
+      @close="showDeleteModal = false"
+      @confirm="handleDeleteAccount"
+    />
   </div>
 </template>
 
@@ -147,6 +174,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import AppIcon from '@/components/common/AppIcon.vue'
+import DeleteAccountModal from '@/components/common/DeleteAccountModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -155,6 +183,8 @@ const user = computed(() => authStore.user)
 const editableUser = ref({})
 const isSaving = ref(false)
 const showSuccessMessage = ref(false)
+const showDeleteModal = ref(false)
+const isLoggingOut = ref(false)
 
 // Check if there are unsaved changes
 const hasChanges = computed(() => {
@@ -228,6 +258,29 @@ function handleCancel() {
     }
   } else {
     router.push('/')
+  }
+}
+
+// Handle logout
+async function handleLogout() {
+  isLoggingOut.value = true
+  try {
+    await authStore.logout()
+    router.push('/login')
+  } finally {
+    isLoggingOut.value = false
+  }
+}
+
+// Handle delete account
+async function handleDeleteAccount(password) {
+  try {
+    await authStore.deleteAccount(password)
+    router.push('/login')
+  } catch (error) {
+    console.error('Failed to delete account:', error)
+    alert(error.response?.data?.message || '회원탈퇴에 실패했습니다. 비밀번호를 확인해주세요.')
+    showDeleteModal.value = false
   }
 }
 
@@ -639,5 +692,70 @@ html[data-theme="night"] .loading-state {
   .btn {
     width: 100%;
   }
+
+  .account-actions {
+    flex-direction: column;
+  }
+}
+
+/* Account Actions */
+.account-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--showroom-text-day, #2C2420);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+html[data-theme="night"] .btn-logout {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--showroom-text-night, #F9F8F6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.btn-logout:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.danger-zone .section-title {
+  color: #EF5350;
 }
 </style>

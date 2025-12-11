@@ -168,5 +168,19 @@ export const authService = {
   async logout() {
     const response = await apiClient.post(AUTH_ENDPOINTS.LOGOUT)
     return response.data
+  },
+
+  /**
+   * 회원탈퇴
+   * 
+   * @param {string} password - 현재 비밀번호
+   * @returns {Promise<{message: string}>} 성공 메시지
+   * @throws {ApiError} 비밀번호 불일치(400), 인증 필요(401)
+   */
+  async deleteAccount(password) {
+    const response = await apiClient.delete(USER_ENDPOINTS.DELETE_ACCOUNT, {
+      data: { password }
+    })
+    return response.data
   }
 }
