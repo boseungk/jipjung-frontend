@@ -5,15 +5,36 @@
         <div class="modal-container" @click.stop>
         <!-- Header -->
         <div class="modal-header">
-          <h2 class="modal-title">🏠 드림홈 설정</h2>
+          <h2 class="modal-title">🏠 목표 설정</h2>
           <button class="close-button" @click="closeModal" :disabled="isSubmitting">✕</button>
         </div>
+
+        <p class="step-indicator">Step 2 / 2</p>
 
         <!-- Property Info -->
         <div class="property-info">
           <h3 class="property-name">{{ property?.title || '아파트' }}</h3>
           <p class="property-location">{{ property?.sido }} {{ property?.sigungu }}</p>
           <p class="property-price">최신 거래가: {{ formatPrice(property?.price || 0) }}</p>
+        </div>
+
+        <!-- Selected Theme Preview -->
+        <div class="selected-theme-preview" v-if="selectedTheme">
+          <div class="theme-preview-image">
+            <img 
+              v-if="selectedTheme.previewImageUrl" 
+              :src="selectedTheme.previewImageUrl" 
+              :alt="selectedTheme.themeName"
+            />
+            <span v-else class="theme-emoji">🏠</span>
+          </div>
+          <div class="theme-preview-info">
+            <span class="theme-label">선택한 테마</span>
+            <span class="theme-preview-name">{{ selectedTheme.themeName }}</span>
+          </div>
+          <button type="button" class="change-theme-btn" @click="goBackToThemeSelect" :disabled="isSubmitting">
+            변경
+          </button>
         </div>
 
         <!-- Form -->
@@ -32,7 +53,7 @@
                   required
                   :disabled="isSubmitting"
                 />
-                <span class="input-suffix">만원</span>
+                <span class="input-suffix">원</span>
               </div>
               <button type="button" class="calc-button" @click="calcDownPayment" :disabled="isSubmitting">
                 30% 자동계산
@@ -46,7 +67,7 @@
             <input
               v-model="formData.targetDate"
               type="date"
-              class="form-input"
+              class="form-input date-input"
               :min="minDate"
               required
               :disabled="isSubmitting"
@@ -66,18 +87,23 @@
                 required
                 :disabled="isSubmitting"
               />
-              <span class="input-suffix">만원</span>
+              <span class="input-suffix">원</span>
             </div>
             <p class="hint" v-if="monthsRemaining > 0">
-              {{ monthsRemaining }}개월 동안 매달 {{ formatMoney(suggestedMonthly) }}만원씩
+              {{ monthsRemaining }}개월 동안 매달 {{ formatMoney(suggestedMonthly) }}원씩
             </p>
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit" class="submit-button" :disabled="isSubmitting || !isFormValid">
-            <span v-if="isSubmitting" class="spinner"></span>
-            {{ isSubmitting ? '설정 중...' : '드림홈 설정하기' }}
-          </button>
+          <!-- Action Buttons -->
+          <div class="button-row">
+            <button type="button" class="back-button" @click="goBackToThemeSelect" :disabled="isSubmitting">
+              ← 테마 변경
+            </button>
+            <button type="submit" class="submit-button" :disabled="isSubmitting || !isFormValid">
+              <span v-if="isSubmitting" class="spinner"></span>
+              {{ isSubmitting ? '설정 중...' : '드림홈 설정하기' }}
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -107,10 +133,14 @@ const props = defineProps({
   property: {
     type: Object,
     default: () => ({})
+  },
+  selectedTheme: {
+    type: Object,
+    default: null
   }
 })
 
-const emit = defineEmits(['close', 'success'])
+const emit = defineEmits(['close', 'success', 'back'])
 
 // Stores & Composables
 const router = useRouter()
@@ -205,7 +235,8 @@ const handleSubmit = async () => {
       aptSeq: props.property?.aptSeq || props.property?.id,
       targetAmount: formData.value.targetAmount,
       targetDate: formData.value.targetDate,
-      monthlyGoal: formData.value.monthlyGoal
+      monthlyGoal: formData.value.monthlyGoal,
+      themeId: props.selectedTheme?.themeId || null
     })
 
     showSuccess(`"${props.property?.title}"을(를) 드림홈으로 설정했습니다!`)
@@ -230,6 +261,13 @@ const resetForm = () => {
     targetDate: '',
     monthlyGoal: null
   }
+}
+
+/**
+ * 테마 선택 화면으로 돌아가기
+ */
+const goBackToThemeSelect = () => {
+  emit('back')
 }
 
 /**
@@ -320,7 +358,90 @@ html[data-theme="night"] .modal-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Step Indicator */
+.step-indicator {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-accent, #ff6b3d);
+  margin: 0 0 1rem 0;
+}
+
+/* Selected Theme Preview */
+.selected-theme-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
+  margin-bottom: 1.25rem;
+}
+
+.theme-preview-image {
+  width: 56px;
+  height: 42px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.theme-emoji {
+  font-size: 1.5rem;
+}
+
+.theme-preview-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.theme-label {
+  font-size: 0.75rem;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+.theme-preview-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--showroom-text-day, #5D4037);
+}
+
+html[data-theme="night"] .theme-preview-name {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.change-theme-btn {
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--brand-accent, #ff6b3d);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--brand-accent, #ff6b3d);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.change-theme-btn:hover:not(:disabled) {
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.1);
+}
+
+.change-theme-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .modal-title {
@@ -520,8 +641,111 @@ html[data-theme="night"] .form-input:focus {
   margin: 0;
 }
 
+/* Theme Selection Grid */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.75rem;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-card:hover:not(:disabled) {
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.1);
+  transform: translateY(-2px);
+}
+
+.theme-card.selected {
+  border-color: var(--brand-accent, #ff6b3d);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+}
+
+html[data-theme="night"] .theme-card {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="night"] .theme-card:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="night"] .theme-card.selected {
+  border-color: var(--showroom-accent-night, #D4A574);
+  background: rgba(212, 165, 116, 0.15);
+}
+
+.theme-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.theme-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.theme-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--showroom-text-day, #5D4037);
+  text-align: center;
+}
+
+html[data-theme="night"] .theme-name {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+/* Button Row */
+.button-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.back-button {
+  flex: 0 0 auto;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-soft, #e5e7eb);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--showroom-text-day, #5D4037);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+html[data-theme="night"] .back-button {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.back-button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="night"] .back-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.back-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Submit Button */
 .submit-button {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -532,7 +756,6 @@ html[data-theme="night"] .form-input:focus {
   font-size: 1.0625rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 0.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
   color: #ffffff;
