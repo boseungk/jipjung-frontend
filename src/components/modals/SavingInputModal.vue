@@ -1,14 +1,15 @@
 <template>
-  <transition name="modal">
-    <div v-if="isOpen" class="modal-overlay" @click="handleOverlayClick">
-      <div class="modal-container" @click.stop>
+  <Teleport to="body">
+    <transition name="modal">
+      <div v-if="isOpen" class="modal-overlay" @click="handleOverlayClick">
+        <div class="modal-container" @click.stop>
         <!-- Header -->
         <div class="modal-header">
           <h2 class="modal-title">
             <AppIcon name="piggyBank" :size="24" weight="fill" color="currentColor" />
             저축 기록하기
           </h2>
-          <button class="close-button" @click="closeModal" aria-label="닫기">
+          <button class="close-button" @click="closeModal" aria-label="닫기" :disabled="isSubmitting">
             <PhX :size="20" weight="bold" color="currentColor" />
           </button>
         </div>
@@ -27,41 +28,10 @@
                 placeholder="금액을 입력하세요"
                 min="1"
                 required
+                :disabled="isSubmitting"
               />
-              <span class="input-suffix">원</span>
+              <span class="input-suffix">만원</span>
             </div>
-          </div>
-
-          <!-- Saving Method -->
-          <div class="form-group">
-            <label for="method" class="form-label">저축 방법</label>
-            <select
-              id="method"
-              v-model="formData.method"
-              class="form-select"
-              required
-            >
-              <option value="">선택하세요</option>
-              <option value="KB청년희망적금">KB청년희망적금</option>
-              <option value="신한 쏠편한 적금">신한 쏠편한 적금</option>
-              <option value="하나 청년도약계좌">하나 청년도약계좌</option>
-              <option value="일반 적금">일반 적금</option>
-              <option value="자유 저축">자유 저축</option>
-              <option value="기타">기타</option>
-            </select>
-          </div>
-
-          <!-- Date Input -->
-          <div class="form-group">
-            <label for="date" class="form-label">저축 날짜</label>
-            <input
-              id="date"
-              v-model="formData.date"
-              type="date"
-              class="form-input"
-              :max="today"
-              required
-            />
           </div>
 
           <!-- Memo Input -->
@@ -73,23 +43,38 @@
               class="form-textarea"
               placeholder="메모를 입력하세요"
               rows="3"
+              :disabled="isSubmitting"
             ></textarea>
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" class="submit-button">
-            <AppIcon name="floppyDisk" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" />
-            저축 기록하기
+          <button type="submit" class="submit-button" :disabled="isSubmitting || !formData.amount">
+            <AppIcon v-if="!isSubmitting" name="floppyDisk" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" />
+            <span v-if="isSubmitting" class="spinner"></span>
+            {{ isSubmitting ? '저축 기록 중...' : '저축 기록하기' }}
           </button>
         </form>
       </div>
     </div>
   </transition>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+/**
+ * SavingInputModal
+ * 
+ * 저축 기록 모달 컴포넌트.
+ * 대시보드 "저축하기" 버튼 클릭 시 표시됩니다.
+ * 
+ * 백엔드 API: POST /api/dream-home/savings
+ */
+import { ref } from 'vue'
 import { PhX } from '@phosphor-icons/vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useGamificationStore } from '@/stores/gamificationStore'
+import { useToast } from '@/composables/useToast'
 
 const props = defineProps({
   isOpen: {
@@ -100,39 +85,84 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit'])
 
-// Form data
+// Stores & Composables
+const dreamHomeStore = useDreamHomeStore()
+const gamificationStore = useGamificationStore()
+const { showSuccess, showError } = useToast()
+
+// State
+const isSubmitting = ref(false)
 const formData = ref({
   amount: null,
-  method: '',
-  date: new Date().toISOString().split('T')[0],
   memo: ''
 })
 
-// Today's date for max attribute
-const today = computed(() => new Date().toISOString().split('T')[0])
-
+/**
+ * 모달 닫기
+ */
 const closeModal = () => {
+  if (isSubmitting.value) return
   emit('close')
   resetForm()
 }
 
+/**
+ * 오버레이 클릭 시 닫기
+ */
 const handleOverlayClick = () => {
   closeModal()
 }
 
-const handleSubmit = () => {
-  // TODO: Add validation
-  if (formData.value.amount && formData.value.method && formData.value.date) {
-    emit('submit', { ...formData.value })
+/**
+ * 폼 제출 - 백엔드 저축 API 호출
+ */
+const handleSubmit = async () => {
+  if (!formData.value.amount || formData.value.amount <= 0) {
+    showError('금액을 입력해주세요')
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    // 백엔드 저축 API 호출 (항상 DEPOSIT)
+    // 만원 단위 입력을 원 단위로 변환
+    const result = await dreamHomeStore.recordSavings(
+      formData.value.amount * 10000,
+      'DEPOSIT',
+      formData.value.memo || ''
+    )
+
+    // 경험치/레벨 반영
+    if (result.growth) {
+      gamificationStore.applyGrowthResult(result.growth)
+
+      if (result.growth.isLevelUp) {
+        showSuccess(`🎉 레벨업! ${result.growth.levelLabel}`)
+      } else {
+        showSuccess(`+${result.growth.expChange} XP 획득!`)
+      }
+    } else {
+      showSuccess('저축이 기록되었습니다!')
+    }
+
+    emit('submit', result)
+    
+    // isSubmitting을 먼저 false로 설정해야 closeModal이 작동함
+    isSubmitting.value = false
     closeModal()
+  } catch (error) {
+    showError(error.message || '저축 기록에 실패했습니다')
+    isSubmitting.value = false
   }
 }
 
+/**
+ * 폼 초기화
+ */
 const resetForm = () => {
   formData.value = {
     amount: null,
-    method: '',
-    date: new Date().toISOString().split('T')[0],
     memo: ''
   }
 }
@@ -226,12 +256,17 @@ html[data-theme="night"] .modal-title {
   transition: all 0.2s ease;
 }
 
+.close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 html[data-theme="day"] .close-button {
   background: transparent;
   color: var(--showroom-text-day, #5D4037);
 }
 
-html[data-theme="day"] .close-button:hover {
+html[data-theme="day"] .close-button:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -240,7 +275,7 @@ html[data-theme="night"] .close-button {
   color: var(--showroom-text-night, #F5EDE3);
 }
 
-html[data-theme="night"] .close-button:hover {
+html[data-theme="night"] .close-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -290,7 +325,6 @@ html[data-theme="night"] .input-suffix {
 
 /* Inputs - Glass Cushioned */
 .form-input,
-.form-select,
 .form-textarea {
   width: 100%;
   padding: 0.875rem 1rem;
@@ -302,7 +336,6 @@ html[data-theme="night"] .input-suffix {
 }
 
 html[data-theme="day"] .form-input,
-html[data-theme="day"] .form-select,
 html[data-theme="day"] .form-textarea {
   background: var(--nav-btn-bg-day, rgba(255, 255, 255, 0.85));
   color: var(--showroom-text-day, #5D4037);
@@ -312,7 +345,6 @@ html[data-theme="day"] .form-textarea {
 }
 
 html[data-theme="day"] .form-input:focus,
-html[data-theme="day"] .form-select:focus,
 html[data-theme="day"] .form-textarea:focus {
   outline: none;
   border-color: var(--brand-accent);
@@ -322,7 +354,6 @@ html[data-theme="day"] .form-textarea:focus {
 }
 
 html[data-theme="night"] .form-input,
-html[data-theme="night"] .form-select,
 html[data-theme="night"] .form-textarea {
   background: var(--nav-btn-bg-night, rgba(255, 255, 255, 0.08));
   color: var(--showroom-text-night, #F5EDE3);
@@ -333,7 +364,6 @@ html[data-theme="night"] .form-textarea {
 }
 
 html[data-theme="night"] .form-input:focus,
-html[data-theme="night"] .form-select:focus,
 html[data-theme="night"] .form-textarea:focus {
   border-color: var(--showroom-accent-night, #D4A574);
   box-shadow:
@@ -353,13 +383,15 @@ html[data-theme="night"] .form-textarea::placeholder {
   opacity: 0.4;
 }
 
+.form-input:disabled,
+.form-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .form-textarea {
   resize: vertical;
   min-height: 80px;
-}
-
-.form-select {
-  cursor: pointer;
 }
 
 /* Submit Button - Glass CTA */
@@ -378,28 +410,29 @@ html[data-theme="night"] .form-textarea::placeholder {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
 html[data-theme="day"] .submit-button {
-  background: linear-gradient(
-    135deg,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.22) 0%,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.12) 100%
-  );
-  color: white;
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: #ffffff;
   backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
   -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
   box-shadow:
-    var(--nav-btn-shadow-day),
-    0 12px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
+    0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
-html[data-theme="day"] .submit-button:hover {
+html[data-theme="day"] .submit-button:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow:
     var(--nav-btn-shadow-day-hover),
     0 14px 36px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26);
 }
 
-html[data-theme="day"] .submit-button:active {
+html[data-theme="day"] .submit-button:active:not(:disabled) {
   transform: translateY(2px) scale(0.98);
   box-shadow: var(--nav-btn-press-shadow-day);
 }
@@ -417,7 +450,7 @@ html[data-theme="night"] .submit-button {
     0 0 25px rgba(212, 165, 116, 0.4);
 }
 
-html[data-theme="night"] .submit-button:hover {
+html[data-theme="night"] .submit-button:hover:not(:disabled) {
   background: rgba(212, 165, 116, 0.25);
   transform: translateY(-4px);
   border-top-color: rgba(255, 255, 255, 0.4);
@@ -426,7 +459,7 @@ html[data-theme="night"] .submit-button:hover {
     0 0 35px rgba(212, 165, 116, 0.5);
 }
 
-html[data-theme="night"] .submit-button:active {
+html[data-theme="night"] .submit-button:active:not(:disabled) {
   background: rgba(0, 0, 0, 0.25);
   transform: translateY(2px) scale(0.98);
   box-shadow:
@@ -434,6 +467,21 @@ html[data-theme="night"] .submit-button:active {
     inset -2px -2px 8px rgba(255, 255, 255, 0.03);
 }
 
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Modal Transition */
 .modal-enter-active,
@@ -472,7 +520,6 @@ html[data-theme="night"] .submit-button:active {
   }
 
   .form-input,
-  .form-select,
   .form-textarea {
     font-size: 16px; /* Prevent zoom on iOS */
   }

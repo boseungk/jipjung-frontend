@@ -118,6 +118,8 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
+import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useToast } from '@/composables/useToast'
 import { 
   PhArrowLeft, PhStar, PhPiggyBank, PhSpinnerGap, PhFire, PhGift 
 } from '@phosphor-icons/vue'
@@ -125,6 +127,8 @@ import {
 const router = useRouter()
 const authStore = useAuthStore()
 const gamificationStore = useGamificationStore()
+const dreamHomeStore = useDreamHomeStore()
+const { showSuccess, showError } = useToast()
 
 const { userDreamHome, user } = storeToRefs(authStore)
 const { currentStreak } = storeToRefs(gamificationStore)
@@ -199,17 +203,29 @@ async function handleSave() {
   isSaving.value = true
   
   try {
-    // TODO: Call backend API to save deposit
-    // For now, simulate success
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 백엔드 저축 API 호출
+    const result = await dreamHomeStore.recordSavings(
+      finalAmount.value,
+      'DEPOSIT',
+      ''
+    )
     
-    // Add experience
-    await gamificationStore.addExperience(estimatedExp.value)
+    // 경험치/레벨 반영 (백엔드 응답에서)
+    if (result?.growth) {
+      gamificationStore.applyGrowthResult(result.growth)
+      if (result.growth.isLevelUp) {
+        showSuccess(`🎉 레벨업! ${result.growth.levelLabel}`)
+      } else {
+        showSuccess(`+${result.growth.expChange} XP 획득!`)
+      }
+    } else {
+      showSuccess('저축이 기록되었습니다!')
+    }
     
     // Navigate back or show success
     router.push('/')
   } catch (error) {
-    console.error('Failed to save deposit:', error)
+    showError(error.message || '저축에 실패했습니다')
   } finally {
     isSaving.value = false
   }

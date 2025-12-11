@@ -50,6 +50,7 @@ const initialPanelWidth = ref(DEFAULT_PANEL_WIDTH)
 onMounted(async () => {
   // 매물 데이터 로드 (컴포넌트 마운트 후)
   await nextTick()
+  await propertyStore.fetchFavorites()  // 관심 아파트 목록 로드
   await propertyStore.fetchProperties()
 })
 

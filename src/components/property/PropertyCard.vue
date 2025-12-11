@@ -79,7 +79,8 @@ const { selectedProperty, savedPropertyIds } = storeToRefs(propertyStore)
 const { targetAmount } = storeToRefs(dreamHomeStore)
 
 const isSelected = computed(() => selectedProperty.value?.id === props.property.id)
-const isSaved = computed(() => savedPropertyIds.value.includes(props.property.id))
+const propertyAptSeq = computed(() => props.property.aptSeq || props.property.id)
+const isSaved = computed(() => savedPropertyIds.value.includes(propertyAptSeq.value))
 const isAffordable = computed(() => props.property.price * 0.3 <= targetAmount.value)
 
 // 이미지 에러 처리
@@ -96,8 +97,9 @@ function handleClick() {
 }
 
 function handleSave() {
-  emit('save', props.property.id)
-  propertyStore.toggleSaveProperty(props.property.id)
+  const aptSeq = propertyAptSeq.value
+  emit('save', aptSeq)
+  propertyStore.toggleSaveProperty(aptSeq)
 }
 </script>
 

@@ -31,56 +31,68 @@
         </div>
         
         <!-- Full-Width Button -->
-        <button class="savings-button" @click="handleSaving">
+        <button class="savings-button" @click="openSavingModal">
           <span class="btn-text">저축하기</span>
         </button>
       </div>
     </div>
+
+    <!-- Saving Modal -->
+    <SavingInputModal
+      :is-open="showSavingModal"
+      @close="closeSavingModal"
+      @submit="handleSavingComplete"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+/**
+ * MainGoalCard
+ * 
+ * 대시보드 메인 목표 카드.
+ * 드림홈 저축 진행률과 저축하기 버튼을 표시합니다.
+ * 
+ * "저축하기" 버튼 클릭 시 SavingInputModal을 표시하고,
+ * 모달에서 백엔드 API를 호출하여 저축을 기록합니다.
+ */
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useDreamHomeStore } from '../../../stores/dreamHomeStore'
-import { useGamificationStore } from '../../../stores/gamificationStore'
-import { formatNumber } from '../../../utils/formatters'
-import AppIcon from '../../common/AppIcon.vue'
+import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { formatNumber } from '@/utils/formatters'
+import SavingInputModal from '@/components/modals/SavingInputModal.vue'
 
 const dreamHomeStore = useDreamHomeStore()
 const {
-  currentAmount,
   targetAmount,
   propertyName,
   achievementRate,
-  remainingAmount,
-  monthlyGoal
+  remainingAmount
 } = storeToRefs(dreamHomeStore)
-const gamificationStore = useGamificationStore()
-const { remainingExp } = storeToRefs(gamificationStore)
 
-const contributionAmount = computed(() => {
-  const remaining = Math.max(0, remainingAmount.value)
-  const goal = Number(monthlyGoal.value) || 0
-  if (!remaining) return 0
-  if (!goal) return remaining
-  return Math.min(goal, remaining)
-})
+// 모달 상태
+const showSavingModal = ref(false)
 
-const XP_REWARD = 60
+/**
+ * 저축 모달 열기
+ */
+const openSavingModal = () => {
+  showSavingModal.value = true
+}
 
-const handleSaving = async () => {
-  try {
-    const contribution = contributionAmount.value
-    if (contribution <= 0) {
-      return
-    }
+/**
+ * 저축 모달 닫기
+ */
+const closeSavingModal = () => {
+  showSavingModal.value = false
+}
 
-    await dreamHomeStore.updateProgress(contribution)
-    await gamificationStore.addExperience(XP_REWARD)
-  } catch (error) {
-    console.error('XP 적립/저축 실패', error)
-  }
+/**
+ * 저축 완료 핸들러
+ * UI는 store reactive 데이터로 자동 갱신됨
+ */
+const handleSavingComplete = (result) => {
+  console.log('저축 완료:', result)
 }
 </script>
 
@@ -95,7 +107,7 @@ const handleSaving = async () => {
 .equal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem; /* Reduced from 2.5rem */
+  gap: 1.5rem;
   align-items: center;
   height: 100%;
 }
@@ -117,10 +129,14 @@ const handleSaving = async () => {
   justify-content: flex-start;
 }
 
-.meta-value {
-  font-size: 1.125rem;
-  font-weight: 800;
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--ink-base, #1f2937);
+}
+
+html[data-theme="night"] .card-title {
+  color: var(--showroom-text-night, #F5EDE3);
 }
 
 /* CSS Donut Chart */
@@ -196,7 +212,7 @@ html[data-theme="night"] .donut-text {
 .content-column {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem; /* Reduced from 2rem */
+  gap: 1.25rem;
   justify-content: center;
 }
 
@@ -278,13 +294,6 @@ html[data-theme="night"] .subtitle-info {
   border: 1px solid var(--border-soft, #e5e7eb);
 }
 
-.progress-note {
-  margin-top: 0.25rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--ink-base, #1f2937);
-}
-
 /* Full-Width Savings Button */
 .savings-button {
   display: flex;
@@ -317,23 +326,6 @@ html[data-theme="night"] .subtitle-info {
   box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
-.saving-feedback {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--ink-base, #1f2937);
-}
-
-html[data-theme="night"] .saving-feedback {
-  color: var(--showroom-text-night, #f5f6f7);
-}
-
-
-.btn-icon {
-  font-size: 1.375rem;
-  color: #ffffff;
-}
-
 .btn-text {
   letter-spacing: 0.03em;
 }
@@ -346,7 +338,7 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .css-donut-chart {
-    max-width: 180px; /* Smaller on tablet */
+    max-width: 180px;
   }
 
   .text-stack {
@@ -364,23 +356,23 @@ html[data-theme="night"] .saving-feedback {
 
 @media (max-width: 767px) {
   .main-goal-card {
-    padding: 1.25rem; /* Reduced from 1.5rem */
+    padding: 1.25rem;
   }
 
   .equal-grid {
-    gap: 1.25rem; /* Tighter gap */
+    gap: 1.25rem;
   }
 
   .css-donut-chart {
-    max-width: 140px; /* Even smaller on mobile */
+    max-width: 140px;
   }
 
   .donut-text {
-    font-size: 1.5rem; /* Smaller percentage text */
+    font-size: 1.5rem;
   }
 
   .content-column {
-    gap: 1.1rem; /* Tighter vertical gap */
+    gap: 1.1rem;
   }
 
   .context-small {
@@ -388,7 +380,7 @@ html[data-theme="night"] .saving-feedback {
   }
 
   .amount-huge {
-    font-size: 1.75rem; /* Smaller huge text */
+    font-size: 1.75rem;
   }
 
   .unit-small {
@@ -404,11 +396,6 @@ html[data-theme="night"] .saving-feedback {
     min-height: 48px;
     font-size: 1rem;
     gap: 0.5rem;
-  }
-
-  .btn-icon {
-    font-size: 1.25rem;
-    color: #ffffff;
   }
 }
 

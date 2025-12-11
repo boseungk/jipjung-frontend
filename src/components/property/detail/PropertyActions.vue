@@ -26,7 +26,7 @@
     </div>
 
     <!-- 구매 가능 여부 표시 -->
-    <div class="affordability-info" v-if="targetAmount">
+    <div class="affordability-info" v-if="currentAmount">
       <div class="affordability-badge" :class="{ affordable: isAffordable }">
         <span class="badge-icon">{{ isAffordable ? '✓' : '✗' }}</span>
         <div class="badge-content">
@@ -34,22 +34,38 @@
             {{ isAffordable ? '구매 가능' : '예산 초과' }}
           </p>
           <p class="badge-detail">
-            필요 계약금: {{ property.getDownPayment().toLocaleString() }}만원
-            (보유: {{ targetAmount.toLocaleString() }}만원)
+            필요 계약금: {{ formatDownPayment }}만원
+            (보유: {{ currentAmount.toLocaleString() }}만원)
           </p>
         </div>
       </div>
     </div>
+
+    <!-- Dream Home Set Modal -->
+    <DreamHomeSetModal
+      :is-open="showDreamHomeModal"
+      :property="property"
+      @close="closeDreamHomeModal"
+      @success="handleDreamHomeSet"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+/**
+ * PropertyActions
+ * 
+ * 매물 상세 페이지의 액션 버튼 컴포넌트.
+ * 저장하기, 내 집으로 설정, 문의하기 버튼을 제공합니다.
+ * 
+ * "내 집으로 설정" 버튼 클릭 시 DreamHomeSetModal을 표시합니다.
+ */
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
+import DreamHomeSetModal from '@/components/modals/DreamHomeSetModal.vue'
 
 const props = defineProps({
   property: {
@@ -58,47 +74,78 @@ const props = defineProps({
   }
 })
 
-const router = useRouter()
 const propertyStore = usePropertyStore()
 const dreamHomeStore = useDreamHomeStore()
 const { showSuccess, showError, showInfo } = useToast()
 const { savedPropertyIds } = storeToRefs(propertyStore)
-const { targetAmount } = storeToRefs(dreamHomeStore)
+const { currentAmount } = storeToRefs(dreamHomeStore)
 
-const isSaved = computed(() => savedPropertyIds.value.includes(props.property.id))
-const isAffordable = computed(() => {
-  if (!targetAmount.value) return false
-  return props.property.price * 0.3 <= targetAmount.value
+// 모달 상태
+const showDreamHomeModal = ref(false)
+
+// 저장 여부
+const isSaved = computed(() => {
+  const aptSeq = props.property.aptSeq || props.property.id
+  return savedPropertyIds.value.includes(aptSeq)
 })
 
-function handleSave() {
-  const wasSaved = isSaved.value
-  propertyStore.toggleSaveProperty(props.property.id)
+// 구매 가능 여부 (보유 금액이 계약금 30%보다 많은지)
+const isAffordable = computed(() => {
+  if (!currentAmount.value || !props.property.price) return false
+  return props.property.price * 0.3 <= currentAmount.value
+})
 
-  if (wasSaved) {
-    showInfo('저장 목록에서 제거되었습니다')
-  } else {
-    showSuccess('저장 목록에 추가되었습니다')
+// 필요 계약금 포맷
+const formatDownPayment = computed(() => {
+  if (!props.property.price) return '0'
+  const downPayment = Math.ceil(props.property.price * 0.3)
+  return downPayment.toLocaleString()
+})
+
+/**
+ * 저장/저장 취소 토글
+ */
+async function handleSave() {
+  try {
+    const aptSeq = props.property.aptSeq || props.property.id
+    const wasSaved = isSaved.value
+    await propertyStore.toggleSaveProperty(aptSeq)
+
+    if (wasSaved) {
+      showInfo('저장 목록에서 제거되었습니다')
+    } else {
+      showSuccess('저장 목록에 추가되었습니다')
+    }
+  } catch (error) {
+    showError(error.message || '저장 처리에 실패했습니다')
   }
 }
 
+/**
+ * 드림홈 설정 모달 열기
+ */
 function handleSetAsDreamHome() {
-  // dreamHomeStore 업데이트
-  dreamHomeStore.changeDreamHome({
-    propertyName: props.property.title,
-    location: `${props.property.sido} ${props.property.sigungu}`,
-    price: props.property.price
-  })
-
-  // 성공 메시지
-  showSuccess(`"${props.property.title}"을(를) 내 집으로 설정했습니다! 대시보드에서 저축 진행 상황을 확인하세요.`, 4000)
-
-  // 1초 후 대시보드로 이동
-  setTimeout(() => {
-    router.push('/')
-  }, 1000)
+  showDreamHomeModal.value = true
 }
 
+/**
+ * 드림홈 설정 모달 닫기
+ */
+function closeDreamHomeModal() {
+  showDreamHomeModal.value = false
+}
+
+/**
+ * 드림홈 설정 성공 핸들러
+ */
+function handleDreamHomeSet(response) {
+  // 추가 처리가 필요한 경우 여기에 구현
+  console.log('드림홈 설정 완료:', response)
+}
+
+/**
+ * 연락하기
+ */
 function handleContact() {
   if (props.property.agentInfo?.phone) {
     window.location.href = `tel:${props.property.agentInfo.phone}`
