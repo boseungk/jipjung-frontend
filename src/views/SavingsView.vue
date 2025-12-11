@@ -441,21 +441,30 @@ async function handleSave() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   width: 100%;
-  padding: 1rem;
+  padding: 0.95rem 1.6rem;
+  min-height: 52px;
   border: none;
   border-radius: 12px;
-  background: white;
-  color: var(--brand-accent, #ff6b3d);
-  font-size: 1.125rem;
   font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.2;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #ffffff;
+  color: var(--brand-accent, #ff6b3d);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .save-button:hover:not(:disabled) {
-  transform: scale(1.02);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.save-button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .save-button:disabled {

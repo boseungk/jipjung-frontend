@@ -32,7 +32,6 @@
         
         <!-- Full-Width Button -->
         <button class="savings-button" @click="handleSaving">
-          <AppIcon name="floppyDisk" :size="20" :active="true" :is-major-cta="true" class="btn-icon" aria-hidden="true" />
           <span class="btn-text">저축하기</span>
         </button>
       </div>

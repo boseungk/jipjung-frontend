@@ -483,51 +483,32 @@ html[data-theme="night"] .form-input::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.95rem 1.6rem;
+  min-height: 52px;
   border: none;
-  border-radius: 16px;
-  font-size: 1.0625rem;
-  font-weight: 600;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.2;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: #ffffff;
+  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
-html[data-theme="day"] .submit-button {
-  background: var(--showroom-accent-day, #D4A574);
-  color: white;
-  box-shadow:
-    6px 6px 16px var(--showroom-shadow-dark-day, #D4C8BD),
-    -3px -3px 10px var(--showroom-shadow-light-day, #FFFFFF);
+.submit-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
 }
 
-html[data-theme="day"] .submit-button:hover {
-  transform: translateY(-4px);
-}
-
-html[data-theme="day"] .submit-button:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow:
-    inset 4px 4px 12px rgba(0, 0, 0, 0.2),
-    inset -2px -2px 8px rgba(255, 255, 255, 0.3);
-}
-
-html[data-theme="night"] .submit-button {
-  background: rgba(212, 165, 116, 0.2);
-  color: var(--showroom-text-night, #F5EDE3);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-}
-
-html[data-theme="night"] .submit-button:hover {
-  transform: translateY(-4px);
-}
-
-html[data-theme="night"] .submit-button:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.6);
+.submit-button:active {
+  transform: translateY(1px) scale(0.99);
+  opacity: 0.9;
+  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
 /* Result Section */
