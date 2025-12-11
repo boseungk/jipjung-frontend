@@ -111,3 +111,13 @@ export const AI_MANAGER_ENDPOINTS = {
     /** 분석 내역 조회 */
     HISTORY: '/ai-manager/history'
 }
+
+/**
+ * 테마 관련 엔드포인트
+ * 
+ * @description 백엔드 /api/themes/* 엔드포인트
+ */
+export const THEME_ENDPOINTS = {
+    /** 활성 테마 목록 조회 (GET) */
+    LIST: '/themes'
+}
