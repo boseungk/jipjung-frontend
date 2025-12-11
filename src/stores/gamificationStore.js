@@ -300,7 +300,9 @@ export const useGamificationStore = defineStore('gamification', () => {
         experiencePoints: growth.currentExp,  // currentExp → experiencePoints
         currentLevel: growth.level,           // level → currentLevel
         nextLevelExp: growth.maxExp,          // maxExp → nextLevelExp
-        levelTitle: growth.levelLabel         // levelLabel → levelTitle
+        levelTitle: growth.levelLabel,        // levelLabel → levelTitle
+        // 레벨이 곧 집 짓기 단계 (1~7)
+        houseStage: Math.min(HOUSE_TOTAL_STAGES, Math.max(1, growth.level || 1))
       }
     })
   }

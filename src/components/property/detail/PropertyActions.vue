@@ -34,18 +34,28 @@
             {{ isAffordable ? '구매 가능' : '예산 초과' }}
           </p>
           <p class="badge-detail">
-            필요 계약금: {{ formatDownPayment }}만원
-            (보유: {{ currentAmount.toLocaleString() }}만원)
+            필요 계약금: {{ formatDownPayment }}원
+            (보유: {{ currentAmount.toLocaleString() }}원)
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Dream Home Set Modal -->
+    <!-- Step 1: Theme Selection Modal -->
+    <ThemeSelectModal
+      :is-open="showThemeModal"
+      :initial-theme-id="selectedThemeId"
+      @close="closeAllModals"
+      @next="handleThemeSelected"
+    />
+
+    <!-- Step 2: Dream Home Set Modal -->
     <DreamHomeSetModal
       :is-open="showDreamHomeModal"
       :property="property"
-      @close="closeDreamHomeModal"
+      :selected-theme="selectedTheme"
+      @close="closeAllModals"
+      @back="goBackToThemeSelect"
       @success="handleDreamHomeSet"
     />
   </div>
@@ -58,13 +68,16 @@
  * 매물 상세 페이지의 액션 버튼 컴포넌트.
  * 저장하기, 내 집으로 설정, 문의하기 버튼을 제공합니다.
  * 
- * "내 집으로 설정" 버튼 클릭 시 DreamHomeSetModal을 표시합니다.
+ * "내 집으로 설정" 버튼 클릭 시:
+ * Step 1: ThemeSelectModal - 테마 선택
+ * Step 2: DreamHomeSetModal - 목표 설정
  */
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
+import ThemeSelectModal from '@/components/modals/ThemeSelectModal.vue'
 import DreamHomeSetModal from '@/components/modals/DreamHomeSetModal.vue'
 
 const props = defineProps({
@@ -81,7 +94,10 @@ const { savedPropertyIds } = storeToRefs(propertyStore)
 const { currentAmount } = storeToRefs(dreamHomeStore)
 
 // 모달 상태
+const showThemeModal = ref(false)
 const showDreamHomeModal = ref(false)
+const selectedTheme = ref(null)
+const selectedThemeId = ref(null)
 
 // 저장 여부
 const isSaved = computed(() => {
@@ -122,16 +138,35 @@ async function handleSave() {
 }
 
 /**
- * 드림홈 설정 모달 열기
+ * 드림홈 설정 시작 - Step 1: 테마 선택 모달 열기
  */
 function handleSetAsDreamHome() {
+  showThemeModal.value = true
+}
+
+/**
+ * 테마 선택 완료 - Step 2로 이동
+ */
+function handleThemeSelected({ themeId, theme }) {
+  selectedThemeId.value = themeId
+  selectedTheme.value = theme
+  showThemeModal.value = false
   showDreamHomeModal.value = true
 }
 
 /**
- * 드림홈 설정 모달 닫기
+ * Step 2에서 테마 변경하러 Step 1로 돌아가기
  */
-function closeDreamHomeModal() {
+function goBackToThemeSelect() {
+  showDreamHomeModal.value = false
+  showThemeModal.value = true
+}
+
+/**
+ * 모든 모달 닫기
+ */
+function closeAllModals() {
+  showThemeModal.value = false
   showDreamHomeModal.value = false
 }
 
@@ -139,7 +174,7 @@ function closeDreamHomeModal() {
  * 드림홈 설정 성공 핸들러
  */
 function handleDreamHomeSet(response) {
-  // 추가 처리가 필요한 경우 여기에 구현
+  closeAllModals()
   console.log('드림홈 설정 완료:', response)
 }
 

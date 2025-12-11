@@ -11,6 +11,19 @@ export const formatNumber = (num) => {
 }
 
 /**
+ * 원 단위 금액을 천 단위 구분자와 함께 표시
+ * @param {number} amount - 원 단위 금액
+ * @returns {string} '150,000,000원' 형태
+ * @example
+ * formatWon(150000000) // "150,000,000원"
+ * formatWon(50000) // "50,000원"
+ */
+export const formatWon = (amount) => {
+    if (amount === null || amount === undefined) return '0원'
+    return `${formatNumber(amount)}원`
+}
+
+/**
  * 만원 단위를 억/만원으로 변환
  * @param {number} amount - 만원 단위 금액
  * @returns {string} '1억 2,500만원' 형태
