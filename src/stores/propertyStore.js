@@ -397,7 +397,6 @@ export const usePropertyStore = defineStore('property', () => {
      */
     function clearSelection() {
         selectedProperty.value = null
-        mapZoom.value = MAP_ZOOM_LEVELS.CITY
     }
 
     /**

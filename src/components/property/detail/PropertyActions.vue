@@ -165,9 +165,15 @@ html[data-theme="night"] .save-btn {
 }
 
 .dream-home-btn {
-  background: linear-gradient(135deg, var(--brand-accent) 0%, #FF6347 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(255, 127, 80, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 52px;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: #ffffff;
+  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
 .contact-btn {
@@ -177,11 +183,17 @@ html[data-theme="night"] .save-btn {
 }
 
 .action-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .dream-home-btn:hover {
-  box-shadow: 0 10px 30px rgba(255, 127, 80, 0.5);
+  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
+}
+
+.dream-home-btn:active {
+  transform: translateY(1px) scale(0.99);
+  opacity: 0.9;
+  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
 }
 
 .contact-btn:hover {

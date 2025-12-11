@@ -224,22 +224,29 @@ export function useKakaoMap(containerId, options = {}) {
      * @param {Array} properties - 매물 목록
      */
     function fitBounds(properties) {
-        if (!map.value || !properties || properties.length === 0) return
+        if (!map.value || !properties || properties.length === 0) return false
 
         const bounds = new kakao.maps.LatLngBounds()
+        let hasValidCoordinate = false
 
         properties.forEach((property) => {
             if (
                 property.coordinates &&
                 validateCoordinates(property.coordinates.lat, property.coordinates.lng)
             ) {
+                hasValidCoordinate = true
                 bounds.extend(
                     new kakao.maps.LatLng(property.coordinates.lat, property.coordinates.lng)
                 )
             }
         })
 
-        map.value.setBounds(bounds)
+        if (hasValidCoordinate) {
+            map.value.setBounds(bounds)
+            return true
+        }
+
+        return false
     }
 
     /**

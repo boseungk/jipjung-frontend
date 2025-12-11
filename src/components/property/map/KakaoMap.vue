@@ -21,8 +21,10 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { useKakaoMap } from '@/composables/useKakaoMap'
 import { MAP_ZOOM_LEVELS } from '@/constants/properties'
+import { propertyService } from '@/api/services/propertyService'
 
 // Props
 const props = defineProps({
@@ -39,6 +41,7 @@ const props = defineProps({
 // Stores
 const propertyStore = usePropertyStore()
 const dreamHomeStore = useDreamHomeStore()
+const authStore = useAuthStore()
 const { filteredProperties, selectedProperty, mapCenter, mapZoom } = storeToRefs(propertyStore)
 const { targetAmount } = storeToRefs(dreamHomeStore)
 
@@ -46,6 +49,9 @@ const { targetAmount } = storeToRefs(dreamHomeStore)
 const mapId = ref('property-map-' + Date.now())
 const loading = ref(true)
 const error = ref(null)
+const preferredCenterApplied = ref(false)
+const previousView = ref(null) // 상세 보기 전에 보고 있던 지도 상태
+const skipFitBoundsOnce = ref(false)
 
 // Kakao Map Composable
 const {
@@ -59,7 +65,9 @@ const {
     centerMap,
     relayout,
     setZoomLevel,
-    resetMap
+    resetMap,
+    getCenter,
+    getZoomLevel
 } = useKakaoMap(mapId.value, {
     onMarkerClick: (propertyId) => {
         propertyStore.selectProperty(propertyId)
@@ -70,10 +78,59 @@ const {
 // Computed
 const hasProperties = computed(() => filteredProperties.value.length > 0)
 
+/**
+ * 사용자 선호 지역 기반 초기 중심 좌표를 API로 가져옴
+ * @returns {Promise<{lat: number, lng: number}|null>}
+ */
+async function fetchPreferredAreaCoordinates() {
+    const preferredAreas = authStore.userPreferredAreas
+    if (!preferredAreas || preferredAreas.length === 0) {
+        return null
+    }
+    
+    // 첫 번째 선호 지역의 좌표를 가져옴
+    const firstArea = preferredAreas[0]
+    let regionName = ''
+
+    if (typeof firstArea === 'string') {
+        regionName = firstArea.trim()
+    } else if (firstArea?.sido && firstArea?.sigungu) {
+        regionName = `${firstArea.sido} ${firstArea.sigungu}`.trim()
+    }
+
+    if (!regionName) return null
+
+    try {
+        const coords = await propertyService.getRegionCoordinates(regionName)
+        if (coords && coords.latitude && coords.longitude) {
+            return { lat: coords.latitude, lng: coords.longitude }
+        }
+    } catch (err) {
+        console.warn('Failed to fetch region coordinates:', err)
+    }
+    
+    return null
+}
+
 // 지도 초기화
 onMounted(async () => {
     try {
-        await initializeMap()
+    const mapConfig = {
+        center: mapCenter.value,
+        level: mapZoom.value ?? MAP_ZOOM_LEVELS.CITY
+    }
+
+        // 사용자 선호 지역 좌표를 API로 가져옴
+        const preferredCoords = await fetchPreferredAreaCoordinates()
+        if (preferredCoords) {
+            mapConfig.center = preferredCoords
+            mapConfig.level = MAP_ZOOM_LEVELS.DISTRICT // 구 단위로 더 확대된 상태로 시작
+            preferredCenterApplied.value = true
+            // 스토어 상태도 동일한 줌/센터로 맞춰 watcher에서 덮어쓰지 않도록 설정
+            propertyStore.setMapCenter(preferredCoords, MAP_ZOOM_LEVELS.DISTRICT)
+        }
+    
+        await initializeMap(mapConfig)
         loading.value = false
 
         // 초기 마커 생성
@@ -104,7 +161,32 @@ watch(selectedProperty, (newVal, oldVal) => {
 
     // 지도 중심 이동
     if (newVal && newVal.coordinates) {
+        // 상세 보기 전 지도 상태 저장
+        const currentCenter = getCenter()
+        const currentZoom = getZoomLevel()
+        const fallbackCenter = currentCenter || mapCenter.value
+        const fallbackZoom = currentZoom ?? mapZoom.value
+        if (fallbackCenter) {
+            previousView.value = {
+                center: fallbackCenter,
+                zoom: fallbackZoom
+            }
+        }
         centerMap(newVal.coordinates.lat, newVal.coordinates.lng, MAP_ZOOM_LEVELS.DETAIL)
+    } else if (!newVal && oldVal && previousView.value?.center) {
+        // 목록으로 돌아올 때 이전 지도 상태 복원
+        skipFitBoundsOnce.value = true
+        const restore = previousView.value
+        centerMap(
+            restore.center.lat,
+            restore.center.lng,
+            restore.zoom ?? mapZoom.value ?? MAP_ZOOM_LEVELS.CITY
+        )
+        propertyStore.setMapCenter(
+            restore.center,
+            restore.zoom ?? mapZoom.value ?? MAP_ZOOM_LEVELS.CITY
+        )
+        previousView.value = null
     }
 
     // 마커 재생성 (선택 상태 반영)
@@ -142,6 +224,25 @@ watch(mapZoom, (level) => {
     setZoomLevel(level)
 })
 
+// 사용자 선호 지역이 늦게 로드되는 경우 지도 중심 재설정
+watch(
+    () => authStore.userPreferredAreas,
+    async (areas) => {
+        if (preferredCenterApplied.value) return
+        if (!areas || areas.length === 0) return
+
+        const preferredCoords = await fetchPreferredAreaCoordinates()
+        if (!preferredCoords) return
+
+        preferredCenterApplied.value = true
+        propertyStore.setMapCenter(preferredCoords, MAP_ZOOM_LEVELS.DISTRICT)
+        if (isLoaded.value) {
+            centerMap(preferredCoords.lat, preferredCoords.lng, MAP_ZOOM_LEVELS.DISTRICT)
+        }
+    },
+    { deep: true }
+)
+
 /**
  * 마커 렌더링
  */
@@ -159,7 +260,11 @@ function renderMarkers() {
 
     // 선택된 매물이 없으면 모든 마커가 보이도록 자동 조정
     if (!selectedProperty.value && filteredProperties.value.length > 0) {
-        fitBounds(filteredProperties.value)
+        if (skipFitBoundsOnce.value) {
+            skipFitBoundsOnce.value = false
+        } else {
+            fitBounds(filteredProperties.value)
+        }
     }
 }
 

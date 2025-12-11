@@ -169,5 +169,23 @@ export const propertyService = {
    */
   isPropertySaved(propertyId, savedIds) {
     return savedIds.includes(Number(propertyId))
+  },
+
+  /**
+   * 지역 좌표 조회
+   * 
+   * 지역명으로 해당 지역의 중심 좌표를 조회합니다.
+   * 
+   * @param {string} regionName - 지역명 (예: 강남구, 서초구)
+   * @returns {Promise<{region: string, latitude: number, longitude: number}>} 지역 좌표
+   * 
+   * @example
+   * const coords = await propertyService.getRegionCoordinates('강남구')
+   * // { region: '강남구', latitude: 37.5172, longitude: 127.0473 }
+   */
+  async getRegionCoordinates(regionName) {
+    const response = await apiClient.get(PROPERTY_ENDPOINTS.REGION_COORDINATES(regionName))
+    return response.data.data || response.data
   }
 }
+
