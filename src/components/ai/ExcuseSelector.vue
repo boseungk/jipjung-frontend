@@ -1,0 +1,322 @@
+<template>
+  <div class="excuse-selector">
+    <h3 class="selector-title">변명을 선택하세요</h3>
+
+    <!-- Suggested Excuses -->
+    <div class="excuse-chips">
+      <button
+        v-for="excuse in excuses"
+        :key="excuse.id"
+        type="button"
+        class="excuse-chip"
+        :class="{ 
+          active: selectedExcuseId === excuse.id,
+          'give-up': excuse.type === 'GIVE_UP'
+        }"
+        @click="selectExcuse(excuse.id)"
+      >
+        {{ excuse.text }}
+      </button>
+    </div>
+
+    <!-- Custom Input -->
+    <div class="custom-input-section">
+      <label class="custom-label">또는 직접 입력:</label>
+      <div class="custom-input-wrapper">
+        <input
+          v-model="customExcuse"
+          type="text"
+          class="custom-input"
+          placeholder="나만의 변명을 입력하세요..."
+          maxlength="100"
+          @input="handleCustomInput"
+        />
+        <span class="char-count">{{ customExcuse.length }}/100</span>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button
+      type="button"
+      class="submit-button"
+      :disabled="!canSubmit || isLoading"
+      @click="handleSubmit"
+    >
+      <span v-if="isLoading" class="loading-spinner"></span>
+      <span v-else>판결 받기 →</span>
+    </button>
+
+    <!-- Error Message -->
+    <p v-if="errorMessage" class="error-message">
+      <AppIcon name="warningCircle" :size="14" weight="fill" />
+      {{ errorMessage }}
+    </p>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch } from 'vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+import { useAiManagerStore } from '@/stores/aiManagerStore'
+
+// ============================================================================
+// Props & Emits
+// ============================================================================
+
+const props = defineProps({
+  /** 변명 선택지 배열 */
+  excuses: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const emit = defineEmits(['submitted'])
+
+// ============================================================================
+// Store
+// ============================================================================
+
+const aiManagerStore = useAiManagerStore()
+
+// ============================================================================
+// State
+// ============================================================================
+
+const selectedExcuseId = ref(null)
+const customExcuse = ref('')
+const errorMessage = ref('')
+
+// ============================================================================
+// Computed
+// ============================================================================
+
+const isLoading = computed(() => aiManagerStore.isActionLoading)
+
+const canSubmit = computed(() => {
+  return selectedExcuseId.value || customExcuse.value.trim()
+})
+
+// ============================================================================
+// Methods
+// ============================================================================
+
+/**
+ * Select a suggested excuse
+ */
+const selectExcuse = (excuseId) => {
+  selectedExcuseId.value = excuseId
+  customExcuse.value = '' // Clear custom input when selecting suggested
+  errorMessage.value = ''
+}
+
+/**
+ * Handle custom input change
+ */
+const handleCustomInput = () => {
+  if (customExcuse.value.trim()) {
+    selectedExcuseId.value = null // Clear selection when typing custom
+  }
+  errorMessage.value = ''
+}
+
+/**
+ * Submit judgment request
+ */
+const handleSubmit = async () => {
+  if (!canSubmit.value || isLoading.value) return
+
+  try {
+    errorMessage.value = ''
+    
+    // Determine excuse to send
+    const excuseId = selectedExcuseId.value ?? 'CUSTOM'
+    const customText = customExcuse.value.trim()
+
+    await aiManagerStore.submitJudgment(excuseId, customText)
+    
+    emit('submitted')
+  } catch (e) {
+    errorMessage.value = aiManagerStore.error || '판결 중 오류가 발생했습니다'
+  }
+}
+
+// ============================================================================
+// Watchers
+// ============================================================================
+
+// Reset state when excuses change (new analysis)
+watch(() => props.excuses, () => {
+  selectedExcuseId.value = null
+  customExcuse.value = ''
+  errorMessage.value = ''
+}, { deep: true })
+</script>
+
+<style scoped>
+.excuse-selector {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 16px;
+}
+
+.selector-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem;
+}
+
+/* Excuse Chips */
+.excuse-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+}
+
+.excuse-chip {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #374151;
+}
+
+.excuse-chip:hover {
+  border-color: #6366f1;
+  background: #f0f0ff;
+}
+
+.excuse-chip.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: white;
+}
+
+.excuse-chip.give-up {
+  background: #fef3c7;
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+.excuse-chip.give-up:hover {
+  background: #fde68a;
+  border-color: #f59e0b;
+}
+
+.excuse-chip.give-up.active {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: white;
+}
+
+/* Custom Input */
+.custom-input-section {
+  margin-bottom: 1.25rem;
+}
+
+.custom-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.custom-input-wrapper {
+  position: relative;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-right: 4rem;
+  font-size: 0.875rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.custom-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.char-count {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Submit Button - CTA Style */
+.submit-button {
+  width: 100%;
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(to right, #fb923c, #f97316);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 12px rgba(251, 146, 60, 0.2),
+    0 10px 28px rgba(249, 115, 22, 0.18);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 6px 16px rgba(251, 146, 60, 0.3),
+    0 14px 32px rgba(249, 115, 22, 0.24);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
+}
+
+.submit-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error Message */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: #ef4444;
+}
+</style>
