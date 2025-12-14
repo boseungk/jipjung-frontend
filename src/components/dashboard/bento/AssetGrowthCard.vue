@@ -12,20 +12,25 @@
     
     <div class="chart-wrapper">
       <apexchart
-        v-if="chartLoaded"
+        v-if="chartLoaded && hasChartData"
         :key="theme"
         type="area"
         :options="chartOptions"
         :series="chartSeries"
         height="170"
       />
+      <div v-else-if="chartLoaded" class="no-data-placeholder">
+        <p class="no-data-text">저축을 시작하면 성장 그래프가 표시됩니다</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import VueApexCharts from 'vue3-apexcharts'
+import { useAuthStore } from '@/stores/authStore'
 import { BRAND_ACCENT, CHART_PALETTE } from '@/constants/colors'
 import { useTheme } from '@/composables/useTheme'
 import { formatNumber } from '@/utils/formatters'
@@ -34,21 +39,50 @@ const apexchart = VueApexCharts
 const brandAccent = BRAND_ACCENT
 const { theme } = useTheme()
 
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
+
 const chartLoaded = ref(false)
 
-// Mock data - replace with real data from store
-const chartSeries = ref([
-  {
-    name: '저축액',
-    data: [
-      { x: new Date('2024-10-01').getTime(), y: 500 },
-      { x: new Date('2024-10-15').getTime(), y: 1200 },
-      { x: new Date('2024-11-01').getTime(), y: 2000 },
-      { x: new Date('2024-11-15').getTime(), y: 3200 },
-      { x: new Date('2024-11-25').getTime(), y: 4250 }
-    ]
+// =========================================================================
+// 백엔드 데이터 연동
+// =========================================================================
+
+/**
+ * authStore.user._raw.assets.chartData에서 차트 데이터 추출
+ * - 데이터가 없으면 빈 배열 반환
+ * - 날짜 기준 오름차순 정렬 (백엔드 정렬 미보장 대비)
+ * - 원(won) 단위를 만원 단위로 변환
+ */
+const chartSeries = computed(() => {
+  const rawChartData = user.value?._raw?.assets?.chartData || []
+  
+  if (!rawChartData.length) {
+    return [{ name: '저축액', data: [] }]
   }
-])
+  
+  // 날짜 기준 정렬 후 매핑
+  const sortedData = [...rawChartData].sort((a, b) => {
+    return new Date(a.date).getTime() - new Date(b.date).getTime()
+  })
+  
+  return [{
+    name: '저축액',
+    data: sortedData.map(item => ({
+      x: new Date(item.date).getTime(),
+      y: Math.round((item.balance || 0) / 10000) // 원 → 만원 변환
+    }))
+  }]
+})
+
+/** 차트 데이터 존재 여부 */
+const hasChartData = computed(() => {
+  return chartSeries.value[0]?.data?.length > 0
+})
+
+// =========================================================================
+// 차트 통계 계산
+// =========================================================================
 
 const chartPalette = computed(() => (theme.value === 'night' ? CHART_PALETTE.night : CHART_PALETTE.day))
 
@@ -66,7 +100,11 @@ const changePercent = computed(() => {
   return (changeValue.value / firstValue.value) * 100
 })
 
-const latestValueText = computed(() => `${formatNumber(Math.round(latestValue.value))}만`)
+const latestValueText = computed(() => {
+  if (!hasChartData.value) return '0만'
+  return `${formatNumber(Math.round(latestValue.value))}만`
+})
+
 const changeLabel = computed(() => {
   if (!firstPoint.value) return '데이터 없음'
   const sign = changeValue.value >= 0 ? '+' : '-'
@@ -74,6 +112,10 @@ const changeLabel = computed(() => {
   const percent = Math.abs(changePercent.value).toFixed(1)
   return `${sign}${formatNumber(absChange)}만 (${percent}%)`
 })
+
+// =========================================================================
+// 차트 옵션
+// =========================================================================
 
 const chartOptions = computed(() => {
   const palette = chartPalette.value
@@ -171,7 +213,7 @@ const chartOptions = computed(() => {
         format: 'MM월 dd일'
       },
       y: {
-        formatter: (val) => `₩${Math.round(val)}만`
+        formatter: (val) => `₩${formatNumber(Math.round(val))}만`
       }
     },
     dataLabels: {
@@ -236,4 +278,31 @@ onMounted(() => {
   min-height: 0;
 }
 
+/* 데이터 없음 플레이스홀더 */
+.no-data-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 170px;
+  background: var(--surface-muted, #f9fafb);
+  border-radius: 12px;
+  border: 1px dashed var(--border-muted, #e5e7eb);
+}
+
+.no-data-text {
+  color: var(--bento-text-muted, #6b7280);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* 다크모드 대응 */
+html[data-theme="night"] .no-data-placeholder {
+  background: var(--surface-muted, #1f2937);
+  border-color: var(--border-muted, #374151);
+}
+
+html[data-theme="night"] .meta-primary {
+  color: var(--ink-base, #f9fafb);
+}
 </style>

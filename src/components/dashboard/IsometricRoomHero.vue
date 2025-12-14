@@ -58,18 +58,21 @@ import AppIcon from '../common/AppIcon.vue'
 import { useGamificationStore } from '../../stores/gamificationStore'
 import { useDreamHomeStore } from '../../stores/dreamHomeStore'
 import { useAuthStore } from '../../stores/authStore'
-import { formatNumber } from '../../utils/formatters'
 
-const HOUSE_STEPS = [
-  { id: 1, title: '기초 공사', label: '씨앗 심기', message: '토대를 다지고 집나무를 심었어요.' },
-  { id: 2, title: '뼈대 세우기', label: '기둥 올리기', message: '튼튼한 골조가 올라가요.' },
-  { id: 3, title: '벽 세우기', label: '벽체 완성', message: '방의 윤곽이 드러나고 있어요.' },
-  { id: 4, title: '창문·문 달기', label: '개구부 완성', message: '빛과 바람이 드나드는 집이 되네요.' },
-  { id: 5, title: '지붕 올리기', label: '지붕 마감', message: '집의 형태가 완성 단계예요.' },
-  { id: 6, title: '인테리어 공정', label: '마감재 설치', message: '내부를 정돈하고 있어요.' },
-  { id: 7, title: '입주 준비 완료', label: '완공', message: '집이 완성됐어요! 이제 가구를 채워요.' }
-]
+// ============================================================================
+// Constants
+// ============================================================================
 
+/** 기본 단계 수 (백엔드 미응답 시 폴백) */
+const DEFAULT_TOTAL_STEPS = 7
+
+/** 기본 이미지 URL (로드 실패 시 폴백) */
+const DEFAULT_IMAGE_URL = '/phase7.svg'
+
+/**
+ * Phase 2 (가구 배치) 단계 정의 - 향후 확장용
+ * @deprecated Phase 2 구현 시 백엔드에서 동적 제공 예정
+ */
 const FURNITURE_STEPS = [
   { id: 1, title: '배경 준비', label: '바닥·벽 정돈', message: '배경과 바닥을 깔끔하게 준비했어요.' },
   { id: 2, title: '소파 배치', label: '휴식 공간', message: '소파가 들어와 거실이 만들어졌어요.' },
@@ -78,22 +81,27 @@ const FURNITURE_STEPS = [
   { id: 5, title: '소품 마무리', label: '디테일', message: '소품까지 채워 완성했어요!' }
 ]
 
+// ============================================================================
+// Refs (SVG State)
+// ============================================================================
+
 const houseSvgMarkup = ref('')
 const furnitureSvgMarkup = ref('')
 const houseSvgRef = ref(null)
 const furnitureSvgRef = ref(null)
 const svgError = ref('')
 const isLoading = ref(true)
+let lastHouseSvgUrl = ''
+
+// ============================================================================
+// Stores
+// ============================================================================
 
 const gamificationStore = useGamificationStore()
 const {
   buildTrack,
   houseStage,
   furnitureStage,
-  experiencePoints,
-  nextLevelExp,
-  expProgress,
-  remainingExp,
   latestBadge
 } = storeToRefs(gamificationStore)
 const { resetHouseProgress } = gamificationStore
@@ -103,55 +111,206 @@ const { currentAmount, targetAmount, daysRemaining } = storeToRefs(dreamHomeStor
 
 const authStore = useAuthStore()
 
+// ============================================================================
+// Computed Properties (Showroom Data from Backend)
+// ============================================================================
+
 /**
- * 대시보드 응답의 showroom.imageUrl을 사용하여 동적 테마 URL 결정
+ * 백엔드 대시보드 응답의 showroom 섹션
+ * @see DashboardResponse.ShowroomSection
  */
-const themeImageUrl = computed(() => {
-  const showroom = authStore.user?._raw?.showroom
-  return showroom?.imageUrl || '/phase7.svg'
+const showroom = computed(() => authStore.user?.showroom || null)
+
+/**
+ * 현재 트랙 (house / furniture)
+ * - Phase 1: 항상 house
+ * - Phase 2: buildTrack 값에 따라 전환
+ */
+const isHouseTrack = computed(() => buildTrack.value === 'house')
+
+/**
+ * 현재 단계 (1-based index)
+ * - 백엔드 showroom.currentStep 우선
+ * - 폴백: gamificationStore.houseStage
+ */
+const activeStage = computed(() => {
+  // 백엔드 showroom 데이터가 있으면 우선 사용
+  if (showroom.value?.currentStep) {
+    return showroom.value.currentStep
+  }
+  // Phase 2 (가구 배치) 지원을 위한 폴백
+  return isHouseTrack.value ? houseStage.value : Math.max(1, furnitureStage.value || 1)
 })
 
-const isHouseTrack = computed(() => buildTrack.value === 'house')
-const activeStage = computed(() =>
-  isHouseTrack.value ? houseStage.value : Math.max(1, furnitureStage.value || 1)
-)
-const totalStages = computed(() => (isHouseTrack.value ? HOUSE_STEPS.length : FURNITURE_STEPS.length))
-const stageList = computed(() => (isHouseTrack.value ? HOUSE_STEPS : FURNITURE_STEPS))
-const currentStep = computed(
-  () => stageList.value[Math.min(stageList.value.length - 1, activeStage.value - 1)] || stageList.value[0]
-)
-const trackLabel = computed(() => (isHouseTrack.value ? '집 짓기' : '가구 채우기'))
+/**
+ * 총 단계 수
+ * - 백엔드 showroom.totalSteps 우선
+ * - 폴백: 기본값 7
+ */
+const totalStages = computed(() => {
+  if (showroom.value?.totalSteps) {
+    return showroom.value.totalSteps
+  }
+  return isHouseTrack.value ? DEFAULT_TOTAL_STEPS : FURNITURE_STEPS.length
+})
 
+/**
+ * 현재 단계 정보 (label, message)
+ * - 백엔드 showroom.stepTitle, stepDescription 우선
+ * - Phase 2 폴백: FURNITURE_STEPS 배열 사용
+ */
+const currentStep = computed(() => {
+  // 백엔드 데이터가 있고 집짓기(Phase 1)인 경우
+  if (showroom.value && isHouseTrack.value) {
+    return {
+      label: showroom.value.stepTitle || '준비 중',
+      message: showroom.value.stepDescription || ''
+    }
+  }
+  // Phase 2 (가구 배치) 폴백
+  if (!isHouseTrack.value) {
+    const idx = Math.min(FURNITURE_STEPS.length - 1, Math.max(0, activeStage.value - 1))
+    return FURNITURE_STEPS[idx]
+  }
+  // 최종 폴백 (showroom 데이터 없음)
+  return { label: '준비 중', message: '집을 짓기 위한 준비를 하고 있어요.' }
+})
+
+/**
+ * 테마 이미지 URL
+ * - 백엔드 showroom.imageUrl 우선
+ * - 폴백: 기본 완공 이미지
+ */
+const themeImageUrl = computed(() => showroom.value?.imageUrl || DEFAULT_IMAGE_URL)
+
+// ============================================================================
+// SVG Loading & Rendering
+// ============================================================================
+
+/**
+ * SVG 마크업 유효성 검사
+ */
+function isSvgMarkup(text) {
+  return typeof text === 'string' && text.toLowerCase().includes('<svg')
+}
+
+/**
+ * 집 짓기 SVG 로드
+ * - 테마 이미지 URL에서 SVG 가져오기
+ * - 실패 시 기본 SVG로 폴백
+ */
 async function loadHouseSvg() {
-  if (houseSvgMarkup.value || svgError.value) return
+  const imageUrl = themeImageUrl.value || DEFAULT_IMAGE_URL
+
+  // 이미 로드된 경우 applyStage만 재실행 (URL이 동일할 때만)
+  if (houseSvgMarkup.value && lastHouseSvgUrl === imageUrl) {
+    await nextTick()
+    retryApplyHouseStage()
+    return
+  }
+
   try {
-    // 대시보드에서 받은 테마 이미지 URL 사용
-    const imageUrl = themeImageUrl.value
+    svgError.value = ''
+    houseSvgMarkup.value = ''
+
     const res = await fetch(imageUrl)
     if (!res.ok) throw new Error('집 SVG를 불러오지 못했습니다')
-    houseSvgMarkup.value = await res.text()
+    const svgText = await res.text()
+    if (!isSvgMarkup(svgText)) {
+      throw new Error('Invalid SVG markup')
+    }
+
+    houseSvgMarkup.value = svgText
+    lastHouseSvgUrl = imageUrl
+
     await nextTick()
-    applyHouseStage()
+    retryApplyHouseStage()
   } catch (error) {
-    svgError.value = '집 SVG를 불러오지 못했어요'
     console.error(error)
+
+    // 테마 URL 실패 시 기본 SVG로 폴백
+    if (imageUrl !== DEFAULT_IMAGE_URL) {
+      try {
+        const fallbackRes = await fetch(DEFAULT_IMAGE_URL)
+        if (fallbackRes.ok) {
+          const fallbackText = await fallbackRes.text()
+          if (isSvgMarkup(fallbackText)) {
+            houseSvgMarkup.value = fallbackText
+            lastHouseSvgUrl = DEFAULT_IMAGE_URL
+            await nextTick()
+            retryApplyHouseStage()
+            return
+          }
+        }
+      } catch (fallbackError) {
+        console.error(fallbackError)
+      }
+    }
+
+    svgError.value = '집 SVG를 불러오지 못했어요'
   }
 }
 
+/**
+ * DOM 준비 대기 후 단계 적용 (재시도 로직)
+ */
+function retryApplyHouseStage(attempts = 0) {
+  const MAX_ATTEMPTS = 10
+  const wrapper = houseSvgRef.value
+  const svg = wrapper?.querySelector('svg')
+
+  if (svg) {
+    applyHouseStage()
+  } else if (attempts < MAX_ATTEMPTS) {
+    setTimeout(() => retryApplyHouseStage(attempts + 1), 50)
+  }
+}
+
+/**
+ * 가구 배치 SVG 로드 (Phase 2)
+ */
 async function loadFurnitureSvg() {
-  if (furnitureSvgMarkup.value || svgError.value) return
+  if (furnitureSvgMarkup.value) {
+    await nextTick()
+    retryApplyFurnitureStage()
+    return
+  }
+
   try {
+    svgError.value = ''
     const res = await fetch('/figure.svg')
     if (!res.ok) throw new Error('가구 SVG를 불러오지 못했습니다')
-    furnitureSvgMarkup.value = await res.text()
+    const svgText = await res.text()
+    if (!isSvgMarkup(svgText)) {
+      throw new Error('Invalid SVG markup')
+    }
+    furnitureSvgMarkup.value = svgText
     await nextTick()
-    applyFurnitureStage()
+    retryApplyFurnitureStage()
   } catch (error) {
     svgError.value = '가구 SVG를 불러오지 못했어요'
     console.error(error)
   }
 }
 
+/**
+ * DOM 준비 대기 후 가구 단계 적용
+ */
+function retryApplyFurnitureStage(attempts = 0) {
+  const MAX_ATTEMPTS = 10
+  const wrapper = furnitureSvgRef.value
+  const svg = wrapper?.querySelector('svg')
+
+  if (svg) {
+    applyFurnitureStage()
+  } else if (attempts < MAX_ATTEMPTS) {
+    setTimeout(() => retryApplyFurnitureStage(attempts + 1), 50)
+  }
+}
+
+/**
+ * 집 짓기 단계 SVG 레이어 표시/숨김 적용
+ */
 function applyHouseStage() {
   const wrapper = houseSvgRef.value
   if (!wrapper) return
@@ -168,12 +327,16 @@ function applyHouseStage() {
   })
 }
 
+/**
+ * 가구 배치 단계 SVG 레이어 표시/숨김 적용 (Phase 2)
+ */
 function applyFurnitureStage() {
   const wrapper = furnitureSvgRef.value
   if (!wrapper) return
   const svg = wrapper.querySelector('svg')
   if (!svg) return
 
+  // 야간 레이어 숨김
   const nightLayer = svg.querySelector('[id*="night"]')
   if (nightLayer) {
     nightLayer.style.opacity = '0'
@@ -186,7 +349,7 @@ function applyFurnitureStage() {
   layerIds.forEach((key, index) => {
     const layer = svg.querySelector(`[id*="${key}"]`)
     if (!layer) return
-    // Show cumulative layers (stage 1 shows background+sofa)
+    // 누적 레이어 표시 (stage 1 = background+sofa)
     const visible = index <= activeStage.value
     layer.classList.toggle('layer-visible', visible)
     layer.classList.toggle('layer-hidden', !visible)
@@ -204,8 +367,12 @@ function applyFurnitureStage() {
   }
 }
 
+/**
+ * 현재 트랙에 맞는 SVG 로드
+ */
 async function ensureActiveSvg(track) {
   isLoading.value = true
+  svgError.value = ''
   try {
     if (track === 'house') {
       await loadHouseSvg()
@@ -217,7 +384,11 @@ async function ensureActiveSvg(track) {
   }
 }
 
-watch([buildTrack, houseStage, furnitureStage], () => {
+// ============================================================================
+// Watchers
+// ============================================================================
+
+watch([buildTrack, activeStage], () => {
   nextTick(() => {
     if (isHouseTrack.value) {
       applyHouseStage()
@@ -227,12 +398,32 @@ watch([buildTrack, houseStage, furnitureStage], () => {
   })
 })
 
-watch(houseSvgMarkup, () => nextTick(applyHouseStage))
-watch(furnitureSvgMarkup, () => nextTick(applyFurnitureStage))
+watch(houseSvgMarkup, () => {
+  nextTick(() => {
+    setTimeout(applyHouseStage, 50)
+  })
+})
+
+watch(furnitureSvgMarkup, () => {
+  nextTick(() => {
+    setTimeout(applyFurnitureStage, 50)
+  })
+})
 
 watch(buildTrack, async (track) => {
   await ensureActiveSvg(track)
 })
+
+// 테마 이미지 URL 변경 시 집 SVG 재로드 (테마 선택/대시보드 갱신 대응)
+watch(themeImageUrl, async (newUrl, oldUrl) => {
+  if (!isHouseTrack.value) return
+  if (!newUrl || newUrl === oldUrl) return
+  await ensureActiveSvg('house')
+})
+
+// ============================================================================
+// Lifecycle
+// ============================================================================
 
 onMounted(async () => {
   try {
@@ -271,12 +462,6 @@ html[data-theme='night'] .hero-card {
   box-shadow: none;
   border: none;
 }
-
-
-
-
-
-
 
 .badge-chip {
   display: flex;
@@ -355,8 +540,6 @@ html[data-theme='night'] .scene-card {
   border: none;
   box-shadow: none;
 }
-
-
 
 .scene-inner {
   position: relative;

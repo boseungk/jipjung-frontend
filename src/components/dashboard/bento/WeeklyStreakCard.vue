@@ -1,7 +1,7 @@
 <template>
   <div class="bento-card weekly-streak-card">
     <div class="card-heading">
-      <h3 class="card-title">연속 저축</h3>
+      <h3 class="card-title">연속 활동</h3>
       <span class="streak-badge">주간</span>
     </div>
 
@@ -56,65 +56,88 @@
 
     <p class="streak-hint">
       <AppIcon name="info" :size="16" :active="true" class="hint-icon" aria-hidden="true" />
-      <span>오늘 불꽃을 켜면 +50 XP를 받을 수 있어요!</span>
+      <span>매일 앱을 방문하면 불꽃이 켜지고 EXP를 받아요!</span>
     </p>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, defineEmits } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
-import confetti from 'canvas-confetti'
+import { useAuthStore } from '../../../stores/authStore'
 import AppIcon from '../../common/AppIcon.vue'
 
+const emit = defineEmits(['open-savings'])
+
 const gamificationStore = useGamificationStore()
+const authStore = useAuthStore()
 const { currentStreak, longestStreak } = storeToRefs(gamificationStore)
 
 const KOREAN_WEEK_LABELS = ['월', '화', '수', '목', '금', '토', '일']
-const isSaving = ref(false)
+
 const todayIndex = computed(() => {
   // JS 일요일(0) 기준을 월요일(0) 기준으로 변환
   return (new Date().getDay() + 6) % 7
 })
 
+/**
+ * 백엔드 기준 오늘 스트릭 참여 여부
+ * (활동 기반 스트릭)
+ */
+const rawIsTodayParticipated = computed(() => {
+  return !!authStore.user?._raw?.streak?.isTodayParticipated
+})
+
+/**
+ * 주간 스트릭 상태 계산
+ * - 백엔드 weeklyStatus 데이터 우선 사용
+ * - 없으면 currentStreak 기반 폴백
+ */
 const weekDays = computed(() => {
+  // 백엔드 weeklyStatus 데이터가 있으면 사용
+  const weeklyStatus = authStore.user?._raw?.streak?.weeklyStatus
+  if (Array.isArray(weeklyStatus) && weeklyStatus.length === 7) {
+    return weeklyStatus.map((status, index) => ({
+      label: status.day || KOREAN_WEEK_LABELS[index],
+      completed: status.achieved || false,
+      isToday: index === todayIndex.value
+    }))
+  }
+  
+  // 폴백: currentStreak 기반 계산
   const streakSpan = Math.min(7, Math.max(0, currentStreak.value))
   return KOREAN_WEEK_LABELS.map((label, index) => {
     const distanceFromToday = (todayIndex.value - index + 7) % 7
     const isToday = index === todayIndex.value
-    const completed = streakSpan > 0 && distanceFromToday < streakSpan
+    const completed = isToday
+      ? rawIsTodayParticipated.value
+      : streakSpan > 0 &&
+        distanceFromToday > 0 &&
+        (rawIsTodayParticipated.value
+          ? distanceFromToday < streakSpan
+          : distanceFromToday <= streakSpan)
 
     return { label, completed, isToday }
   })
 })
 
-const handleDayClick = async (day) => {
-  if (!day.isToday || day.completed || isSaving.value) return
-  isSaving.value = true
-  try {
-    await gamificationStore.incrementStreak()
-    triggerConfetti()
-  } catch (error) {
-    console.error('오늘 스트릭 체크 실패', error)
-  } finally {
-    isSaving.value = false
-  }
+/**
+ * 오늘 불꽃 클릭 핸들러
+ * - 저축 화면 열기 CTA (수동 스트릭 증가 제거)
+ * - 스트릭은 백엔드에서 활동 시 자동 처리
+ */
+const handleDayClick = (day) => {
+  if (!day.isToday) return
+  
+  // 저축 화면 열기 이벤트 발생
+  emit('open-savings')
 }
 
 const dayAriaLabel = (day) => {
-  if (day.completed) return `${day.label} 저축 완료`
-  if (day.isToday) return `오늘(${day.label}) 체크하기`
+  if (day.completed) return `${day.label} 활동 완료`
+  if (day.isToday) return `오늘(${day.label}) - 활동하면 불꽃이 켜져요`
   return `${day.label} 예정일`
-}
-
-const triggerConfetti = () => {
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ['#D4A574', '#E8C9A1', '#F5EDE3']
-  })
 }
 </script>
 
