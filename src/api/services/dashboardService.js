@@ -41,8 +41,8 @@ import { USER_ENDPOINTS } from '@/api/endpoints'
  * @property {number} experiencePoints - 현재 경험치
  * @property {number} nextLevelExp - 다음 레벨 필요 경험치
  * @property {number} expProgress - 경험치 진행률 (%)
- * @property {number} currentStreak - 현재 연속 저축 일수
- * @property {number} longestStreak - 최장 연속 저축 일수
+ * @property {number} currentStreak - 현재 연속 활동 일수
+ * @property {number} longestStreak - 최장 연속 활동 일수
  * @property {number} treesCollected - 수집한 나무 수
  */
 
@@ -67,6 +67,16 @@ import { USER_ENDPOINTS } from '@/api/endpoints'
  * @property {DashboardDsr} dsr - DSR 정보
  */
 
+/**
+ * Dashboard Service
+ * 
+ * @description
+ * **반환값 규칙**: 이 서비스는 `response.data` (ApiResponse 전체)를 반환합니다.
+ * 호출자(authStore)가 `data.showroom`, `data.profile` 등의 내부 필드를 추출해야 합니다.
+ * 
+ * 일부 다른 서비스(예: themeService)는 내부 데이터를 바로 반환하므로,
+ * 서비스별 반환 형태가 다를 수 있습니다. 신규 서비스 작성 시 이 규칙을 참고하세요.
+ */
 export const dashboardService = {
     /**
      * 대시보드 통합 데이터 조회

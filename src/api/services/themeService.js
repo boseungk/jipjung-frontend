@@ -15,7 +15,7 @@ import { THEME_ENDPOINTS } from '@/api/endpoints'
  * @property {number} themeId - 테마 고유 ID
  * @property {string} themeCode - 테마 코드 (MODERN, HANOK, CASTLE 등)
  * @property {string} themeName - 테마 표시명 (모던 하우스, 한옥, 서양 성 등)
- * @property {boolean} isActive - 활성 상태
+ * @property {string|null} previewImageUrl - 테마 미리보기 이미지 URL (없으면 null)
  */
 
 export const themeService = {

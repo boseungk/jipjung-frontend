@@ -33,8 +33,8 @@ import { GAMIFICATION_ENDPOINTS } from '@/api/endpoints'
 /**
  * @typedef {Object} StreakResponse
  * @property {Object} gamification - 게임화 정보
- * @property {number} gamification.currentStreak - 현재 연속 저축 일수
- * @property {number} gamification.longestStreak - 최장 연속 저축 일수
+ * @property {number} gamification.currentStreak - 현재 연속 활동 일수
+ * @property {number} gamification.longestStreak - 최장 연속 활동 일수
  */
 
 export const gamificationService = {
@@ -66,7 +66,7 @@ export const gamificationService = {
     /**
      * 스트릭 업데이트
      * 
-     * 연속 저축 기록을 업데이트합니다.
+     * 연속 활동 기록을 업데이트합니다.
      * - increment: 스트릭 1 증가
      * - reset: 스트릭 초기화
      * 
@@ -75,7 +75,7 @@ export const gamificationService = {
      * @throws {ApiError} 인증 필요(401)
      * 
      * @example
-     * // 연속 저축 성공
+     * // 연속 활동 성공
      * const result = await gamificationService.updateStreak('increment')
      * console.log(result.gamification.currentStreak) // 6
      * 

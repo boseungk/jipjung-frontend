@@ -44,6 +44,10 @@ import { DREAM_HOME_ENDPOINTS } from '@/api/endpoints'
  * @property {number} growth.level - 현재 레벨
  * @property {boolean} growth.isLevelUp - 레벨업 여부
  * @property {string} growth.levelLabel - 레벨 타이틀
+ * @property {Object|null} streakInfo - 스트릭 정보 (오늘 첫 활동 시에만 포함)
+ * @property {number} streakInfo.currentStreak - 현재 연속 활동 일수
+ * @property {number} streakInfo.maxStreak - 최장 연속 활동 일수
+ * @property {number} streakInfo.expEarned - 스트릭으로 획득한 EXP
  */
 
 export const dreamHomeService = {
