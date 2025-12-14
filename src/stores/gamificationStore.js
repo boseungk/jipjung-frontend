@@ -7,6 +7,10 @@ const HOUSE_TOTAL_STAGES = 7
 const FURNITURE_TOTAL_STAGES = 5
 const BADGE_HISTORY_LIMIT = 12
 
+/**
+ * 집 짓기 배지 메시지 (Phase 1)
+ * @deprecated 백엔드 levelLabel 우선 사용, 이 배열은 폴백용
+ */
 const HOUSE_BADGE_MESSAGES = [
   '씨앗을 심고 기초를 다졌어요 🌱',
   '뼈대가 올라가고 있어요 🏗️',
@@ -17,6 +21,10 @@ const HOUSE_BADGE_MESSAGES = [
   '집이 완성됐어요! 이제 가구를 채워볼까요? 🏡'
 ]
 
+/**
+ * 가구 배치 배지 메시지 (Phase 2)
+ * @deprecated Phase 2 구현 시 백엔드에서 동적 제공 예정
+ */
 const FURNITURE_BADGE_MESSAGES = [
   '배경과 바닥을 정돈했어요 🪴',
   '소파가 들어왔어요 🛋️',
@@ -229,23 +237,23 @@ export const useGamificationStore = defineStore('gamification', () => {
     }
   }
 
+  /**
+   * @deprecated 백엔드에서 저축 시 자동으로 스트릭 처리합니다.
+   * 이 메서드는 더 이상 사용하지 마세요.
+   * @see StreakService.participate()
+   */
   async function incrementStreak() {
-    const nextCurrentStreak = currentStreak.value + 1
-    const nextLongestStreak = Math.max(nextCurrentStreak, longestStreak.value)
-    const updated = {
-      ...gamification.value,
-      currentStreak: nextCurrentStreak,
-      longestStreak: nextLongestStreak
-    }
-    await saveGamification(updated)
+    console.warn('[DEPRECATED] incrementStreak: 백엔드에서 자동 처리됩니다. 저축 API를 사용하세요.')
+    // 로컬 상태 업데이트 제거 - 서버 데이터와 불일치 방지
   }
 
+  /**
+   * @deprecated 백엔드에서 스트릭을 관리합니다.
+   * 이 메서드는 더 이상 사용하지 마세요.
+   */
   async function resetStreak() {
-    const updated = {
-      ...gamification.value,
-      currentStreak: 0
-    }
-    await saveGamification(updated)
+    console.warn('[DEPRECATED] resetStreak: 백엔드에서 관리됩니다.')
+    // 로컬 상태 업데이트 제거 - 서버 데이터와 불일치 방지
   }
 
   async function resetFurnitureProgress() {
@@ -293,6 +301,8 @@ export const useGamificationStore = defineStore('gamification', () => {
   function applyGrowthResult(growth) {
     if (!growth) return
 
+    const nextHouseStage = Math.min(HOUSE_TOTAL_STAGES, Math.max(1, growth.level || 1))
+
     authStore.updateUserData({
       gamification: {
         ...authStore.userGamification,
@@ -302,8 +312,22 @@ export const useGamificationStore = defineStore('gamification', () => {
         nextLevelExp: growth.maxExp,          // maxExp → nextLevelExp
         levelTitle: growth.levelLabel,        // levelLabel → levelTitle
         // 레벨이 곧 집 짓기 단계 (1~7)
-        houseStage: Math.min(HOUSE_TOTAL_STAGES, Math.max(1, growth.level || 1))
-      }
+        houseStage: nextHouseStage
+      },
+      // showroom 섹션 동기화 (저축 직후 즉시 단계 반영)
+      showroom: authStore.userShowroom
+        ? {
+            ...authStore.userShowroom,
+            currentStep: nextHouseStage,
+            stepTitle: growth.levelLabel || authStore.userShowroom.stepTitle
+          }
+        : {
+            currentStep: nextHouseStage,
+            totalSteps: HOUSE_TOTAL_STAGES,
+            stepTitle: growth.levelLabel || '',
+            stepDescription: '',
+            imageUrl: null
+          }
     })
   }
 
@@ -332,8 +356,9 @@ export const useGamificationStore = defineStore('gamification', () => {
     addExperience,
     syncMilestones,
     levelUp,
-    incrementStreak,
-    resetStreak,
+    // @deprecated - 백엔드 자동 처리로 인해 사용 중단
+    // incrementStreak,
+    // resetStreak,
     resetFurnitureProgress,
     resetHouseProgress,
     applyGrowthResult

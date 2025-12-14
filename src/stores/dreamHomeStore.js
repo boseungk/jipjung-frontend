@@ -130,6 +130,38 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
                 })
             }
 
+            // 스트릭 정보 반영 (활동 기반)
+            const previousRaw = authStore.user?._raw || {}
+            const previousRawStreak = previousRaw.streak || {}
+            if (response.streakInfo) {
+                authStore.updateUserData({
+                    gamification: {
+                        ...authStore.userGamification,
+                        currentStreak: response.streakInfo.currentStreak,
+                        longestStreak: response.streakInfo.maxStreak
+                    },
+                    _raw: {
+                        ...previousRaw,
+                        streak: {
+                            ...previousRawStreak,
+                            currentStreak: response.streakInfo.currentStreak,
+                            maxStreak: response.streakInfo.maxStreak,
+                            isTodayParticipated: true
+                        }
+                    }
+                })
+            } else {
+                authStore.updateUserData({
+                    _raw: {
+                        ...previousRaw,
+                        streak: {
+                            ...previousRawStreak,
+                            isTodayParticipated: true
+                        }
+                    }
+                })
+            }
+
             return response
         } catch (err) {
             error.value = err.message || '저축 기록에 실패했습니다.'

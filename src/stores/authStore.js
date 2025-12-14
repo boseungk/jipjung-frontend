@@ -76,6 +76,9 @@ export const useAuthStore = defineStore('auth', () => {
     /** 게임화 정보 (기본값 포함) */
     const userGamification = computed(() => user.value?.gamification || DEFAULT_GAMIFICATION)
 
+    /** 쇼룸 정보 (집짓기 시각화) */
+    const userShowroom = computed(() => user.value?.showroom || null)
+
     // ============================================
     // Private Helpers
     // ============================================
@@ -366,6 +369,8 @@ export const useAuthStore = defineStore('auth', () => {
                 ...mappedUser,
                 dreamHome: mappedDreamHome,
                 gamification: mappedGamification,
+                // 쇼룸 정보 직접 매핑 (집짓기 시각화)
+                showroom: response.showroom || null,
                 // 원본 백엔드 응답 보존 (컴포넌트에서 직접 접근 가능)
                 _raw: {
                     profile: response.profile,
@@ -373,7 +378,6 @@ export const useAuthStore = defineStore('auth', () => {
                     streak: response.streak,
                     dsr: response.dsr,
                     assets: response.assets,
-                    showroom: response.showroom,
                     gapAnalysis: response.gapAnalysis
                 }
             }
@@ -419,6 +423,7 @@ export const useAuthStore = defineStore('auth', () => {
         userPreferredAreas,
         userDreamHome,
         userGamification,
+        userShowroom,
 
         // Actions
         register,
