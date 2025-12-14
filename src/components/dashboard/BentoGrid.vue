@@ -3,17 +3,24 @@
     <MainGoalCard />
     <ProfileCard />
     <AssetGrowthCard />
-    <WeeklyStreakCard />
+    <WeeklyStreakCard @open-savings="goToSavings" />
     <DsrGaugeCard />
   </div>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import ProfileCard from './bento/ProfileCard.vue'
 import MainGoalCard from './bento/MainGoalCard.vue'
 import WeeklyStreakCard from './bento/WeeklyStreakCard.vue'
 import DsrGaugeCard from './bento/DsrGaugeCard.vue'
 import AssetGrowthCard from './bento/AssetGrowthCard.vue'
+
+const router = useRouter()
+
+const goToSavings = () => {
+  router.push({ name: 'Savings' })
+}
 </script>
 
 <style scoped>

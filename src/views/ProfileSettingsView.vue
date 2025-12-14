@@ -2,7 +2,6 @@
   <div class="profile-view">
     <div class="profile-container">
       <h1 class="page-title">
-        <AppIcon name="user" :size="24" />
         프로필 설정
       </h1>
       <p class="page-subtitle">내 정보를 관리하세요</p>
@@ -716,20 +715,51 @@ html[data-theme="night"] .loading-state {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   background: rgba(255, 255, 255, 0.6);
   color: var(--showroom-text-day, #2C2420);
   border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 12px rgba(88, 60, 50, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 html[data-theme="night"] .btn-logout {
   background: rgba(255, 255, 255, 0.08);
   color: var(--showroom-text-night, #F9F8F6);
   border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .btn-logout:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 6px 16px rgba(88, 60, 50, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme="night"] .btn-logout:hover:not(:disabled) {
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-logout:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.8;
+  box-shadow: 
+    inset 0 3px 8px rgba(88, 60, 50, 0.15),
+    0 2px 6px rgba(88, 60, 50, 0.08);
+}
+
+html[data-theme="night"] .btn-logout:active:not(:disabled) {
+  box-shadow:
+    inset 0 4px 16px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .btn-danger {
@@ -744,15 +774,27 @@ html[data-theme="night"] .btn-logout {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(135deg, var(--brand-accent), #FF6347);
   color: white;
-  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  box-shadow: 
+    0 4px 16px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .btn-danger:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 6px 20px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  opacity: 0.85;
+  box-shadow: 
+    inset 0 3px 12px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
 }
 
 .danger-zone .section-title {

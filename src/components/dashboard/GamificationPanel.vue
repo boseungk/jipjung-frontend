@@ -30,7 +30,7 @@
     <div class="streak-section">
       <div class="streak-icon"><AppIcon name="fire" :size="32" :active="true" :is-major-cta="true" /></div>
       <div class="streak-info">
-        <span class="streak-text">연속 저축: {{ currentStreak }}일</span>
+        <span class="streak-text">연속 활동: {{ currentStreak }}일</span>
         <span class="streak-divider">|</span>
         <span class="streak-record">최장: {{ longestStreak }}일</span>
       </div>

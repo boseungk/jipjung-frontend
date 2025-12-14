@@ -154,9 +154,9 @@ const isTodayParticipated = computed(() => rawStreak.value?.isTodayParticipated 
 const rewardAvailable = computed(() => rawStreak.value?.rewardAvailable || false)
 const streakActive = computed(() => currentStreak.value > 0)
 const streakMessage = computed(() => {
-  if (isTodayParticipated.value) return '오늘 저축 완료!'
-  if (currentStreak.value > 0) return '오늘도 저축하면 연속 기록!'
-  return '저축을 시작해보세요'
+  if (isTodayParticipated.value) return '오늘 스트릭 참여 완료!'
+  if (currentStreak.value > 0) return '오늘도 활동하면 연속 기록!'
+  return '첫 활동으로 스트릭 시작!'
 })
 
 // Final amount to save
