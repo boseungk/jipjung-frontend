@@ -16,6 +16,37 @@ import { DEFAULT_DREAM_HOME } from '@/constants/user'
 export const useDreamHomeStore = defineStore('dreamHome', () => {
     const authStore = useAuthStore()
 
+    function formatLocalDateYYYYMMDD(date) {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+    }
+
+    function updateAssetsChartDataForToday(previousChartData, today, todayBalance) {
+        const safeChartData = Array.isArray(previousChartData) ? previousChartData : []
+        const todayStr = typeof today === 'string' ? today : formatLocalDateYYYYMMDD(today)
+
+        if (!safeChartData.length) {
+            return [{ date: todayStr, balance: todayBalance }]
+        }
+
+        const chartDataCopy = safeChartData.map((point) => ({ ...point }))
+        const todayIndex = chartDataCopy.findIndex((point) => point?.date === todayStr)
+
+        if (todayIndex >= 0) {
+            for (let index = todayIndex; index < chartDataCopy.length; index += 1) {
+                chartDataCopy[index] = { ...chartDataCopy[index], balance: todayBalance }
+            }
+            return chartDataCopy
+        }
+
+        // Fallback: update the latest point (chart window usually ends at "today")
+        const lastIndex = chartDataCopy.length - 1
+        chartDataCopy[lastIndex] = { ...chartDataCopy[lastIndex], balance: todayBalance }
+        return chartDataCopy
+    }
+
     // ============================================
     // State
     // ============================================
@@ -126,6 +157,28 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
                         currentAmount: response.dreamHomeStatus.currentSavedAmount,
                         targetAmount: response.dreamHomeStatus.targetAmount,
                         achievementRate: response.dreamHomeStatus.achievementRate
+                    }
+                })
+
+                // 대시보드 자산 성장 차트(assets.chartData) 즉시 반영
+                // - 대시보드 API 재호출 없이도 AssetGrowthCard가 업데이트되도록 authStore._raw.assets.chartData를 갱신
+                const previousRaw = authStore.user?._raw || {}
+                const previousAssets = previousRaw.assets || {}
+                const nextSavedAmount = response.dreamHomeStatus.currentSavedAmount
+                const nextChartData = updateAssetsChartDataForToday(
+                    previousAssets.chartData,
+                    new Date(),
+                    nextSavedAmount
+                )
+
+                authStore.updateUserData({
+                    _raw: {
+                        ...previousRaw,
+                        assets: {
+                            ...previousAssets,
+                            totalAsset: nextSavedAmount,
+                            chartData: nextChartData
+                        }
                     }
                 })
             }
