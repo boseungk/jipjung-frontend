@@ -4,38 +4,29 @@
       <div 
         v-if="toastState.visible" 
         class="toast-container"
-        role="alert"
-        :aria-live="toastState.type === 'error' ? 'assertive' : 'polite'"
+        :role="toastRole"
+        :aria-live="toastAriaLive"
+        @mouseenter="pauseToast"
+        @mouseleave="resumeToast"
       >
-        <div class="toast-content" :class="`toast-${toastState.type}`">
-          <!-- Icons -->
-          <PhWarning 
-            v-if="toastState.type === 'error'" 
-            :size="20" 
-            weight="fill" 
-            class="toast-icon"
-          />
-          <PhCheckCircle 
-            v-if="toastState.type === 'success'" 
-            :size="20" 
-            weight="fill" 
-            class="toast-icon"
-          />
-          <PhInfo 
-            v-if="toastState.type === 'info'" 
-            :size="20" 
-            weight="fill" 
-            class="toast-icon"
-          />
-          <PhWarningCircle 
-            v-if="toastState.type === 'warning'" 
-            :size="20" 
-            weight="fill" 
-            class="toast-icon"
-          />
+        <div class="toast-content">
+          <!-- Icon with gradient background -->
+          <div class="toast-icon-wrapper" :class="`icon-${toastState.type}`">
+            <AppIcon
+              :name="toastIconName"
+              :size="18"
+              weight="fill"
+              color="#fff"
+              :active="true"
+              customClass="toast-icon"
+              aria-hidden="true"
+            />
+          </div>
           
           <!-- Message -->
-          <span class="toast-message">{{ toastState.message }}</span>
+          <div class="toast-body">
+            <span class="toast-message">{{ toastState.message }}</span>
+          </div>
           
           <!-- Close button -->
           <button 
@@ -43,8 +34,24 @@
             class="toast-close"
             aria-label="닫기"
           >
-            <PhX :size="18" weight="bold" />
+            <AppIcon
+              name="x"
+              :size="14"
+              weight="bold"
+              color="currentColor"
+              :active="true"
+              aria-hidden="true"
+            />
           </button>
+          
+          <!-- Progress bar -->
+          <div v-if="toastState.duration > 0" class="toast-progress" :class="`progress-${toastState.type}`">
+            <div
+              :key="toastState.id"
+              class="toast-progress-bar"
+              :style="progressBarStyle"
+            ></div>
+          </div>
         </div>
       </div>
     </Transition>
@@ -52,144 +59,302 @@
 </template>
 
 <script setup>
-import { 
-  PhWarning, 
-  PhCheckCircle, 
-  PhInfo, 
-  PhWarningCircle, 
-  PhX 
-} from '@phosphor-icons/vue'
+import { computed } from 'vue'
 import { useToast } from '@/composables/useToast'
 
-const { toastState, hideToast } = useToast()
+const { toastState, hideToast, pauseToast, resumeToast, isPaused } = useToast()
+
+const toastIconName = computed(() => {
+  switch (toastState.type) {
+    case 'success':
+      return 'checkCircle'
+    case 'error':
+      return 'warning'
+    case 'warning':
+      return 'warningCircle'
+    case 'info':
+    default:
+      return 'info'
+  }
+})
+
+const toastAriaLive = computed(() => (toastState.type === 'error' || toastState.type === 'warning' ? 'assertive' : 'polite'))
+const toastRole = computed(() => (toastAriaLive.value === 'assertive' ? 'alert' : 'status'))
+
+const progressBarStyle = computed(() => ({
+  animationDuration: `${toastState.duration}ms`,
+  animationPlayState: isPaused.value ? 'paused' : 'running'
+}))
 </script>
 
 <style scoped>
 .toast-container {
   position: fixed;
-  top: 2rem;
-  right: 2rem;
+  top: 5rem;
+  right: 1.5rem;
   z-index: 9999;
-  max-width: 420px;
+  max-width: 400px;
+  perspective: 1000px;
 }
 
 .toast-content {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   padding: 1rem 1.25rem;
-  background: var(--onboarding-surface);
-  border-radius: var(--onboarding-radius-md);
+  padding-right: 2.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 
-    var(--onboarding-shadow-floating-strong),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-  transition: var(--onboarding-transition-base);
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-html[data-theme="night"] .toast-content {
-  background: var(--onboarding-surface);
+.toast-content:hover {
+  transform: translateY(-2px) scale(1.01);
   box-shadow: 
-    var(--onboarding-shadow-floating-strong),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 12px 40px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Dark mode styles */
+html[data-theme="night"] .toast-content {
+  background: rgba(30, 32, 40, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="night"] .toast-content:hover {
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Icon wrapper with gradient */
+.toast-icon-wrapper {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast-content:hover .toast-icon-wrapper {
+  transform: scale(1.1) rotate(-3deg);
+}
+
+.icon-success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.icon-error {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.icon-warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.icon-info {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .toast-icon {
-  flex-shrink: 0;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Message body */
+.toast-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .toast-message {
-  flex: 1;
+  display: block;
   font-size: 0.9375rem;
   font-weight: 500;
-  color: var(--onboarding-text-primary);
+  color: #1f2937;
   line-height: 1.5;
+  letter-spacing: -0.01em;
 }
 
+html[data-theme="night"] .toast-message {
+  color: #f3f4f6;
+}
+
+/* Close button */
 .toast-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  background: transparent;
-  border-radius: 6px;
-  color: var(--onboarding-text-secondary);
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  color: #9ca3af;
   cursor: pointer;
-  transition: var(--onboarding-transition-fast);
+  transition: all 0.2s ease;
 }
 
 .toast-close:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--onboarding-text-primary);
+  background: rgba(0, 0, 0, 0.08);
+  color: #6b7280;
+  transform: scale(1.1);
+}
+
+.toast-close:active {
+  transform: scale(0.95);
+}
+
+html[data-theme="night"] .toast-close {
+  background: rgba(255, 255, 255, 0.06);
+  color: #9ca3af;
 }
 
 html[data-theme="night"] .toast-close:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  color: #d1d5db;
 }
 
-/* Type-specific styles */
-.toast-success {
-  border-left: 4px solid var(--onboarding-success);
+/* Progress bar */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
 }
 
-.toast-success .toast-icon {
-  color: var(--onboarding-success);
+html[data-theme="night"] .toast-progress {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.toast-error {
-  border-left: 4px solid var(--onboarding-error);
+.toast-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  animation: progress-shrink linear forwards;
+  border-radius: 0 0 0 16px;
 }
 
-.toast-error .toast-icon {
-  color: var(--onboarding-error);
+.progress-success .toast-progress-bar {
+  background: linear-gradient(90deg, #10B981, #34D399);
 }
 
-.toast-warning {
-  border-left: 4px solid #FF9800;
+.progress-error .toast-progress-bar {
+  background: linear-gradient(90deg, #EF4444, #F87171);
 }
 
-.toast-warning .toast-icon {
-  color: #FF9800;
+.progress-warning .toast-progress-bar {
+  background: linear-gradient(90deg, #F59E0B, #FBBF24);
 }
 
-.toast-info {
-  border-left: 4px solid var(--onboarding-primary);
+.progress-info .toast-progress-bar {
+  background: linear-gradient(90deg, #3B82F6, #60A5FA);
 }
 
-.toast-info .toast-icon {
-  color: var(--onboarding-primary);
+@keyframes progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 
-/* Slide-in animation */
+/* Slide-in animation - more elegant spring effect */
 .toast-slide-enter-active {
-  animation: toast-slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: toast-slide-in 0.5s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
 
 .toast-slide-leave-active {
-  animation: toast-slide-out 0.2s ease-in;
+  animation: toast-slide-out 0.35s cubic-bezier(0.36, 0, 0.66, -0.56);
 }
 
 @keyframes toast-slide-in {
-  from {
-    transform: translateX(120%);
+  0% {
+    transform: translateX(calc(100% + 2rem)) scale(0.9) rotateY(-10deg);
     opacity: 0;
   }
-  to {
-    transform: translateX(0);
+  60% {
+    transform: translateX(-8px) scale(1.02) rotateY(2deg);
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(4px) scale(0.99);
+  }
+  100% {
+    transform: translateX(0) scale(1) rotateY(0);
     opacity: 1;
   }
 }
 
 @keyframes toast-slide-out {
-  from {
-    transform: translateX(0);
+  0% {
+    transform: translateX(0) scale(1);
     opacity: 1;
   }
-  to {
-    transform: translateX(120%);
+  100% {
+    transform: translateX(calc(100% + 2rem)) scale(0.9);
     opacity: 0;
+  }
+}
+
+/* Shimmer effect on enter */
+.toast-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 0.8s ease-out 0.2s;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 150%;
   }
 }
 
@@ -204,10 +369,51 @@ html[data-theme="night"] .toast-close:hover {
   
   .toast-content {
     padding: 0.875rem 1rem;
+    padding-right: 2.5rem;
+    border-radius: 14px;
+  }
+  
+  .toast-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  
+  .toast-icon-wrapper svg {
+    width: 16px;
+    height: 16px;
   }
   
   .toast-message {
     font-size: 0.875rem;
+  }
+  
+  .toast-progress {
+    border-radius: 0 0 14px 14px;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .toast-slide-enter-active,
+  .toast-slide-leave-active {
+    animation-duration: 0.01ms;
+  }
+  
+  .toast-progress-bar {
+    animation: none;
+  }
+  
+  .toast-content::before {
+    animation: none;
+  }
+  
+  .toast-content:hover {
+    transform: none;
+  }
+  
+  .toast-content:hover .toast-icon-wrapper {
+    transform: none;
   }
 }
 </style>
