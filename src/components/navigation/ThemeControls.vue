@@ -3,6 +3,7 @@
     <div class="nav-color-theme" ref="colorMenuRef">
       <button
         class="color-theme-btn nav-btn-base"
+        type="button"
         @click="$emit('toggle-color-dropdown')"
         aria-label="색상 테마 선택"
         :aria-expanded="isColorOpen"
@@ -30,6 +31,7 @@
 
     <button
       class="theme-toggle-btn nav-btn-base"
+      type="button"
       @click="$emit('toggle-theme')"
       aria-label="테마 전환"
       title="Day/Night 모드 전환"
@@ -69,14 +71,14 @@ const props = defineProps({
 defineEmits(['toggle-color-dropdown', 'select-color-theme', 'toggle-theme'])
 
 const colorMenuRef = ref(null)
-const allowedThemeValues = ['warm-beige', 'cool-gray']
+const allowedThemeValues = new Set(DEFAULT_COLOR_THEMES.map((theme) => theme.value))
 const normalizedColorThemes = computed(() => {
   const source = Array.isArray(props.colorThemes) && props.colorThemes.length
     ? props.colorThemes
     : DEFAULT_COLOR_THEMES
   const seen = new Set()
   return source.filter((theme) => {
-    const keep = allowedThemeValues.includes(theme.value) && !seen.has(theme.value)
+    const keep = allowedThemeValues.has(theme.value) && !seen.has(theme.value)
     if (keep) seen.add(theme.value)
     return keep
   })

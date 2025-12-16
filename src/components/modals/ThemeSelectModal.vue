@@ -5,12 +5,12 @@
         <div class="modal-container" @click.stop>
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">🏠 집 테마 선택</h2>
+            <h2 class="modal-title">🏠 완성 테마 선택</h2>
             <button class="close-button" @click="closeModal">✕</button>
           </div>
 
           <p class="step-indicator">Step 1 / 2</p>
-          <p class="description">저축 여정을 함께할 나만의 집 테마를 선택하세요</p>
+          <p class="description">완성된 모습(스테이지 6)으로 미리 보고, 저축 여정을 함께할 집을 골라보세요</p>
 
           <!-- Theme Grid with Large Images -->
           <div class="theme-grid">
@@ -19,7 +19,7 @@
               :key="theme.themeId"
               type="button"
               class="theme-card"
-              :class="{ selected: selectedThemeId === theme.themeId }"
+              :class="{ selected: selectedThemeId === String(theme.themeId) }"
               @click="selectTheme(theme.themeId)"
             >
               <div class="theme-image-wrapper">
@@ -51,7 +51,7 @@
           <!-- Next Button -->
           <button 
             class="next-button" 
-            :disabled="!selectedThemeId || isLoading"
+            :disabled="selectedThemeId == null || isLoading"
             @click="goToNextStep"
           >
             다음: 목표 설정 →
@@ -71,6 +71,7 @@
  */
 import { ref, onMounted, watch } from 'vue'
 import { themeService } from '@/api/services/themeService'
+import { getExteriorStageUrl, resolveThemeCode } from '@/constants/showroomWebp'
 
 const props = defineProps({
   isOpen: {
@@ -78,7 +79,7 @@ const props = defineProps({
     default: false
   },
   initialThemeId: {
-    type: Number,
+    type: [Number, String],
     default: null
   }
 })
@@ -90,17 +91,72 @@ const themes = ref([])
 const selectedThemeId = ref(null)
 const isLoading = ref(false)
 
+const THEME_STAGE_PREVIEW = 6
+const THEME_COPY = {
+  CLASSIC: {
+    themeName: '클래식 하우스',
+    description: '따뜻한 우드 톤의 아늑한 집'
+  },
+  HANOK: {
+    themeName: '한옥',
+    description: '고즈넉한 한옥의 멋과 여백'
+  },
+  SANTORINI: {
+    themeName: '산토리니',
+    description: '맑은 지중해 감성의 화이트 하우스'
+  }
+}
+
+const getThemeIdentityText = (theme) => {
+  const candidates = [
+    theme?.themeCode,
+    theme?.theme_code,
+    theme?.code,
+    theme?.themeName,
+    theme?.name,
+    theme?.title
+  ]
+
+  return candidates
+    .filter((value) => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+}
+
+const decorateThemeForStage6 = (theme) => {
+  const identityText = getThemeIdentityText(theme)
+  const resolvedCode = resolveThemeCode(identityText)
+  const copy = THEME_COPY[resolvedCode]
+  return {
+    ...theme,
+    previewImageUrl: getExteriorStageUrl(resolvedCode, THEME_STAGE_PREVIEW),
+    themeName: copy?.themeName ?? theme?.themeName,
+    description: copy?.description ?? theme?.description
+  }
+}
+
 /**
  * 테마 목록 로드
  */
 const loadThemes = async () => {
   isLoading.value = true
   try {
-    themes.value = await themeService.getActiveThemes()
-    // 기본 테마 선택
-    if (themes.value.length > 0 && !selectedThemeId.value) {
-      selectedThemeId.value = props.initialThemeId || themes.value[0].themeId
+    const fetchedThemes = await themeService.getActiveThemes()
+    themes.value = (Array.isArray(fetchedThemes) ? fetchedThemes : []).map(decorateThemeForStage6)
+
+    if (themes.value.length === 0) return
+
+    // 기본/현재 테마 선택 (themeId가 0일 수 있어 truthy 체크 금지)
+    const currentId = selectedThemeId.value != null ? String(selectedThemeId.value) : null
+    const currentExists = currentId != null && themes.value.some((theme) => String(theme.themeId) === currentId)
+
+    if (currentExists) {
+      selectedThemeId.value = currentId
+      return
     }
+
+    const initialId = props.initialThemeId != null ? String(props.initialThemeId) : null
+    const initialExists = initialId != null && themes.value.some((theme) => String(theme.themeId) === initialId)
+    selectedThemeId.value = initialExists ? initialId : String(themes.value[0].themeId)
   } catch (error) {
     console.error('테마 목록 로드 실패:', error)
   } finally {
@@ -112,16 +168,16 @@ const loadThemes = async () => {
  * 테마 선택
  */
 const selectTheme = (themeId) => {
-  selectedThemeId.value = themeId
+  selectedThemeId.value = String(themeId)
 }
 
 /**
  * 다음 단계로 이동
  */
 const goToNextStep = () => {
-  const selectedTheme = themes.value.find(t => t.themeId === selectedThemeId.value)
+  const selectedTheme = themes.value.find((theme) => String(theme.themeId) === selectedThemeId.value)
   emit('next', {
-    themeId: selectedThemeId.value,
+    themeId: selectedTheme?.themeId ?? null,
     theme: selectedTheme
   })
 }
@@ -142,8 +198,11 @@ watch(() => props.isOpen, (isOpen) => {
   if (isOpen && themes.value.length === 0) {
     loadThemes()
   }
-  if (props.initialThemeId) {
-    selectedThemeId.value = props.initialThemeId
+
+  if (props.initialThemeId != null) {
+    const candidateId = String(props.initialThemeId)
+    const exists = themes.value.some((theme) => String(theme.themeId) === candidateId)
+    selectedThemeId.value = exists ? candidateId : (themes.value[0] ? String(themes.value[0].themeId) : null)
   }
 }, { immediate: true })
 

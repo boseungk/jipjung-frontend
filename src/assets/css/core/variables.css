@@ -67,6 +67,10 @@
    --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
    --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
+   /* Theme Switch (Day/Night) */
+   --theme-switch-duration: 0.45s;
+   --theme-switch-easing: var(--easing-smooth);
+
    /* 투명도 */
    --opacity-subtle: 0.6;
    --opacity-medium: 0.75;
