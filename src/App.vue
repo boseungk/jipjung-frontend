@@ -45,8 +45,8 @@ onMounted(async () => {
 <style>
 /* Main content padding to account for fixed top nav */
 .main-content {
-  padding-top: 64px;
-  min-height: calc(100vh - 64px);
+  padding-top: var(--nav-height, 64px);
+  min-height: calc(100vh - var(--nav-height, 64px));
   scrollbar-gutter: stable;
 }
 

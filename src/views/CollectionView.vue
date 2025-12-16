@@ -113,7 +113,7 @@ const selectCrystal = (index) => {
   font-weight: 600;
   margin-bottom: 3rem;
   color: var(--showroom-text-day, #5D4037);
-  transition: color 0.5s ease;
+  transition: color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,7 +137,7 @@ html[data-theme="night"] .collection-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--showroom-accent-day, #D4A574);
-  transition: color 0.5s ease;
+  transition: color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 html[data-theme="night"] .selected-name {
@@ -171,7 +171,7 @@ html[data-theme="night"] .selected-name {
   font-weight: 600;
   margin-bottom: 4rem;
   color: var(--showroom-text-day, #5D4037);
-  transition: color 0.5s ease;
+  transition: color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 html[data-theme="night"] .section-subtitle {

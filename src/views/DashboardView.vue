@@ -136,7 +136,6 @@ onMounted(() => {
 .dashboard-view {
   width: 100%;
   min-height: 100vh;
-  padding-top: 64px; /* Account for fixed TopNavigationBar */
   background: #f5f6f8;
 }
 

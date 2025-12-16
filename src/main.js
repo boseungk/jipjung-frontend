@@ -14,7 +14,7 @@ import {
   PhBank, PhCalculator, PhChartLine, PhLightbulb,
   PhCheckCircle, PhXCircle, PhTrophy, PhCalendarBlank,
   PhTrendUp, PhConfetti, PhSealCheck, PhPaperPlaneRight,
-  PhLockSimple, PhInfo
+  PhLockSimple, PhInfo, PhWarning, PhWarningCircle
 } from '@phosphor-icons/vue'
 
 // AppIcon Wrapper
@@ -32,7 +32,7 @@ const icons = {
   PhBank, PhCalculator, PhChartLine, PhLightbulb,
   PhCheckCircle, PhXCircle, PhTrophy, PhCalendarBlank,
   PhTrendUp, PhConfetti, PhSealCheck, PhPaperPlaneRight,
-  PhLockSimple, PhInfo
+  PhLockSimple, PhInfo, PhWarning, PhWarningCircle
 }
 
 Object.entries(icons).forEach(([name, component]) => {
