@@ -5,17 +5,47 @@
         <!-- Specular Glare -->
         <div class="highlight-glare"></div>
 
-        <!-- SVG Container -->
-        <div id="furniture-svg-wrapper" ref="svgWrapper" aria-label="3D 룸 디스플레이">
-          <div v-if="loading" class="loading">
+        <!-- WebP Layer Container -->
+        <div id="furniture-webp-wrapper" aria-label="3D 룸 디스플레이">
+          <div v-if="isLoading && !hasLoadedOnce" class="loading">
             <div class="loading-spinner"></div>
             <p>3D 룸 로딩 중...</p>
           </div>
-          <div v-else-if="error" class="loading" style="opacity: 1">
-            <p style="color: #d97979">⚠️ SVG 파일을 불러올 수 없습니다</p>
-            <p style="font-size: 0.875rem; opacity: 0.7; margin-top: 0.5rem">
-              figure.svg 파일이 올바른 위치에 있는지 확인해주세요
-            </p>
+          <div v-else-if="hasError && !hasLoadedOnce" class="loading" style="opacity: 1">
+            <p style="color: #d97979">⚠️ 이미지를 불러올 수 없습니다</p>
+          </div>
+
+          <div v-else class="webp-stage" aria-hidden="true">
+            <div class="stage-group stage-group--day">
+              <img
+                v-if="backgroundLayer"
+                :src="backgroundLayer.url"
+                class="stage-img stage-img--base"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+              />
+              <img
+                v-for="layer in dayOverlayLayers"
+                :key="layer.id"
+                :src="layer.url"
+                class="stage-img stage-img--overlay"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+              />
+            </div>
+
+            <div class="stage-group stage-group--night">
+              <img
+                v-if="nightImageUrl"
+                :src="nightImageUrl"
+                class="stage-img stage-img--base"
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -27,66 +57,106 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import gsap from 'gsap'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
+import { useTheme } from '@/composables/useTheme'
+import { getInteriorLayerUrls, getInteriorNightUrl, resolveThemeCode } from '@/constants/showroomWebp'
 
-const svgWrapper = ref(null)
-const loading = ref(true)
-const error = ref(false)
+const props = defineProps({
+  themeCode: {
+    type: String,
+    default: null
+  }
+})
 
-const loadSVG = async () => {
-  try {
-    const response = await fetch('/figure.svg')
-    
-    if (!response.ok) {
-      throw new Error(`SVG file not found: ${response.status}`)
-    }
-    
-    const svgContent = await response.text()
-    
-    if (svgWrapper.value) {
-      svgWrapper.value.innerHTML = svgContent
-      
-      // Configure SVG
-      const svg = svgWrapper.value.querySelector('svg')
-      if (svg) {
-        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
-        svg.removeAttribute('width')
-        svg.removeAttribute('height')
-      }
-      
-      // Animate furniture layers
-      showAllFurniture()
-      
-      loading.value = false
-    }
-  } catch (err) {
-    console.error('Error loading SVG:', err)
-    error.value = true
-    loading.value = false
+const authStore = useAuthStore()
+const { isNight } = useTheme()
+const isLoading = ref(true)
+const hasError = ref(false)
+const hasLoadedOnce = ref(false)
+let preloadAbort = null
+
+const resolvedThemeCode = computed(() => {
+  return resolveThemeCode(props.themeCode || authStore.userShowroom?.themeCode)
+})
+
+const layers = computed(() => getInteriorLayerUrls(resolvedThemeCode.value))
+const backgroundLayer = computed(() => layers.value.find((layer) => layer.id === 'background') || null)
+const nightImageUrl = computed(() => getInteriorNightUrl(resolvedThemeCode.value))
+const dayOverlayLayers = computed(() => layers.value.filter((layer) => layer.id !== 'background'))
+const dayBaseUrl = computed(() => backgroundLayer.value?.url || null)
+const activeBaseUrl = computed(() => (isNight.value ? nightImageUrl.value : dayBaseUrl.value))
+
+const prefetchedUrls = new Set()
+const schedulePrefetch = (url) => {
+  if (!url || prefetchedUrls.has(url)) return
+  prefetchedUrls.add(url)
+
+  if (typeof window === 'undefined') return
+  const run = () => preloadImage(url).catch(() => {})
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(run, { timeout: 600 })
+  } else {
+    window.setTimeout(run, 0)
   }
 }
 
-const showAllFurniture = () => {
-  const furnitureLayers = document.querySelectorAll(
-    '[id^="background"], [id^="sofa"], [id^="tables"], [id^="lamp"], [id^="reze"]'
-  )
-  
-  furnitureLayers.forEach((layer) => {
-    if (typeof gsap !== 'undefined') {
-      gsap.to(layer, {
-        opacity: 1,
-        duration: 0.8,
-        ease: 'power2.out',
-      })
-    } else {
-      layer.style.opacity = '1'
-    }
+function preloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(url)
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
+    img.src = url
   })
 }
 
-onMounted(() => {
-  loadSVG()
+async function loadActiveBase() {
+  const url = activeBaseUrl.value
+
+  if (!url) {
+    isLoading.value = false
+    hasError.value = true
+    return
+  }
+
+  preloadAbort = { aborted: false }
+  const token = preloadAbort
+
+  if (!hasLoadedOnce.value) isLoading.value = true
+  hasError.value = false
+
+  try {
+    await preloadImage(url)
+    if (token.aborted) return
+
+    hasLoadedOnce.value = true
+
+    // Prefetch the other mode so the next toggle feels instant.
+    const otherUrl = isNight.value ? dayBaseUrl.value : nightImageUrl.value
+    schedulePrefetch(otherUrl)
+  } catch (error) {
+    console.error(error)
+    if (!token.aborted) {
+      hasError.value = true
+    }
+  } finally {
+    if (!token.aborted) {
+      isLoading.value = false
+    }
+  }
+}
+
+watch([resolvedThemeCode, activeBaseUrl], () => {
+  // Ensure the currently-visible mode has its base image ready.
+  loadActiveBase()
+
+  // Also prefetch the other mode ASAP (night image is a single snapshot).
+  schedulePrefetch(nightImageUrl.value)
+}, { immediate: true })
+
+onUnmounted(() => {
+  if (preloadAbort) preloadAbort.aborted = true
 })
 </script>
 
@@ -118,6 +188,74 @@ onMounted(() => {
   overflow: hidden;
   background: transparent;
   transform-style: preserve-3d;
+}
+
+#furniture-webp-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.webp-stage {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage-group {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, ease-in-out);
+  will-change: opacity;
+  pointer-events: none;
+}
+
+.stage-group--day {
+  opacity: 1;
+}
+
+html[data-theme="night"] .stage-group--day {
+  opacity: 0;
+}
+
+html[data-theme="night"] .stage-group--night {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-group {
+    transition: none;
+  }
+}
+
+.stage-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+.stage-img--base {
+  position: relative;
+  z-index: 1;
+}
+
+.stage-img--overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  z-index: 2;
 }
 
 /* Day Mode - Realistic Glass */
@@ -194,19 +332,9 @@ html[data-theme="night"] .ground-shadow {
   filter: blur(1.5rem);
 }
 
-/* SVG Furniture Content */
-#furniture-svg-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* WebP Furniture Content */
+.webp-stage {
   transform: scale(1.1);
-}
-
-#furniture-svg-wrapper svg {
-  width: 100%;
-  height: 100%;
 }
 
 /* Loading State */

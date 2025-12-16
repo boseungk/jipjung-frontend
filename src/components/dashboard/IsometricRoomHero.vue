@@ -1,35 +1,66 @@
 <template>
   <div class="gamified-hero">
     <div class="hero-card">
-      <button class="reset-btn" type="button" @click="resetHouseProgress">
-        진행 초기화
-      </button>
 
       <div class="scene-card">
+        <ShowroomUnlockModal
+          :is-open="isUnlockModalOpen"
+          title="내 집 완공!"
+          message="축하해요! 이제 방을 꾸밀 수 있어요."
+          button-text="인테리어 시작하기"
+          @confirm="handleUnlockConfirm"
+        />
         <div class="scene-inner">
-          <div
-            v-if="isHouseTrack"
-            ref="houseSvgRef"
-            class="svg-stage"
-            v-html="houseSvgMarkup"
-            aria-label="집 단계 애니메이션"
-          ></div>
-          <div
-            v-else
-            ref="furnitureSvgRef"
-            class="svg-stage"
-            v-html="furnitureSvgMarkup"
-            aria-label="가구 단계 애니메이션"
-          ></div>
-
-          <div v-if="svgError" class="svg-fallback">
-            {{ svgError }}
+          <!-- WebP Stage -->
+          <div v-if="isHouseTrack" ref="houseStageRef" class="stage-frame" aria-label="집 단계 애니메이션">
+            <img
+              v-if="houseIncomingUrl"
+              ref="houseIncomingImgRef"
+              :src="houseIncomingUrl"
+              class="stage-img stage-img--base"
+              :alt="`${resolvedThemeLabel} 집 ${activeStage}단계`"
+              draggable="false"
+            />
+            <img
+              v-if="houseOutgoingUrl"
+              ref="houseOutgoingImgRef"
+              :src="houseOutgoingUrl"
+              class="stage-img stage-img--overlay"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
           </div>
-          <div v-else-if="isLoading" class="svg-loader">
+
+          <div v-else ref="furnitureStageRef" class="stage-frame stage-frame--layers" aria-label="가구 단계 애니메이션">
+            <img
+              v-if="interiorBackgroundLayer"
+              :src="interiorBackgroundLayer.url"
+              class="stage-img stage-img--base"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+            <img
+              v-for="layer in interiorOverlayLayers"
+              :key="layer.id"
+              :src="layer.url"
+              class="layer-img"
+              :class="interiorVisibleLayerIds.has(layer.id) ? 'layer-visible' : 'layer-hidden'"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+          </div>
+
+          <!-- Loading / Error States -->
+          <div v-if="assetError" class="stage-fallback">{{ assetError }}</div>
+          <div v-else-if="isLoading" class="stage-loader">
             게이미피케이션 일러스트를 불러오는 중...
           </div>
         </div>
 
+        <!-- Stage Message -->
         <div class="stage-message">
           <p class="stage-eyebrow">{{ currentStep.label }} · Step {{ activeStage }}/{{ totalStages }}</p>
           <p class="stage-text">{{ currentStep.message }}</p>
@@ -39,6 +70,7 @@
           </p>
         </div>
 
+        <!-- Progress Dots -->
         <div class="progress-dots">
           <span
             v-for="dot in totalStages"
@@ -46,341 +78,307 @@
             :class="['dot', { completed: dot < activeStage, active: dot === activeStage }]"
           ></span>
         </div>
+
+        <!-- Particle Container for Level-Up Celebrations -->
+        <div ref="particlesRef" class="particles-container" aria-hidden="true"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import gsap from 'gsap'
 import AppIcon from '../common/AppIcon.vue'
+import ShowroomUnlockModal from '../modals/ShowroomUnlockModal.vue'
 import { useGamificationStore } from '../../stores/gamificationStore'
-import { useDreamHomeStore } from '../../stores/dreamHomeStore'
 import { useAuthStore } from '../../stores/authStore'
+import {
+  getExteriorStageUrl,
+  getInteriorLayerUrls,
+  getInteriorVisibleLayerIds,
+  resolveThemeCode,
+  SHOWROOM_TOTAL_STAGES
+} from '../../constants/showroomWebp'
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-/** 기본 단계 수 (백엔드 미응답 시 폴백) */
-const DEFAULT_TOTAL_STEPS = 7
+const DEFAULT_TOTAL_STEPS = SHOWROOM_TOTAL_STAGES.house
+const DEFAULT_FURNITURE_STEPS = SHOWROOM_TOTAL_STAGES.furniture
 
-/** 기본 이미지 URL (로드 실패 시 폴백) */
-const DEFAULT_IMAGE_URL = '/phase7.svg'
-
-/**
- * Phase 2 (가구 배치) 단계 정의 - 향후 확장용
- * @deprecated Phase 2 구현 시 백엔드에서 동적 제공 예정
- */
+/** Phase 2 (가구 배치) 단계 정의 - 향후 확장용 */
 const FURNITURE_STEPS = [
-  { id: 1, title: '배경 준비', label: '바닥·벽 정돈', message: '배경과 바닥을 깔끔하게 준비했어요.' },
-  { id: 2, title: '소파 배치', label: '휴식 공간', message: '소파가 들어와 거실이 만들어졌어요.' },
-  { id: 3, title: '테이블 추가', label: '기능 더하기', message: '테이블과 수납이 배치됐어요.' },
-  { id: 4, title: '조명 켜기', label: '분위기 완성', message: '램프로 공간이 따뜻해졌어요.' },
-  { id: 5, title: '소품 마무리', label: '디테일', message: '소품까지 채워 완성했어요!' }
+  { id: 1, label: '바닥·벽 정돈', message: '배경과 바닥을 깔끔하게 준비했어요.' },
+  { id: 2, label: '휴식 공간', message: '소파가 들어와 거실이 만들어졌어요.' },
+  { id: 3, label: '기능 더하기', message: '테이블과 수납이 배치됐어요.' },
+  { id: 4, label: '분위기 완성', message: '램프로 공간이 따뜻해졌어요.' },
+  { id: 5, label: '디테일', message: '소품까지 채워 완성했어요!' }
 ]
 
 // ============================================================================
-// Refs (SVG State)
+// Refs
 // ============================================================================
 
-const houseSvgMarkup = ref('')
-const furnitureSvgMarkup = ref('')
-const houseSvgRef = ref(null)
-const furnitureSvgRef = ref(null)
-const svgError = ref('')
+const houseStageRef = ref(null)
+const furnitureStageRef = ref(null)
+const houseIncomingImgRef = ref(null)
+const houseOutgoingImgRef = ref(null)
+const houseIncomingUrl = ref('')
+const houseOutgoingUrl = ref('')
+const assetError = ref('')
 const isLoading = ref(true)
-let lastHouseSvgUrl = ''
+const particlesRef = ref(null)
 
 // ============================================================================
 // Stores
 // ============================================================================
 
 const gamificationStore = useGamificationStore()
-const {
-  buildTrack,
-  houseStage,
-  furnitureStage,
-  latestBadge
-} = storeToRefs(gamificationStore)
-const { resetHouseProgress } = gamificationStore
-
-const dreamHomeStore = useDreamHomeStore()
-const { currentAmount, targetAmount, daysRemaining } = storeToRefs(dreamHomeStore)
+const { buildTrack, houseStage, furnitureStage, latestBadge } = storeToRefs(gamificationStore)
 
 const authStore = useAuthStore()
 
+const displayTrack = ref(buildTrack.value || 'house')
+const isUnlockModalOpen = ref(false)
+
 // ============================================================================
-// Computed Properties (Showroom Data from Backend)
+// Computed Properties
 // ============================================================================
 
-/**
- * 백엔드 대시보드 응답의 showroom 섹션
- * @see DashboardResponse.ShowroomSection
- */
-const showroom = computed(() => authStore.user?.showroom || null)
+const showroom = computed(() => authStore.userShowroom || null)
+const isHouseTrack = computed(() => displayTrack.value === 'house')
 
-/**
- * 현재 트랙 (house / furniture)
- * - Phase 1: 항상 house
- * - Phase 2: buildTrack 값에 따라 전환
- */
-const isHouseTrack = computed(() => buildTrack.value === 'house')
+const showroomThemeCode = computed(() => resolveThemeCode(showroom.value?.themeCode))
+const resolvedThemeLabel = computed(() => {
+  const code = showroomThemeCode.value
+  if (code === 'HANOK') return '한옥'
+  if (code === 'SANTORINI') return '산토리니'
+  return '클래식'
+})
 
-/**
- * 현재 단계 (1-based index)
- * - 백엔드 showroom.currentStep 우선
- * - 폴백: gamificationStore.houseStage
- */
 const activeStage = computed(() => {
-  // 백엔드 showroom 데이터가 있으면 우선 사용
-  if (showroom.value?.currentStep) {
-    return showroom.value.currentStep
+  if (isHouseTrack.value) {
+    const rawStage = showroom.value?.currentStep ?? houseStage.value
+    const parsed = Number(rawStage)
+    const safe = Number.isFinite(parsed) ? Math.trunc(parsed) : 1
+    return Math.min(Math.max(safe, 1), DEFAULT_TOTAL_STEPS)
   }
-  // Phase 2 (가구 배치) 지원을 위한 폴백
-  return isHouseTrack.value ? houseStage.value : Math.max(1, furnitureStage.value || 1)
+
+  const parsed = Number(furnitureStage.value || 1)
+  const safe = Number.isFinite(parsed) ? Math.trunc(parsed) : 1
+  return Math.min(Math.max(safe, 1), DEFAULT_FURNITURE_STEPS)
 })
 
-/**
- * 총 단계 수
- * - 백엔드 showroom.totalSteps 우선
- * - 폴백: 기본값 7
- */
 const totalStages = computed(() => {
-  if (showroom.value?.totalSteps) {
-    return showroom.value.totalSteps
-  }
-  return isHouseTrack.value ? DEFAULT_TOTAL_STEPS : FURNITURE_STEPS.length
+  return isHouseTrack.value ? DEFAULT_TOTAL_STEPS : DEFAULT_FURNITURE_STEPS
 })
 
-/**
- * 현재 단계 정보 (label, message)
- * - 백엔드 showroom.stepTitle, stepDescription 우선
- * - Phase 2 폴백: FURNITURE_STEPS 배열 사용
- */
 const currentStep = computed(() => {
-  // 백엔드 데이터가 있고 집짓기(Phase 1)인 경우
   if (showroom.value && isHouseTrack.value) {
     return {
       label: showroom.value.stepTitle || '준비 중',
       message: showroom.value.stepDescription || ''
     }
   }
-  // Phase 2 (가구 배치) 폴백
   if (!isHouseTrack.value) {
     const idx = Math.min(FURNITURE_STEPS.length - 1, Math.max(0, activeStage.value - 1))
     return FURNITURE_STEPS[idx]
   }
-  // 최종 폴백 (showroom 데이터 없음)
   return { label: '준비 중', message: '집을 짓기 위한 준비를 하고 있어요.' }
 })
 
-/**
- * 테마 이미지 URL
- * - 백엔드 showroom.imageUrl 우선
- * - 폴백: 기본 완공 이미지
- */
-const themeImageUrl = computed(() => showroom.value?.imageUrl || DEFAULT_IMAGE_URL)
+const houseStageUrl = computed(() => {
+  if (!isHouseTrack.value) return ''
+  return getExteriorStageUrl(showroomThemeCode.value, activeStage.value)
+})
+
+const interiorLayers = computed(() => getInteriorLayerUrls(showroomThemeCode.value))
+const interiorLayerIds = computed(() => interiorLayers.value.map((layer) => layer.id))
+const interiorVisibleLayerIds = computed(() => {
+  if (isHouseTrack.value) return new Set()
+  return getInteriorVisibleLayerIds(interiorLayerIds.value, activeStage.value)
+})
+const interiorBackgroundLayer = computed(() => interiorLayers.value.find((layer) => layer.id === 'background') || null)
+const interiorOverlayLayers = computed(() => interiorLayers.value.filter((layer) => layer.id !== 'background'))
 
 // ============================================================================
-// SVG Loading & Rendering
+// WebP Loading
 // ============================================================================
 
-/**
- * SVG 마크업 유효성 검사
- */
-function isSvgMarkup(text) {
-  return typeof text === 'string' && text.toLowerCase().includes('<svg')
-}
-
-/**
- * 집 짓기 SVG 로드
- * - 테마 이미지 URL에서 SVG 가져오기
- * - 실패 시 기본 SVG로 폴백
- */
-async function loadHouseSvg() {
-  const imageUrl = themeImageUrl.value || DEFAULT_IMAGE_URL
-
-  // 이미 로드된 경우 applyStage만 재실행 (URL이 동일할 때만)
-  if (houseSvgMarkup.value && lastHouseSvgUrl === imageUrl) {
-    await nextTick()
-    retryApplyHouseStage()
-    return
-  }
-
-  try {
-    svgError.value = ''
-    houseSvgMarkup.value = ''
-
-    const res = await fetch(imageUrl)
-    if (!res.ok) throw new Error('집 SVG를 불러오지 못했습니다')
-    const svgText = await res.text()
-    if (!isSvgMarkup(svgText)) {
-      throw new Error('Invalid SVG markup')
-    }
-
-    houseSvgMarkup.value = svgText
-    lastHouseSvgUrl = imageUrl
-
-    await nextTick()
-    retryApplyHouseStage()
-  } catch (error) {
-    console.error(error)
-
-    // 테마 URL 실패 시 기본 SVG로 폴백
-    if (imageUrl !== DEFAULT_IMAGE_URL) {
-      try {
-        const fallbackRes = await fetch(DEFAULT_IMAGE_URL)
-        if (fallbackRes.ok) {
-          const fallbackText = await fallbackRes.text()
-          if (isSvgMarkup(fallbackText)) {
-            houseSvgMarkup.value = fallbackText
-            lastHouseSvgUrl = DEFAULT_IMAGE_URL
-            await nextTick()
-            retryApplyHouseStage()
-            return
-          }
-        }
-      } catch (fallbackError) {
-        console.error(fallbackError)
-      }
-    }
-
-    svgError.value = '집 SVG를 불러오지 못했어요'
-  }
-}
-
-/**
- * DOM 준비 대기 후 단계 적용 (재시도 로직)
- */
-function retryApplyHouseStage(attempts = 0) {
-  const MAX_ATTEMPTS = 10
-  const wrapper = houseSvgRef.value
-  const svg = wrapper?.querySelector('svg')
-
-  if (svg) {
-    applyHouseStage()
-  } else if (attempts < MAX_ATTEMPTS) {
-    setTimeout(() => retryApplyHouseStage(attempts + 1), 50)
-  }
-}
-
-/**
- * 가구 배치 SVG 로드 (Phase 2)
- */
-async function loadFurnitureSvg() {
-  if (furnitureSvgMarkup.value) {
-    await nextTick()
-    retryApplyFurnitureStage()
-    return
-  }
-
-  try {
-    svgError.value = ''
-    const res = await fetch('/figure.svg')
-    if (!res.ok) throw new Error('가구 SVG를 불러오지 못했습니다')
-    const svgText = await res.text()
-    if (!isSvgMarkup(svgText)) {
-      throw new Error('Invalid SVG markup')
-    }
-    furnitureSvgMarkup.value = svgText
-    await nextTick()
-    retryApplyFurnitureStage()
-  } catch (error) {
-    svgError.value = '가구 SVG를 불러오지 못했어요'
-    console.error(error)
-  }
-}
-
-/**
- * DOM 준비 대기 후 가구 단계 적용
- */
-function retryApplyFurnitureStage(attempts = 0) {
-  const MAX_ATTEMPTS = 10
-  const wrapper = furnitureSvgRef.value
-  const svg = wrapper?.querySelector('svg')
-
-  if (svg) {
-    applyFurnitureStage()
-  } else if (attempts < MAX_ATTEMPTS) {
-    setTimeout(() => retryApplyFurnitureStage(attempts + 1), 50)
-  }
-}
-
-/**
- * 집 짓기 단계 SVG 레이어 표시/숨김 적용
- */
-function applyHouseStage() {
-  const wrapper = houseSvgRef.value
-  if (!wrapper) return
-  const svg = wrapper.querySelector('svg')
-  if (!svg) return
-
-  const phases = Array.from(svg.querySelectorAll('[id^="phase"]'))
-  phases.forEach((phase) => {
-    const match = phase.id.match(/phase(\d+)/)
-    const phaseNumber = Number(match?.[1] || 0)
-    const visible = phaseNumber === activeStage.value
-    phase.classList.toggle('phase-visible', visible)
-    phase.classList.toggle('phase-hidden', !visible)
+function preloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(url)
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
+    img.src = url
   })
 }
 
-/**
- * 가구 배치 단계 SVG 레이어 표시/숨김 적용 (Phase 2)
- */
-function applyFurnitureStage() {
-  const wrapper = furnitureSvgRef.value
-  if (!wrapper) return
-  const svg = wrapper.querySelector('svg')
-  if (!svg) return
+// ============================================================================
+// Stage Animation (GSAP)
+// ============================================================================
 
-  // 야간 레이어 숨김
-  const nightLayer = svg.querySelector('[id*="night"]')
-  if (nightLayer) {
-    nightLayer.style.opacity = '0'
-    nightLayer.style.display = 'none'
-    nightLayer.style.pointerEvents = 'none'
-  }
-
-  const layerIds = ['background', 'sofa', 'tables', 'lamp', 'reze']
-  let anyVisible = false
-  layerIds.forEach((key, index) => {
-    const layer = svg.querySelector(`[id*="${key}"]`)
-    if (!layer) return
-    // 누적 레이어 표시 (stage 1 = background+sofa)
-    const visible = index <= activeStage.value
-    layer.classList.toggle('layer-visible', visible)
-    layer.classList.toggle('layer-hidden', !visible)
-    if (visible) anyVisible = true
-  })
-
-  // 안전망: 어떤 레이어도 보이지 않을 경우 모두 표시
-  if (!anyVisible) {
-    layerIds.forEach((key) => {
-      const layer = svg.querySelector(`[id*="${key}"]`)
-      if (!layer) return
-      layer.classList.add('layer-visible')
-      layer.classList.remove('layer-hidden')
-    })
-  }
+const HOUSE_STAGE_TRANSITION = {
+  outgoingDuration: 0.6,
+  incomingDuration: 1.45,
+  incomingDelay: 0.06,
+  settleDelay: 0.25
 }
 
-/**
- * 현재 트랙에 맞는 SVG 로드
- */
-async function ensureActiveSvg(track) {
-  isLoading.value = true
-  svgError.value = ''
+const PARTICLE_LIFETIME_MS = 1800
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+async function transitionHouseStage(nextUrl, { isInitial = false } = {}) {
+  if (!nextUrl) return
+
   try {
-    if (track === 'house') {
-      await loadHouseSvg()
-    } else {
-      await loadFurnitureSvg()
+    assetError.value = ''
+    await preloadImage(nextUrl)
+  } catch (error) {
+    console.error(error)
+    assetError.value = '집 이미지를 불러오지 못했어요'
+    return
+  }
+
+  if (isInitial || !houseIncomingUrl.value) {
+    houseOutgoingUrl.value = ''
+    houseIncomingUrl.value = nextUrl
+    await nextTick()
+    return
+  }
+
+  if (houseIncomingUrl.value === nextUrl) return
+
+  if (prefersReducedMotion()) {
+    houseOutgoingUrl.value = ''
+    houseIncomingUrl.value = nextUrl
+    await nextTick()
+    return
+  }
+
+  const prevUrl = houseIncomingUrl.value
+  houseOutgoingUrl.value = prevUrl
+  houseIncomingUrl.value = nextUrl
+
+  await nextTick()
+  const outgoingEl = houseOutgoingImgRef.value
+  const incomingEl = houseIncomingImgRef.value
+
+  gsap.killTweensOf([outgoingEl, incomingEl])
+  if (incomingEl) gsap.set(incomingEl, { opacity: 0, y: 28, scale: 0.94, filter: 'blur(10px)' })
+  if (outgoingEl) gsap.set(outgoingEl, { filter: 'blur(0px)' })
+
+  const tl = gsap.timeline({
+    onComplete: () => {
+      houseOutgoingUrl.value = ''
+      nextTick(() => startIdleAnimation(houseStageRef.value))
     }
-  } finally {
-    isLoading.value = false
+  })
+
+  if (outgoingEl) {
+    tl.to(outgoingEl, {
+      duration: HOUSE_STAGE_TRANSITION.outgoingDuration,
+      opacity: 0,
+      scale: 1.01,
+      y: -10,
+      filter: 'blur(10px)',
+      ease: 'power2.inOut',
+      clearProps: 'transform,filter'
+    }, 0)
+  }
+
+  if (incomingEl) {
+    tl.to(incomingEl, {
+      duration: HOUSE_STAGE_TRANSITION.incomingDuration,
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      ease: 'power3.out',
+      clearProps: 'transform,filter'
+    }, HOUSE_STAGE_TRANSITION.incomingDelay)
+  }
+
+  tl.to({}, { duration: HOUSE_STAGE_TRANSITION.settleDelay })
+}
+
+// ============================================================================
+// Idle & Entry Animation
+// ============================================================================
+
+function enableIdleAnimation(target) {
+  if (!target) return
+  target.classList.add('idle-float')
+}
+
+function playEntryAnimation(target) {
+  if (!target) return
+
+  gsap.killTweensOf(target)
+  gsap.set(target, { opacity: 0, y: 45, scale: 0.75 })
+
+  if (prefersReducedMotion()) {
+    gsap.set(target, { opacity: 1, y: 0, scale: 1, clearProps: 'all' })
+    enableIdleAnimation(target)
+    return
+  }
+
+  gsap.to(target, {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    duration: 1.25,
+    ease: 'power3.out',
+    onComplete: () => {
+      gsap.set(target, { clearProps: 'all' })
+      enableIdleAnimation(target)
+    }
+  })
+}
+
+function startIdleAnimation(target) {
+  if (!target) return
+  gsap.killTweensOf(target)
+  gsap.set(target, { clearProps: 'all' })
+  enableIdleAnimation(target)
+}
+
+// ============================================================================
+// Particle Effects
+// ============================================================================
+
+function spawnParticles() {
+  const container = particlesRef.value
+  if (!container) return
+
+  const colors = ['#ff6b3d', '#ff9a75', '#ffd700', '#81c784', '#66bb6a']
+
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement('div')
+    particle.className = 'particle'
+
+    const color = colors[Math.floor(Math.random() * colors.length)]
+    particle.style.backgroundColor = color
+
+    const startX = 50 + (Math.random() - 0.5) * 20
+    const startY = 50 + (Math.random() - 0.5) * 20
+    particle.style.left = `${startX}%`
+    particle.style.top = `${startY}%`
+
+    const angle = Math.random() * 360 * (Math.PI / 180)
+    const distance = 100 + Math.random() * 100
+    particle.style.setProperty('--end-x', `${Math.cos(angle) * distance}%`)
+    particle.style.setProperty('--end-y', `${Math.sin(angle) * distance}%`)
+
+    container.appendChild(particle)
+    setTimeout(() => particle.remove(), PARTICLE_LIFETIME_MS)
   }
 }
 
@@ -388,37 +386,56 @@ async function ensureActiveSvg(track) {
 // Watchers
 // ============================================================================
 
-watch([buildTrack, activeStage], () => {
-  nextTick(() => {
-    if (isHouseTrack.value) {
-      applyHouseStage()
+watch(activeStage, (newStage, oldStage) => {
+  if (oldStage && newStage > oldStage) {
+    spawnParticles()
+  }
+})
+
+watch(buildTrack, (track, prevTrack) => {
+  if (track === prevTrack) return
+
+  if (track === 'furniture' && prevTrack === 'house') {
+    isUnlockModalOpen.value = true
+    displayTrack.value = 'house'
+    return
+  }
+
+  if (track === 'house') {
+    isUnlockModalOpen.value = false
+    displayTrack.value = 'house'
+    return
+  }
+
+  displayTrack.value = track
+})
+
+watch(displayTrack, async (track) => {
+  assetError.value = ''
+  isLoading.value = true
+
+  try {
+    if (track === 'house') {
+      await transitionHouseStage(houseStageUrl.value, { isInitial: !houseIncomingUrl.value })
+      await nextTick()
+      playEntryAnimation(houseStageRef.value)
     } else {
-      applyFurnitureStage()
+      const bg = interiorBackgroundLayer.value
+      if (bg?.url) await preloadImage(bg.url)
+      await nextTick()
+      playEntryAnimation(furnitureStageRef.value)
     }
-  })
+  } catch (error) {
+    console.error(error)
+    assetError.value = '게이미피케이션 이미지를 불러오지 못했어요'
+  } finally {
+    isLoading.value = false
+  }
 })
 
-watch(houseSvgMarkup, () => {
-  nextTick(() => {
-    setTimeout(applyHouseStage, 50)
-  })
-})
-
-watch(furnitureSvgMarkup, () => {
-  nextTick(() => {
-    setTimeout(applyFurnitureStage, 50)
-  })
-})
-
-watch(buildTrack, async (track) => {
-  await ensureActiveSvg(track)
-})
-
-// 테마 이미지 URL 변경 시 집 SVG 재로드 (테마 선택/대시보드 갱신 대응)
-watch(themeImageUrl, async (newUrl, oldUrl) => {
-  if (!isHouseTrack.value) return
-  if (!newUrl || newUrl === oldUrl) return
-  await ensureActiveSvg('house')
+watch(houseStageUrl, async (newUrl, oldUrl) => {
+  if (!isHouseTrack.value || !newUrl || newUrl === oldUrl) return
+  await transitionHouseStage(newUrl)
 })
 
 // ============================================================================
@@ -428,13 +445,34 @@ watch(themeImageUrl, async (newUrl, oldUrl) => {
 onMounted(async () => {
   try {
     await gamificationStore.syncMilestones()
-    await ensureActiveSvg(buildTrack.value)
+    isLoading.value = true
+    if (isHouseTrack.value) {
+      await transitionHouseStage(houseStageUrl.value, { isInitial: true })
+      await nextTick()
+      playEntryAnimation(houseStageRef.value)
+    } else {
+      const bg = interiorBackgroundLayer.value
+      if (bg?.url) await preloadImage(bg.url)
+      await nextTick()
+      playEntryAnimation(furnitureStageRef.value)
+    }
   } catch (error) {
-    console.error('Failed to load gamification SVGs', error)
+    console.error('Failed to load gamification images', error)
   } finally {
     isLoading.value = false
   }
 })
+
+onUnmounted(() => {
+  // Clean up GSAP animations
+  if (houseStageRef.value) gsap.killTweensOf(houseStageRef.value)
+  if (furnitureStageRef.value) gsap.killTweensOf(furnitureStageRef.value)
+})
+
+function handleUnlockConfirm() {
+  isUnlockModalOpen.value = false
+  displayTrack.value = buildTrack.value || 'furniture'
+}
 </script>
 
 <style scoped>
@@ -450,95 +488,17 @@ onMounted(async () => {
   max-width: 920px;
   background: transparent;
   border-radius: 16px;
-  padding: 0.5rem 0.5rem 0.5rem;
-  box-shadow: none;
-  border: none;
+  padding: 0.5rem;
   position: relative;
   overflow: visible;
 }
 
-html[data-theme='night'] .hero-card {
-  background: transparent;
-  box-shadow: none;
-  border: none;
-}
-
-.badge-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.3rem 0.45rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--border-strong, #d1d5db);
-}
-
-.icon-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  box-shadow: 0 12px 24px -10px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
-}
-
-.badge-text .title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--ink-base, #1f2937);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-html[data-theme='night'] .badge-text .title {
-  color: var(--showroom-text-night, #f5f6f7);
-}
-
-.reset-btn {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  padding: 0.4rem 0.7rem;
-  border-radius: 10px;
-  border: 1px solid var(--border-soft, #e5e7eb);
-  background: #f7f8fa;
-  color: var(--ink-base, #1f2937);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  z-index: 10;
-}
-
-html[data-theme='night'] .reset-btn {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--showroom-text-night, #f5f6f7);
-}
-
-.reset-btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--brand-accent, #ff6b3d);
-  box-shadow: 0 8px 18px -12px rgba(17, 24, 39, 0.25);
-}
 
 .scene-card {
   position: relative;
   border-radius: 16px;
   overflow: visible;
-  margin-top: 0;
   padding: 0.1rem 0.5rem 0.75rem;
-  background: transparent;
-  border: none;
-  backdrop-filter: none;
-  box-shadow: none;
-}
-
-html[data-theme='night'] .scene-card {
-  background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
 .scene-inner {
@@ -550,28 +510,67 @@ html[data-theme='night'] .scene-card {
   z-index: 1;
 }
 
-.svg-stage {
+/* Stage */
+.stage-frame {
   width: 100%;
   max-width: 540px;
-  filter: none;
+  will-change: transform, opacity;
+  transform-origin: center bottom;
+  position: relative;
 }
 
-html[data-theme='night'] .svg-stage {
-  filter: none;
+.stage-img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.svg-loader,
-.svg-fallback {
+.stage-img--overlay,
+.layer-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+}
+
+.stage-img--overlay {
+  z-index: 2;
+}
+
+.stage-img--base {
+  position: relative;
+  z-index: 1;
+}
+
+.stage-frame--layers {
+  max-width: 520px;
+}
+
+/* Idle Float Animation */
+@keyframes idle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.stage-frame.idle-float {
+  animation: idle-float 3.5s ease-in-out infinite;
+}
+
+/* Loading & Error */
+.stage-loader,
+.stage-fallback {
   text-align: center;
   color: var(--showroom-text-secondary-day, #8d6e63);
   font-weight: 600;
 }
 
-html[data-theme='night'] .svg-loader,
-html[data-theme='night'] .svg-fallback {
+html[data-theme='night'] .stage-loader,
+html[data-theme='night'] .stage-fallback {
   color: var(--showroom-text-secondary-night, #d7ccc8);
 }
 
+/* Stage Message */
 .stage-message {
   margin-top: 0.75rem;
   text-align: center;
@@ -613,6 +612,7 @@ html[data-theme='night'] .badge-inline {
   color: var(--showroom-accent-night, #ff8a5c);
 }
 
+/* Progress Dots */
 .progress-dots {
   display: flex;
   justify-content: center;
@@ -641,6 +641,12 @@ html[data-theme='night'] .badge-inline {
   border-color: transparent;
   transform: scale(1.12);
   box-shadow: 0 10px 18px -10px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.5);
+  animation: dot-pop 2.2s ease-in-out infinite;
+}
+
+@keyframes dot-pop {
+  0%, 100% { transform: scale(1.12); }
+  50% { transform: scale(1.22); }
 }
 
 html[data-theme='night'] .dot {
@@ -649,182 +655,66 @@ html[data-theme='night'] .dot {
   box-shadow: none;
 }
 
-.footer {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.85rem;
-  align-items: center;
-}
-
-.dday-block {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.dday-chip {
-  padding: 0.35rem 0.85rem;
-  background: #ffffff;
-  color: var(--ink-base, #1f2937);
-  border-radius: 12px;
-  font-weight: 700;
-  border: 1px solid var(--border-soft, #e5e7eb);
-  box-shadow: 0 8px 16px -12px rgba(17, 24, 39, 0.22);
-}
-
-html[data-theme='night'] .dday-chip {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--showroom-text-night, #f5f6f7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: none;
-}
-
-.amounts .main-price {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--ink-base, #1f2937);
-}
-
-html[data-theme='night'] .amounts .main-price {
-  color: var(--showroom-text-night, #f5f6f7);
-}
-
-.amounts .sub-price {
-  font-size: 0.95rem;
-  color: var(--ink-muted, #6b7280);
-}
-
-html[data-theme='night'] .amounts .sub-price {
-  color: rgba(245, 246, 247, 0.75);
-}
-
-.xp-progress {
-  width: 100%;
-}
-
-.xp-bar {
-  width: 100%;
-  height: 14px;
-  border-radius: 10px;
-  background: var(--showroom-card-bg-day, #f5ede3);
+/* Particles */
+.particles-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   overflow: hidden;
-  box-shadow:
-    inset 2px 2px 4px var(--showroom-shadow-dark-day, #d4c8bd),
-    inset -2px -2px 4px var(--showroom-shadow-light-day, #ffffff);
+  z-index: 10;
 }
 
-html[data-theme='night'] .xp-bar {
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-fly 1.8s ease-out forwards;
+  box-shadow: 0 0 8px currentColor;
 }
 
-.xp-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #81c784, #66bb6a);
-  width: 0%;
-  border-radius: 10px;
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 10px rgba(129, 199, 132, 0.35);
+@keyframes particle-fly {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  50% { opacity: 1; }
+  100% { transform: translate(var(--end-x, 100%), var(--end-y, -100%)) scale(0); opacity: 0; }
 }
 
-.xp-meta {
-  margin-top: 0.35rem;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: var(--showroom-text-day, #5d4037);
-}
-
-html[data-theme='night'] .xp-meta {
-  color: var(--showroom-text-night, #f5ede3);
-}
-
-.xp-meta .muted {
-  color: var(--showroom-text-secondary-day, #8d6e63);
-}
-
-html[data-theme='night'] .xp-meta .muted {
-  color: var(--showroom-text-secondary-night, #d7ccc8);
-}
-
-/* SVG tuning */
-:deep(.svg-stage svg) {
-  width: 100%;
-  height: auto;
-}
-
-:deep([id^='phase']) {
-  opacity: 0;
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-:deep(.phase-visible) {
-  opacity: 1;
-  transform: translateY(0);
-  filter: none;
-}
-
-:deep(.phase-hidden) {
-  opacity: 0;
-  transform: translateY(10px) scale(0.98);
-}
-
-:deep([id*='background']),
-:deep([id*='sofa']),
-:deep([id*='tables']),
-:deep([id*='lamp']),
-:deep([id*='reze']) {
+/* Furniture Layers */
+.layer-img {
   opacity: 0;
   transition: opacity 0.45s ease, transform 0.45s ease;
-  display: block;
+  z-index: 3;
 }
 
-:deep([id*='night']) {
-  opacity: 0 !important;
-  display: none !important;
-  pointer-events: none !important;
-}
-
-:deep(.layer-visible) {
+.layer-visible {
   opacity: 1;
   transform: translateY(0);
-  pointer-events: auto;
 }
 
-:deep(.layer-hidden) {
+.layer-hidden {
   opacity: 0;
   transform: translateY(-12px);
-  pointer-events: none;
 }
 
-:deep(.svg-stage > svg > rect:not([id])),
-:deep(.svg-stage > svg > g > rect:not([id])) {
-  display: none !important;
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .stage-frame,
+  .stage-frame.idle-float,
+  .dot.active {
+    animation: none !important;
+  }
 }
 
+/* Mobile */
 @media (max-width: 768px) {
   .hero-card {
     padding: 0.9rem;
     max-width: 100%;
   }
 
-  .hero-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .xp-chip {
-    width: 100%;
-    text-align: left;
-  }
-
   .scene-inner {
     min-height: 200px;
-  }
-
-  .footer {
-    grid-template-columns: 1fr;
   }
 }
 </style>
