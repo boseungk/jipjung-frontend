@@ -1,5 +1,5 @@
 <template>
-  <nav class="top-nav" ref="navRef">
+  <nav class="top-nav">
     <!-- Logo -->
     <div class="nav-logo">
       <router-link to="/" class="logo-link">
@@ -14,6 +14,7 @@
       :mobile-menu-open="mobileMenuOpen"
       @item-selected="mobileMenuOpen = false"
       ref="navMenuRef"
+      id="primary-navigation"
     />
 
     <div class="nav-actions">
@@ -22,7 +23,7 @@
         :current-color-theme="currentColorTheme"
         :is-color-open="isColorOpen"
         :is-night="isNight"
-        @toggle-color-dropdown="dropdown.toggle('color')"
+        @toggle-color-dropdown="dropdown.toggle(DROPDOWNS.COLOR)"
         @select-color-theme="selectColorTheme"
         @toggle-theme="toggleTheme"
         ref="themeControlsRef"
@@ -31,8 +32,8 @@
       <UserMenu
         :user-name="userName"
         :is-user-open="isUserOpen"
-        @toggle-user-dropdown="dropdown.toggle('user')"
-        @close-user-dropdown="dropdown.close('user')"
+        @toggle-user-dropdown="dropdown.toggle(DROPDOWNS.USER)"
+        @close-user-dropdown="dropdown.close(DROPDOWNS.USER)"
         @logout="handleLogout"
         ref="userMenuRef"
       />
@@ -42,8 +43,11 @@
     <!-- Mobile Hamburger -->
     <button
       class="mobile-hamburger"
+      type="button"
       @click.stop="mobileMenuOpen = !mobileMenuOpen"
       aria-label="메뉴 열기/닫기"
+      :aria-expanded="mobileMenuOpen"
+      aria-controls="primary-navigation"
       ref="mobileHamburgerRef"
     >
       <span class="hamburger-line"></span>
@@ -76,27 +80,35 @@ const dropdown = useDropdown()
 const { isMobile } = useResponsive()
 const authStore = useAuthStore()
 
+const DROPDOWNS = {
+  COLOR: 'color',
+  USER: 'user'
+}
+
 // Data
 const menuItems = NAV_MENU_ITEMS
 const colorThemes = COLOR_THEMES
 const mobileMenuOpen = ref(false)
 const brandAccent = BRAND_ACCENT
-const navRef = ref(null)
 const navMenuRef = ref(null)
 const themeControlsRef = ref(null)
 const userMenuRef = ref(null)
 const mobileHamburgerRef = ref(null)
 
 // Computed
-const userName = computed(() => authStore.userName || '사용자')
+const userName = computed(() => authStore.userName)
 const showNavMenu = computed(() => !isMobile.value || mobileMenuOpen.value)
-const isColorOpen = computed(() => dropdown.isOpen('color'))
-const isUserOpen = computed(() => dropdown.isOpen('user'))
+const isColorOpen = computed(() => dropdown.isOpen(DROPDOWNS.COLOR))
+const isUserOpen = computed(() => dropdown.isOpen(DROPDOWNS.USER))
+
+const closeAllMenus = () => {
+  dropdown.close()
+  mobileMenuOpen.value = false
+}
 
 // Close menus on navigation
 watch(() => route.fullPath, () => {
-  dropdown.close()
-  mobileMenuOpen.value = false
+  closeAllMenus()
 })
 
 // Reset mobile menu when viewport changes
@@ -107,28 +119,26 @@ watch(isMobile, () => {
 // Methods
 const selectColorTheme = (theme) => {
   setColorTheme(theme)
-  dropdown.close('color')
+  dropdown.close(DROPDOWNS.COLOR)
 }
 
 const handleLogout = async () => {
-  dropdown.close()
   try {
     await authStore.logout()
-    router.push('/login')
   } catch (error) {
     console.error('로그아웃 실패:', error)
+  } finally {
+    closeAllMenus()
     router.push('/login')
   }
 }
 
 const handleKeydown = (event) => {
   if (event.key === 'Escape') {
-    dropdown.close()
-    mobileMenuOpen.value = false
+    closeAllMenus()
   }
 }
 
-const getElement = (targetRef) => targetRef.value?.$el ?? targetRef.value ?? null
 const getExposedElement = (componentRef, key) => {
   const exposed = componentRef.value?.[key]
   return exposed?.value ?? exposed ?? null
@@ -137,16 +147,19 @@ const getExposedElement = (componentRef, key) => {
 // Close dropdowns and mobile menu when clicking outside
 const handleClickOutside = (event) => {
   const target = event.target
+
+  if (typeof Node !== 'undefined' && !(target instanceof Node)) return
+
   const userEl = getExposedElement(userMenuRef, 'rootEl')
   const colorMenuEl = getExposedElement(themeControlsRef, 'colorMenuEl')
-  const navMenuEl = getElement(navMenuRef)
+  const navMenuEl = getExposedElement(navMenuRef, 'rootEl')
   const hamburgerEl = mobileHamburgerRef.value
 
   if (userEl && !userEl.contains(target)) {
-    dropdown.close('user')
+    dropdown.close(DROPDOWNS.USER)
   }
   if (colorMenuEl && !colorMenuEl.contains(target)) {
-    dropdown.close('color')
+    dropdown.close(DROPDOWNS.COLOR)
   }
   if (
     mobileMenuOpen.value &&
@@ -182,7 +195,10 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: 0 2rem;
   z-index: 10000;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1)),
+    border-color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
   overflow: visible;
 }
 
@@ -270,7 +286,7 @@ html[data-theme="night"] .logo-text {
   width: 24px;
   height: 3px;
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 html[data-theme="day"] .hamburger-line {

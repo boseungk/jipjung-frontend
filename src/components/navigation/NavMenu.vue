@@ -1,22 +1,26 @@
 <template>
-  <div
-    class="nav-menu"
-    v-show="showNavMenu"
-    :class="{ 'menu-open': mobileMenuOpen }"
-    @click.stop
-  >
-    <NavMenuItem
-      v-for="item in items"
-      :key="item.path"
-      :to="item.path"
-      :icon="item.icon"
-      :label="item.label"
-      @click="$emit('item-selected')"
-    />
-  </div>
+  <transition name="nav-slide">
+    <div
+      class="nav-menu"
+      v-show="showNavMenu"
+      :class="{ 'menu-open': mobileMenuOpen }"
+      @click.stop
+      ref="rootRef"
+    >
+      <NavMenuItem
+        v-for="item in items"
+        :key="item.path"
+        :to="item.path"
+        :icon="item.icon"
+        :label="item.label"
+        @click="$emit('item-selected')"
+      />
+    </div>
+  </transition>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import NavMenuItem from '../common/NavMenuItem.vue'
 
 defineProps({
@@ -35,6 +39,9 @@ defineProps({
 })
 
 defineEmits(['item-selected'])
+
+const rootRef = ref(null)
+defineExpose({ rootEl: rootRef })
 </script>
 
 <style scoped>
@@ -57,10 +64,6 @@ defineEmits(['item-selected'])
     flex-direction: column;
     gap: 0;
     padding: 1rem;
-    transform: translateY(-100%);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   html[data-theme="day"] .nav-menu {
@@ -73,10 +76,15 @@ defineEmits(['item-selected'])
     border-bottom: 1px solid var(--nav-dropdown-border-night, rgba(255, 255, 255, 0.1));
   }
 
-  .nav-menu.menu-open {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
+  .nav-slide-enter-active,
+  .nav-slide-leave-active {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-slide-enter-from,
+  .nav-slide-leave-to {
+    transform: translateY(-100%);
+    opacity: 0;
   }
 }
 </style>

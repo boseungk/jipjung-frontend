@@ -2,6 +2,7 @@
   <div class="nav-user" ref="rootRef">
     <button
       class="user-button nav-btn-base"
+      type="button"
       @click="$emit('toggle-user-dropdown')"
       aria-label="사용자 메뉴"
       :aria-expanded="isUserOpen"
@@ -16,7 +17,7 @@
         <AppIcon name="gear" :size="18" class="dropdown-icon" />
         <span>프로필 설정</span>
       </router-link>
-      <button class="dropdown-item-base" @click="$emit('logout')">
+      <button type="button" class="dropdown-item-base" @click="$emit('logout')">
         <AppIcon name="doorOpen" :size="18" class="dropdown-icon" />
         <span>로그아웃</span>
       </button>
