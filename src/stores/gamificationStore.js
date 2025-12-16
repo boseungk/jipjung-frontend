@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { useAuthStore } from './authStore'
-import { DEFAULT_GAMIFICATION, LEVEL_TITLES } from '@/constants/user'
+import { DEFAULT_GAMIFICATION, LEVEL_TITLES, calculateLevelProgress } from '@/constants/user'
 
-const HOUSE_TOTAL_STAGES = 7
+const HOUSE_TOTAL_STAGES = 6
 const FURNITURE_TOTAL_STAGES = 5
 const BADGE_HISTORY_LIMIT = 12
 
@@ -12,13 +12,12 @@ const BADGE_HISTORY_LIMIT = 12
  * @deprecated 백엔드 levelLabel 우선 사용, 이 배열은 폴백용
  */
 const HOUSE_BADGE_MESSAGES = [
-  '씨앗을 심고 기초를 다졌어요 🌱',
-  '뼈대가 올라가고 있어요 🏗️',
-  '벽을 세워 공간을 만들었어요 🧱',
-  '창문과 문이 생겼어요 🚪',
-  '지붕을 올렸어요. 거의 다 왔어요 🏠',
-  '마감 공사 중이에요 ✨',
-  '집이 완성됐어요! 이제 가구를 채워볼까요? 🏡'
+  '꿈을 위한 첫 삽을 떴어요! 🌱',
+  '차근차근 기초를 다지고 있어요 🧱',
+  '공간이 조금씩 형태를 갖춰가요 🏗️',
+  '어떤 집이 될지 기대되지 않나요? 🏠',
+  '거의 다 왔어요! 마무리가 한창이에요 🎨',
+  '드디어 완성! 따뜻한 온기로 채워주세요 🏡'
 ]
 
 /**
@@ -26,11 +25,11 @@ const HOUSE_BADGE_MESSAGES = [
  * @deprecated Phase 2 구현 시 백엔드에서 동적 제공 예정
  */
 const FURNITURE_BADGE_MESSAGES = [
-  '배경과 바닥을 정돈했어요 🪴',
-  '소파가 들어왔어요 🛋️',
-  '테이블과 수납을 배치했어요 🪑',
-  '조명을 켜서 분위기를 더했어요 💡',
-  '소품까지 모두 완성! 🎉'
+  '새로운 인테리어를 시작해볼까요? 🎨',
+  '공간의 중심이 잡히기 시작했어요 🏠',
+  '허전했던 곳들이 알차게 채워졌어요 📦',
+  '공간에 따뜻한 생기를 불어넣었어요 ✨',
+  '살고 싶은 집, 인테리어 끝! 🥳'
 ]
 
 export const useGamificationStore = defineStore('gamification', () => {
@@ -67,15 +66,36 @@ export const useGamificationStore = defineStore('gamification', () => {
     return Math.max(1, furnitureStage.value || 1)
   })
 
-  // Getters
-  const nextLevelExp = computed(() => calculateNextMilestoneExp(buildTrack.value, activeStage.value))
+  // Getters - 진행도 계산
+  const levelProgress = computed(() => calculateLevelProgress(experiencePoints.value, currentLevel.value))
+
+  const nextLevelExp = computed(() => {
+    if (buildTrack.value === 'furniture') {
+      return calculateNextMilestoneExp('furniture', activeStage.value)
+    }
+    return levelProgress.value.requiredForLevel || calculateNextMilestoneExp('house', activeStage.value)
+  })
+
   const expProgress = computed(() => {
-    if (!nextLevelExp.value) return '0.0'
-    return Math.min(100, (experiencePoints.value / nextLevelExp.value) * 100).toFixed(1)
+    if (buildTrack.value === 'furniture') {
+      const denom = nextLevelExp.value || 1
+      const percent = denom > 0 ? (experiencePoints.value / denom) * 100 : 0
+      return Math.min(100, Math.max(0, percent)).toFixed(1)
+    }
+    return levelProgress.value.percent.toFixed(1)
   })
 
   const remainingExp = computed(() => {
-    return Math.max(0, nextLevelExp.value - experiencePoints.value)
+    if (buildTrack.value === 'furniture') {
+      return Math.max(0, nextLevelExp.value - experiencePoints.value)
+    }
+    return Math.max(0, levelProgress.value.requiredForLevel - levelProgress.value.currentInLevel)
+  })
+
+  // 현재 레벨 내 경험치 (UI 표시용)
+  const currentExpInLevel = computed(() => {
+    if (buildTrack.value === 'furniture') return experiencePoints.value
+    return levelProgress.value.currentInLevel
   })
 
   const isHouseComplete = computed(() => houseStage.value >= HOUSE_TOTAL_STAGES)
@@ -260,7 +280,7 @@ export const useGamificationStore = defineStore('gamification', () => {
     const updated = {
       ...gamification.value,
       buildTrack: 'furniture',
-      furnitureStage: 0,
+      furnitureStage: 1,
       houseStage: Math.max(houseStage.value, HOUSE_TOTAL_STAGES),
       experiencePoints: 0,
       nextLevelExp: calculateNextMilestoneExp('furniture', 1),
@@ -301,34 +321,105 @@ export const useGamificationStore = defineStore('gamification', () => {
   function applyGrowthResult(growth) {
     if (!growth) return
 
-    const nextHouseStage = Math.min(HOUSE_TOTAL_STAGES, Math.max(1, growth.level || 1))
+    const rawStep = Number(growth.level || 1)
+    const nextStep = Number.isFinite(rawStep) ? Math.max(1, Math.trunc(rawStep)) : 1
+    const currentTrack = authStore.userGamification?.buildTrack || 'house'
+    const currentFurnitureStage = Number(authStore.userGamification?.furnitureStage) || 0
+    const currentTrackExp = Number(authStore.userGamification?.experiencePoints) || 0
+
+    let nextTrack = nextStep > HOUSE_TOTAL_STAGES ? 'furniture' : 'house'
+    const nextHouseStage = Math.min(HOUSE_TOTAL_STAGES, nextStep)
+
+    // 백엔드가 레벨을 6(완공)에서 더 올려주지 않는 경우에도,
+    // 집 완성 이후에는 인테리어 트랙으로 넘어갈 수 있어야 합니다.
+    if (nextHouseStage >= HOUSE_TOTAL_STAGES) {
+      nextTrack = 'furniture'
+    }
+    if (currentTrack === 'furniture' && nextStep <= HOUSE_TOTAL_STAGES) {
+      nextTrack = 'furniture'
+    }
+
+    const baseFurnitureStage = nextTrack === 'furniture'
+      ? Math.min(FURNITURE_TOTAL_STAGES, Math.max(1, currentFurnitureStage, nextStep - HOUSE_TOTAL_STAGES))
+      : 0
+
+    const isUnlockingFurniture = currentTrack !== 'furniture' && nextTrack === 'furniture'
+    const rawExpDelta = Math.max(0, Number(growth.expChange) || 0)
+    const expDelta = isUnlockingFurniture ? 0 : rawExpDelta
+
+    let nextFurnitureStage = baseFurnitureStage
+    let nextTrackExp = nextTrack === 'furniture'
+      ? (isUnlockingFurniture ? 0 : currentTrackExp)
+      : Math.max(0, Number(growth.currentExp) || 0)
+
+    // Phase 2(인테리어) 진행도는 XP 임계값 기반으로 프론트에서 계산합니다.
+    // - Stage 1: 배경(언락 시 기본 지급)
+    // - Stage 2~5: XP 임계값 도달 시 단계 상승 + XP 리셋
+    if (nextTrack === 'furniture') {
+      let pendingExp = expDelta
+      let accumulatedExp = Math.max(0, nextTrackExp)
+
+      while (pendingExp > 0 && nextFurnitureStage < FURNITURE_TOTAL_STAGES) {
+        const milestone = calculateNextMilestoneExp('furniture', Math.max(1, nextFurnitureStage))
+        const total = accumulatedExp + pendingExp
+        if (total < milestone) {
+          accumulatedExp = total
+          pendingExp = 0
+          break
+        }
+
+        const overflow = total - milestone
+        nextFurnitureStage = Math.min(FURNITURE_TOTAL_STAGES, nextFurnitureStage + 1)
+        accumulatedExp = 0
+        pendingExp = overflow
+      }
+
+      // 최종 단계에서는 XP를 계속 쌓이게 두되, UI/로직이 깨지지 않도록 상한만 둡니다.
+      if (nextFurnitureStage >= FURNITURE_TOTAL_STAGES) {
+        accumulatedExp = Math.min(accumulatedExp + pendingExp, calculateNextMilestoneExp('furniture', FURNITURE_TOTAL_STAGES))
+      }
+
+      nextTrackExp = accumulatedExp
+    }
 
     authStore.updateUserData({
       gamification: {
         ...authStore.userGamification,
         // 필드명 매핑 (백엔드 → 프론트엔드)
-        experiencePoints: growth.currentExp,  // currentExp → experiencePoints
+        experiencePoints: nextTrackExp,
         currentLevel: growth.level,           // level → currentLevel
-        nextLevelExp: growth.maxExp,          // maxExp → nextLevelExp
+        nextLevelExp: nextTrack === 'furniture'
+          ? calculateNextMilestoneExp('furniture', Math.max(1, nextFurnitureStage))
+          : growth.maxExp,                    // maxExp → nextLevelExp
         levelTitle: growth.levelLabel,        // levelLabel → levelTitle
-        // 레벨이 곧 집 짓기 단계 (1~7)
-        houseStage: nextHouseStage
+        buildTrack: nextTrack,
+        houseStage: nextHouseStage,
+        furnitureStage: nextFurnitureStage
       },
       // showroom 섹션 동기화 (저축 직후 즉시 단계 반영)
       showroom: authStore.userShowroom
         ? {
-            ...authStore.userShowroom,
-            currentStep: nextHouseStage,
-            stepTitle: growth.levelLabel || authStore.userShowroom.stepTitle
-          }
+          ...authStore.userShowroom,
+          currentStep: nextStep,
+          stepTitle: growth.levelLabel || authStore.userShowroom.stepTitle
+        }
         : {
-            currentStep: nextHouseStage,
-            totalSteps: HOUSE_TOTAL_STAGES,
-            stepTitle: growth.levelLabel || '',
-            stepDescription: '',
-            imageUrl: null
-          }
+          currentStep: nextStep,
+          totalSteps: HOUSE_TOTAL_STAGES,
+          stepTitle: growth.levelLabel || '',
+          stepDescription: '',
+          imageUrl: null
+        }
     })
+
+    if (nextTrack === 'furniture') {
+      authStore.persistFurnitureProgress({
+        furnitureStage: nextFurnitureStage,
+        experiencePoints: nextTrackExp
+      })
+    } else {
+      authStore.clearFurnitureProgress()
+    }
   }
 
   return {
@@ -351,6 +442,7 @@ export const useGamificationStore = defineStore('gamification', () => {
     // Getters
     expProgress,
     remainingExp,
+    currentExpInLevel,
     gamificationInfo,
     // Actions
     addExperience,

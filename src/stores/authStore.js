@@ -15,6 +15,10 @@ import { ref, computed } from 'vue'
 import { authService } from '@/api/services/authService'
 import { dashboardService } from '@/api/services/dashboardService'
 import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
+import { SHOWROOM_TOTAL_STAGES } from '@/constants/showroomWebp'
+
+const HOUSE_TOTAL_STAGES = SHOWROOM_TOTAL_STAGES.house
+const FURNITURE_TOTAL_STAGES = SHOWROOM_TOTAL_STAGES.furniture
 
 /**
  * localStorage 키 상수
@@ -22,7 +26,8 @@ import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
 const STORAGE_KEYS = {
     ACCESS_TOKEN: 'accessToken',
     REFRESH_TOKEN: 'refreshToken',
-    ONBOARDING_COMPLETED: 'onboardingCompleted'
+    ONBOARDING_COMPLETED: 'onboardingCompleted',
+    FURNITURE_PROGRESS_PREFIX: 'showroomFurnitureProgress'
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -95,16 +100,71 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh)
     }
 
+    function getFurnitureProgressStorageKey() {
+        const token = accessToken.value || ''
+        const suffix = token ? token.slice(-24) : 'guest'
+        return `${STORAGE_KEYS.FURNITURE_PROGRESS_PREFIX}_${suffix}`
+    }
+
+    function readFurnitureProgress() {
+        try {
+            const raw = localStorage.getItem(getFurnitureProgressStorageKey())
+            if (!raw) return null
+            const parsed = JSON.parse(raw)
+            const stage = Number(parsed?.furnitureStage)
+            const exp = Number(parsed?.experiencePoints)
+            const safeStage = Number.isFinite(stage) ? Math.trunc(stage) : null
+            const safeExp = Number.isFinite(exp) ? Math.max(0, exp) : null
+
+            if (!safeStage || safeStage < 1) return null
+            return {
+                furnitureStage: Math.min(FURNITURE_TOTAL_STAGES, safeStage),
+                experiencePoints: safeExp ?? 0
+            }
+        } catch (error) {
+            return null
+        }
+    }
+
+    function persistFurnitureProgress({ furnitureStage, experiencePoints }) {
+        const stage = Number(furnitureStage)
+        const exp = Number(experiencePoints)
+        const safeStage = Number.isFinite(stage) ? Math.trunc(stage) : 1
+        const safeExp = Number.isFinite(exp) ? Math.max(0, exp) : 0
+
+        const payload = {
+            furnitureStage: Math.min(FURNITURE_TOTAL_STAGES, Math.max(1, safeStage)),
+            experiencePoints: safeExp,
+            updatedAt: new Date().toISOString()
+        }
+
+        try {
+            localStorage.setItem(getFurnitureProgressStorageKey(), JSON.stringify(payload))
+        } catch (error) {
+            // ignore storage failures
+        }
+    }
+
+    function clearFurnitureProgress() {
+        try {
+            localStorage.removeItem(getFurnitureProgressStorageKey())
+        } catch (error) {
+            // ignore
+        }
+    }
+
     /**
      * 토큰 및 사용자 상태 초기화
      */
     function clearAuth() {
+        const furnitureProgressKey = getFurnitureProgressStorageKey()
         user.value = null
         accessToken.value = null
         refreshTokenValue.value = null
         localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
+        localStorage.removeItem(furnitureProgressKey)
     }
 
     // ============================================
@@ -349,10 +409,38 @@ export const useAuthStore = defineStore('auth', () => {
             }
 
             // 게임화 정보 매핑 (profile + streak -> gamification)
+            const existingTrack = user.value?.gamification?.buildTrack
+            const existingFurnitureStage = Number(user.value?.gamification?.furnitureStage) || 0
+            const existingExperiencePoints = Number(user.value?.gamification?.experiencePoints)
+            const storedFurnitureProgress = readFurnitureProgress()
+
+            const rawShowroomStep = Number(response.showroom?.currentStep ?? response.profile?.level ?? 1)
+            const showroomStep = Number.isFinite(rawShowroomStep) ? Math.max(1, Math.trunc(rawShowroomStep)) : 1
+
+            let derivedTrack = showroomStep >= HOUSE_TOTAL_STAGES ? 'furniture' : 'house'
+            if (existingTrack === 'furniture') derivedTrack = 'furniture'
+
+            const derivedHouseStage = Math.min(HOUSE_TOTAL_STAGES, showroomStep)
+            const derivedFurnitureStage = derivedTrack === 'furniture'
+                ? Math.min(
+                    FURNITURE_TOTAL_STAGES,
+                    Math.max(
+                        1,
+                        existingFurnitureStage,
+                        storedFurnitureProgress?.furnitureStage || 0,
+                        showroomStep - HOUSE_TOTAL_STAGES
+                    )
+                )
+                : 0
+
             const mappedGamification = {
                 currentLevel: response.profile?.level || 1,
                 levelTitle: response.profile?.title || '신입 건축가',
-                experiencePoints: response.profile?.levelProgress?.currentExp || 0,
+                experiencePoints: derivedTrack === 'furniture'
+                    ? (Number.isFinite(existingExperiencePoints)
+                        ? existingExperiencePoints
+                        : (storedFurnitureProgress?.experiencePoints || 0))
+                    : (response.profile?.levelProgress?.currentExp || 0),
                 nextLevelExp: response.profile?.levelProgress?.targetExp || 100,
                 expProgress: response.profile?.levelProgress?.percent || 0,
                 remainingExp: response.profile?.levelProgress?.remainingExp || 0,
@@ -360,7 +448,10 @@ export const useAuthStore = defineStore('auth', () => {
                 longestStreak: response.streak?.maxStreak || 0,
                 isTodayParticipated: response.streak?.isTodayParticipated || false,
                 rewardAvailable: response.streak?.rewardAvailable || false,
-                weeklyStatus: response.streak?.weeklyStatus || []
+                weeklyStatus: response.streak?.weeklyStatus || [],
+                buildTrack: derivedTrack,
+                houseStage: derivedHouseStage,
+                furnitureStage: derivedFurnitureStage
             }
 
             // 사용자 정보 업데이트
@@ -435,6 +526,8 @@ export const useAuthStore = defineStore('auth', () => {
         updateProfile,
         checkAuth,
         loadDashboard,
-        updateUserData
+        updateUserData,
+        persistFurnitureProgress,
+        clearFurnitureProgress
     }
 })
