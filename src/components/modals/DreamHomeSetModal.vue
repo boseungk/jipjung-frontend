@@ -5,7 +5,7 @@
         <div class="modal-container" @click.stop>
         <!-- Header -->
         <div class="modal-header">
-          <h2 class="modal-title">🏠 목표 설정</h2>
+          <h2 class="modal-title">🏠 드림홈 목표 설정</h2>
           <button class="close-button" @click="closeModal" :disabled="isSubmitting">✕</button>
         </div>
 
@@ -29,7 +29,7 @@
             <span v-else class="theme-emoji">🏠</span>
           </div>
           <div class="theme-preview-info">
-            <span class="theme-label">선택한 테마</span>
+            <span class="theme-label">선택한 테마 (완성본)</span>
             <span class="theme-preview-name">{{ selectedTheme.themeName }}</span>
           </div>
           <button type="button" class="change-theme-btn" @click="goBackToThemeSelect" :disabled="isSubmitting">

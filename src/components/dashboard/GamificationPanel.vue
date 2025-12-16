@@ -21,7 +21,7 @@
           ></div>
         </div>
         <div class="exp-text">
-          {{ experiencePoints }} / {{ nextLevelExp }} EXP ({{ expProgress }}%)
+          {{ currentExpInLevel }} / {{ nextLevelExp }} EXP ({{ expProgress }}%)
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@ const gamificationStore = useGamificationStore()
 const { 
   currentLevel, 
   levelTitle, 
-  experiencePoints, 
+  currentExpInLevel, 
   nextLevelExp, 
   expProgress, 
   currentStreak, 

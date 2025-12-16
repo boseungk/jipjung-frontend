@@ -6,8 +6,20 @@
         <h3 class="card-title">프로필</h3>
       </div>
       <span class="level-chip heading-level">
-        <AppIcon name="star" :size="14" :active="true" :is-major-cta="true" class="level-icon" aria-hidden="true" />
-        Lv.{{ currentLevel }} · {{ levelTitle }}
+        <AppIcon
+          :name="isFurnitureTrack ? 'confetti' : 'star'"
+          :size="14"
+          :active="true"
+          :is-major-cta="true"
+          class="level-icon"
+          aria-hidden="true"
+        />
+        <template v-if="isFurnitureTrack">
+          인테리어 {{ furnitureStage }} / {{ furnitureTotalStages }}
+        </template>
+        <template v-else>
+          Lv.{{ currentLevel }} · {{ levelTitle }}
+        </template>
       </span>
     </div>
     <div class="card-layout">
@@ -30,7 +42,7 @@
 
     <div class="progress-section">
       <div class="progress-top">
-        <span class="progress-label">레벨 진행도</span>
+        <span class="progress-label">{{ isFurnitureTrack ? '인테리어 진행도' : '레벨 진행도' }}</span>
         <span class="progress-value">{{ expProgress }}%</span>
       </div>
       <div class="xp-bar-container" role="progressbar" :aria-valuenow="Number(expProgress)" aria-valuemin="0" aria-valuemax="100">
@@ -39,8 +51,10 @@
         </div>
       </div>
       <div class="exp-row">
-        <div class="exp-info">{{ experiencePoints }} / {{ nextLevelExp }} XP</div>
-        <div class="exp-remaining">다음 레벨까지 {{ remainingExp }} XP</div>
+        <div class="exp-info">{{ currentExpInLevel }} / {{ nextLevelExp }} XP</div>
+        <div class="exp-remaining">
+          {{ isFurnitureTrack ? '다음 단계까지' : '다음 레벨까지' }} {{ remainingExp }} XP
+        </div>
       </div>
     </div>
 
@@ -52,12 +66,16 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
 import { useAuthStore } from '../../../stores/authStore'
+import { SHOWROOM_TOTAL_STAGES } from '../../../constants/showroomWebp'
 
 const gamificationStore = useGamificationStore()
-const { currentLevel, levelTitle, expProgress, experiencePoints, nextLevelExp, remainingExp } = storeToRefs(gamificationStore)
+const { buildTrack, furnitureStage, currentLevel, levelTitle, expProgress, currentExpInLevel, nextLevelExp, remainingExp } = storeToRefs(gamificationStore)
 
 const authStore = useAuthStore()
 const { userName } = storeToRefs(authStore)
+
+const isFurnitureTrack = computed(() => buildTrack.value === 'furniture')
+const furnitureTotalStages = SHOWROOM_TOTAL_STAGES.furniture
 
 const userInitial = computed(() => {
   const name = (userName.value || '').trim()

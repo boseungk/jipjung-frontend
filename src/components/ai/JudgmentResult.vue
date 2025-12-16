@@ -32,7 +32,7 @@
       <div class="level-progress">
         <div class="progress-header">
           <span class="level-label">Lv.{{ growth.level }} {{ growth.levelLabel }}</span>
-          <span class="exp-label">{{ growth.currentExp }} / {{ growth.maxExp }}</span>
+          <span class="exp-label">{{ displayCurrentExp }} / {{ displayMaxExp }}</span>
         </div>
         <div class="progress-bar">
           <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -66,6 +66,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { calculateLevelProgress } from '@/constants/user'
 
 // ============================================================================
 // Props & Emits
@@ -116,11 +117,17 @@ const expChangeClass = computed(() => {
   return props.growth.expChange >= 0 ? 'positive' : 'negative'
 })
 
-const progressPercent = computed(() => {
-  if (!props.growth) return 0
-  const { currentExp, maxExp } = props.growth
-  return Math.min(100, Math.max(0, (currentExp / maxExp) * 100))
+/**
+ * 레벨 내 진행도 계산 (누적 경험치가 아닌 현재 레벨 내 진행도)
+ */
+const levelProgress = computed(() => {
+  if (!props.growth) return { currentInLevel: 0, requiredForLevel: 0, percent: 0 }
+  return calculateLevelProgress(props.growth.currentExp, props.growth.level)
 })
+
+const progressPercent = computed(() => levelProgress.value.percent)
+const displayCurrentExp = computed(() => levelProgress.value.currentInLevel)
+const displayMaxExp = computed(() => levelProgress.value.requiredForLevel)
 </script>
 
 <style scoped>

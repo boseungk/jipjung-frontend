@@ -51,7 +51,7 @@ html[data-theme="night"] .dropdown-menu {
 /* Dropdown Transition */
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .dropdown-enter-from,
