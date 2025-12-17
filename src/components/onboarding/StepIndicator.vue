@@ -1,5 +1,12 @@
 <template>
-  <div class="step-indicator">
+  <div
+    class="step-indicator"
+    role="progressbar"
+    :aria-valuenow="currentStep"
+    aria-valuemin="1"
+    :aria-valuemax="totalSteps"
+    aria-label="온보딩 진행률"
+  >
     <div
       v-for="step in totalSteps"
       :key="step"
@@ -8,14 +15,20 @@
         active: step === currentStep,
         completed: step < currentStep
       }"
-      role="progressbar"
-      :aria-valuenow="currentStep"
-      :aria-valuemin="1"
-      :aria-valuemax="totalSteps"
+      role="presentation"
       :aria-label="`Step ${step} of ${totalSteps}`"
+      :aria-current="step === currentStep ? 'step' : undefined"
     >
       <div class="dot-inner">
-        <PhCheck v-if="step < currentStep" :size="18" weight="bold" class="check-icon" />
+        <AppIcon
+          v-if="step < currentStep"
+          name="check"
+          :size="18"
+          weight="bold"
+          color="currentColor"
+          class="check-icon"
+          aria-hidden="true"
+        />
         <span v-else class="step-number">{{ step }}</span>
       </div>
     </div>
@@ -26,8 +39,6 @@
 </template>
 
 <script setup>
-import { PhCheck } from '@phosphor-icons/vue'
-
 defineProps({
   currentStep: {
     type: Number,

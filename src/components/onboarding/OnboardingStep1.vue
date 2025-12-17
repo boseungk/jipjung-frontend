@@ -1,8 +1,8 @@
 <template>
   <div class="onboarding-step">
-    <h2 class="step-title">출생연도를 입력해주세요</h2>
+    <h2 class="step-title">{{ STEP_CONTENT[1].title }}</h2>
     <p class="step-description">
-      연령대에 맞는 맞춤 정보를 제공해드립니다
+      {{ STEP_CONTENT[1].description }}
     </p>
 
     <div class="input-group">
@@ -35,7 +35,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { VALIDATION } from '@/constants/onboardingConstants'
+import { STEP_CONTENT, VALIDATION } from '@/constants/onboardingConstants'
 
 const props = defineProps({
   modelValue: {

@@ -99,8 +99,8 @@ export const STEP_CONTENT = {
         icon: 'CurrencyCircleDollar'
     },
     3: {
-        title: '기존 대출이 있으신가요?',
-        description: '기존 대출의 월 상환액을 입력해주세요 (없으면 0 입력)',
+        title: '재정 상황을 알려주세요',
+        description: '대출 한도 분석을 위해 필요합니다',
         icon: 'FileText'
     },
     4: {

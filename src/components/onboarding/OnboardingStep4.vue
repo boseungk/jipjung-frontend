@@ -1,7 +1,7 @@
 <template>
   <div class="onboarding-step">
-    <h2 class="step-title">희망 지역을 선택하세요</h2>
-    <p class="step-description">최대 3곳까지 선택 가능합니다</p>
+    <h2 class="step-title">{{ STEP_CONTENT[4].title }}</h2>
+    <p class="step-description">{{ STEP_CONTENT[4].description }}</p>
 
     <!-- Selected Areas -->
     <div v-if="localAreas.length > 0" class="selected-areas">
@@ -17,38 +17,44 @@
           type="button"
           :aria-label="`${formatRegion(area)} 제거`"
         >
-          <PhX :size="16" weight="bold" />
+          <AppIcon name="x" :size="16" weight="bold" color="currentColor" aria-hidden="true" />
         </button>
       </div>
     </div>
 
     <!-- Area Selector -->
-    <div v-if="localAreas.length < VALIDATION.PREFERRED_AREAS.MAX" class="area-selector">
-      <CustomDropdown
-        v-model="selectedSido"
-        :options="sidoOptions"
-        placeholder="시/도 선택"
-        label="시/도 선택"
-        class="area-dropdown"
-      />
+    <div v-if="localAreas.length < VALIDATION.PREFERRED_AREAS.MAX">
+      <div class="area-selector">
+        <CustomDropdown
+          v-model="selectedSido"
+          :options="sidoOptions"
+          placeholder="시/도 선택"
+          label="시/도 선택"
+          class="area-dropdown"
+        />
 
-      <CustomDropdown
-        v-model="selectedSigungu"
-        :options="sigunguOptions"
-        :disabled="!selectedSido"
-        placeholder="구/군 선택"
-        label="구/군 선택"
-        class="area-dropdown"
-      />
+        <CustomDropdown
+          v-model="selectedSigungu"
+          :options="sigunguOptions"
+          :disabled="!selectedSido"
+          placeholder="구/군 선택"
+          label="구/군 선택"
+          class="area-dropdown"
+        />
 
-      <button
-        @click="addArea"
-        :disabled="!selectedSido || !selectedSigungu"
-        class="add-btn"
-        type="button"
-      >
-        추가
-      </button>
+        <button
+          @click="addArea"
+          :disabled="!selectedSido || !selectedSigungu || isDuplicateSelection"
+          class="add-btn"
+          type="button"
+        >
+          추가
+        </button>
+      </div>
+
+      <div v-if="isDuplicateSelection" class="max-areas-message" role="status">
+        이미 추가된 지역입니다
+      </div>
     </div>
 
     <div v-else class="max-areas-message" role="status">
@@ -58,15 +64,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { PhX } from '@phosphor-icons/vue'
+import { ref, computed, watch } from 'vue'
 import CustomDropdown from '@/components/common/CustomDropdown.vue'
 import { 
   SIDO_LIST, 
   getSigunguList, 
   formatRegion 
 } from '@/constants/regions'
-import { VALIDATION } from '@/constants/onboardingConstants'
+import { STEP_CONTENT, VALIDATION } from '@/constants/onboardingConstants'
 
 const props = defineProps({
   modelValue: {
@@ -79,6 +84,10 @@ const emit = defineEmits(['update:modelValue'])
 
 const selectedSido = ref('')
 const selectedSigungu = ref('')
+
+watch(selectedSido, () => {
+  selectedSigungu.value = ''
+})
 
 // Convert arrays to dropdown options format
 const sidoOptions = computed(() => {
@@ -102,6 +111,13 @@ const localAreas = computed({
   set: (value) => {
     emit('update:modelValue', value)
   }
+})
+
+const isDuplicateSelection = computed(() => {
+  if (!selectedSido.value || !selectedSigungu.value) return false
+  return localAreas.value.some(
+    area => area.sido === selectedSido.value && area.sigungu === selectedSigungu.value
+  )
 })
 
 function addArea() {

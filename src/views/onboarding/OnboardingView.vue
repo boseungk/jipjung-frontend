@@ -8,7 +8,7 @@
         <div class="onboarding-header">
           <p class="onboarding-eyebrow" v-if="currentStep === 1">
             {{ MESSAGES.WELCOME }}
-            <PhConfetti :size="24" weight="fill" />
+            <AppIcon name="confetti" :size="24" weight="fill" color="currentColor" aria-hidden="true" />
           </p>
           <h1 class="onboarding-title" :class="{ compact: currentStep > 1 }">
             {{ currentStep === 1 ? MESSAGES.INTRO : '정보를 입력해주세요' }}
@@ -69,7 +69,6 @@
 import { ref, computed, markRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import { PhConfetti } from '@phosphor-icons/vue'
 import { useOnboardingValidation } from '@/composables/useOnboardingValidation'
 import { useToast } from '@/composables/useToast'
 import { TOTAL_STEPS, MESSAGES, VALIDATION } from '@/constants/onboardingConstants'
@@ -95,17 +94,6 @@ const onboardingData = ref({
   preferredAreas: []
 })
 
-const stepDataKeys = ['birthYear', 'annualIncome', 'financialInfo', 'preferredAreas']
-
-const stepComponents = {
-  1: markRaw(OnboardingStep1),
-  2: markRaw(OnboardingStep2),
-  3: markRaw(OnboardingStep3),
-  4: markRaw(OnboardingStep4)
-}
-
-const currentStepComponent = computed(() => stepComponents[currentStep.value])
-
 const { canProceed } = useOnboardingValidation(onboardingData, currentStep)
 
 // Computed for Step 3 (financial info object binding)
@@ -120,21 +108,44 @@ const financialInfo = computed({
   }
 })
 
-// Unified model for v-model binding based on current step
-const currentStepModel = computed({
-  get: () => {
-    if (currentStep.value === 3) {
-      return financialInfo.value
+const steps = [
+  {
+    component: markRaw(OnboardingStep1),
+    getModel: () => onboardingData.value.birthYear,
+    setModel: (val) => {
+      onboardingData.value.birthYear = val
     }
-    return onboardingData.value[stepDataKeys[currentStep.value - 1]]
   },
-  set: (val) => {
-    if (currentStep.value === 3) {
+  {
+    component: markRaw(OnboardingStep2),
+    getModel: () => onboardingData.value.annualIncome,
+    setModel: (val) => {
+      onboardingData.value.annualIncome = val
+    }
+  },
+  {
+    component: markRaw(OnboardingStep3),
+    getModel: () => financialInfo.value,
+    setModel: (val) => {
       financialInfo.value = val
-    } else {
-      onboardingData.value[stepDataKeys[currentStep.value - 1]] = val
+    }
+  },
+  {
+    component: markRaw(OnboardingStep4),
+    getModel: () => onboardingData.value.preferredAreas,
+    setModel: (val) => {
+      onboardingData.value.preferredAreas = val
     }
   }
+]
+
+const currentStepIndex = computed(() => Math.min(steps.length - 1, Math.max(0, currentStep.value - 1)))
+const currentStepComponent = computed(() => steps[currentStepIndex.value].component)
+
+// Unified model for v-model binding based on current step
+const currentStepModel = computed({
+  get: () => steps[currentStepIndex.value].getModel(),
+  set: (val) => steps[currentStepIndex.value].setModel(val)
 })
 
 function handleNext() {
@@ -155,15 +166,7 @@ async function handleComplete() {
   isSubmitting.value = true
 
   try {
-    // preferredAreas를 백엔드 형식(문자열 배열)으로 변환
-    const requestData = {
-      ...onboardingData.value,
-      preferredAreas: onboardingData.value.preferredAreas.map(
-        area => `${area.sido} ${area.sigungu}`.trim()
-      )
-    }
-    
-    await authStore.completeOnboarding(requestData)
+    await authStore.completeOnboarding(onboardingData.value)
     showSuccess(MESSAGES.SUBMIT_SUCCESS)
     
     // Delay navigation to show success toast

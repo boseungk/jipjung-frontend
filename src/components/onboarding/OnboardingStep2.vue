@@ -1,8 +1,8 @@
 <template>
   <div class="onboarding-step">
-    <h2 class="step-title">연소득을 알려주세요</h2>
+    <h2 class="step-title">{{ STEP_CONTENT[2].title }}</h2>
     <p class="step-description">
-      정확한 대출 한도 계산을 위해 필요합니다
+      {{ STEP_CONTENT[2].description }}
     </p>
 
     <!-- Income Display - Click to Edit -->
@@ -16,7 +16,14 @@
       aria-label="연소득 직접 입력하려면 클릭"
     >
       <span class="income-value">{{ formattedIncome }}</span>
-      <PhPencilSimple :size="20" weight="bold" class="edit-icon" />
+      <AppIcon
+        name="pencilSimple"
+        :size="20"
+        weight="bold"
+        color="currentColor"
+        class="edit-icon"
+        aria-hidden="true"
+      />
     </div>
 
     <!-- Income Edit Mode -->
@@ -64,8 +71,8 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-import { PhPencilSimple } from '@phosphor-icons/vue'
 import { 
+  STEP_CONTENT,
   VALIDATION, 
   formatIncome, 
   calculateSliderFillPercent 

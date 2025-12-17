@@ -1,8 +1,8 @@
 <template>
   <div class="onboarding-step">
-    <h2 class="step-title">재정 상황을 알려주세요</h2>
+    <h2 class="step-title">{{ STEP_CONTENT[3].title }}</h2>
     <p class="step-description">
-      대출 한도 분석을 위해 필요합니다
+      {{ STEP_CONTENT[3].description }}
     </p>
 
     <!-- Sections Container -->
@@ -34,7 +34,13 @@
               type="button"
               class="custom-trigger"
             >
-              <PhPencilLine :size="18" weight="bold" />
+              <AppIcon
+                name="pencilLine"
+                :size="18"
+                weight="bold"
+                color="currentColor"
+                aria-hidden="true"
+              />
               <span>직접 입력</span>
             </button>
             
@@ -84,7 +90,13 @@
               type="button"
               class="custom-trigger"
             >
-              <PhPencilLine :size="18" weight="bold" />
+              <AppIcon
+                name="pencilLine"
+                :size="18"
+                weight="bold"
+                color="currentColor"
+                aria-hidden="true"
+              />
               <span>직접 입력</span>
             </button>
             
@@ -110,9 +122,8 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
-import { PhPencilLine } from '@phosphor-icons/vue'
-import { VALIDATION } from '@/constants/onboardingConstants'
+import { ref, computed, nextTick } from 'vue'
+import { STEP_CONTENT, VALIDATION } from '@/constants/onboardingConstants'
 
 const props = defineProps({
   modelValue: {
