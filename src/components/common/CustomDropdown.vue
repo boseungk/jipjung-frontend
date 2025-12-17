@@ -15,11 +15,14 @@
       :disabled="disabled"
     >
       <span class="dropdown-value">{{ displayValue }}</span>
-      <PhCaretDown 
-        :size="16" 
-        weight="bold" 
+      <AppIcon
+        name="caretDown"
+        :size="16"
+        weight="bold"
+        color="currentColor"
         class="dropdown-caret"
         :class="{ rotate: isOpen }"
+        aria-hidden="true"
       />
     </button>
     
@@ -47,11 +50,14 @@
             :aria-selected="modelValue === option.value"
           >
             {{ option.label }}
-            <PhCheck 
-              v-if="modelValue === option.value" 
-              :size="16" 
-              weight="bold" 
+            <AppIcon
+              v-if="modelValue === option.value"
+              name="check"
+              :size="16"
+              weight="bold"
+              color="currentColor"
               class="check-icon"
+              aria-hidden="true"
             />
           </button>
         </div>
@@ -62,7 +68,6 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { PhCaretDown, PhCheck } from '@phosphor-icons/vue'
 
 const props = defineProps({
   /**

@@ -12,7 +12,7 @@
         type="radialBar"
         :options="chartOptions"
         :series="[displayRatio]"
-        height="150"
+        height="200"
       />
     </div>
     
@@ -72,33 +72,28 @@ const chartPalette = computed(() => (theme.value === 'night' ? CHART_PALETTE.nig
 const chartOptions = computed(() => ({
   chart: {
     type: 'radialBar',
-    toolbar: { show: false },
     sparkline: { enabled: true }
   },
   plotOptions: {
     radialBar: {
       startAngle: -110,
       endAngle: 110,
-      hollow: {
-        size: '68%',
-        background: 'transparent'
-      },
+      hollow: { size: '65%' },
       track: {
         background: chartPalette.value.track,
-        strokeWidth: '78%'
+        strokeWidth: '80%'
       },
       dataLabels: {
         name: {
           show: true,
-          offsetY: -6,
-          fontSize: '20px',
-          fontWeight: 700,
+          offsetY: -8,
+          fontSize: '21px',
           color: chartPalette.value.muted
         },
         value: {
           offsetY: 4,
-          fontSize: '26px',
-          fontWeight: '800',
+          fontSize: '24px',
+          fontWeight: '700',
           color: gaugeColor.value,
           formatter: () => `${Number(dsrRatio.value || 0).toFixed(1)}%`
         }
@@ -106,21 +101,8 @@ const chartOptions = computed(() => ({
     }
   },
   colors: [gaugeColor.value],
-  fill: {
-    type: 'gradient',
-    gradient: {
-      shade: 'light',
-      gradientToColors: [gaugeColor.value],
-      inverseColors: false,
-      opacityFrom: 0.95,
-      opacityTo: 0.85,
-      stops: [0, 60, 100]
-    }
-  },
   labels: ['DSR'],
-  stroke: {
-    lineCap: 'round'
-  }
+  stroke: { lineCap: 'round' }
 }))
 
 onMounted(() => {
@@ -149,21 +131,44 @@ onMounted(() => {
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
   font-size: 0.8125rem;
-  font-weight: 700;
-  background: var(--surface-muted, #f3f4f6);
+  font-weight: 800;
+  background: var(--dsr-subcard-bg, rgba(17, 24, 39, 0.04));
+  border: 1px solid var(--dsr-subcard-border, rgba(17, 24, 39, 0.06));
   color: var(--ink-base, #1f2937);
+  white-space: nowrap;
 }
 
 .tone-safe {
+  background: rgba(67, 160, 71, 0.14);
+  border-color: rgba(67, 160, 71, 0.2);
   color: #2e7d32;
 }
 
+html[data-theme="night"] .tone-safe {
+  background: rgba(67, 160, 71, 0.16);
+  color: #86efac;
+}
+
 .tone-warning {
-  color: #d97706;
+  background: rgba(251, 192, 45, 0.16);
+  border-color: rgba(251, 192, 45, 0.22);
+  color: #b45309;
+}
+
+html[data-theme="night"] .tone-warning {
+  background: rgba(251, 192, 45, 0.14);
+  color: #fbbf24;
 }
 
 .tone-danger {
-  color: #dc2626;
+  background: rgba(244, 67, 54, 0.12);
+  border-color: rgba(244, 67, 54, 0.2);
+  color: #c62828;
+}
+
+html[data-theme="night"] .tone-danger {
+  background: rgba(244, 67, 54, 0.14);
+  color: #fca5a5;
 }
 
 .gauge-wrapper {

@@ -4,7 +4,7 @@
       <div class="modal-container" @click.stop>
         <!-- Icon -->
         <div class="guide-icon">
-          <PhHouseLine :size="64" weight="duotone" color="currentColor" />
+          <AppIcon name="house" :size="64" weight="duotone" color="currentColor" />
         </div>
 
         <!-- Title -->
@@ -28,8 +28,6 @@
 </template>
 
 <script setup>
-import { PhHouseLine } from '@phosphor-icons/vue'
-
 defineProps({
   isOpen: {
     type: Boolean,
