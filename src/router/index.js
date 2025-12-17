@@ -112,6 +112,17 @@ const routes = [
             requiresAuth: true,
             requiresOnboarding: true
         }
+    },
+    {
+        path: '/collection/:id/journey',
+        name: 'JourneyReplay',
+        component: () => import('../views/JourneyReplayView.vue'),
+        meta: {
+            title: '집-중 - 저축 여정',
+            requiresAuth: true,
+            requiresOnboarding: true,
+            hideNavbar: true
+        }
     }
 ]
 

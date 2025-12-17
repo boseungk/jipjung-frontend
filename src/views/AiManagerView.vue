@@ -14,7 +14,7 @@
         <div class="profile-card card">
           <div class="character-image-wrapper">
             <img 
-              src="@/assets/images/reze.png" 
+              :src="rezeImageUrl"
               alt="레제" 
               class="character-image"
             />
@@ -32,28 +32,36 @@
         </div>
 
         <!-- Receipt Info Card (After Analysis) -->
-        <div v-if="aiManagerStore.receiptInfo" class="receipt-card card">
-          <h3 class="receipt-label">RECEIPT INFO</h3>
-          <div class="receipt-amount">₩{{ formatAmount(aiManagerStore.receiptInfo.amount) }}</div>
+        <div v-if="receiptInfo" class="receipt-card card">
+          <h3 class="receipt-label">영수증 정보</h3>
+          <div class="receipt-amount">₩{{ formatAmount(receiptInfo.amount) }}</div>
           <div class="receipt-details">
             <p class="receipt-merchant">
-              {{ getCategoryEmoji(aiManagerStore.receiptInfo.category) }} 
-              {{ aiManagerStore.receiptInfo.storeName }} 
-              ({{ aiManagerStore.receiptInfo.categoryLabel }})
+              {{ getCategoryEmoji(receiptInfo.category) }}
+              {{ receiptInfo.storeName }}
+              ({{ receiptInfo.categoryLabel }})
             </p>
-            <p class="receipt-date">{{ aiManagerStore.receiptInfo.paymentDate }}</p>
+            <p class="receipt-date">{{ receiptInfo.paymentDate }}</p>
           </div>
         </div>
 
         <!-- Input Trigger Card (Idle State) -->
-        <div 
-          v-else 
+        <button
+          v-else-if="aiManagerStore.isIdle"
+          type="button"
           class="input-trigger-card card"
+          aria-label="지출 등록하기"
           @click="openInputModal"
         >
           <AppIcon name="receipt" :size="48" weight="duotone" />
           <p class="trigger-text">클릭하여 지출 등록하기</p>
           <p class="trigger-subtext">📷 영수증 촬영 또는 ✏️ 수기 입력</p>
+        </button>
+
+        <!-- Processing Card (Non-idle without receipt) -->
+        <div v-else class="processing-card card">
+          <p class="processing-title">진행 중</p>
+          <p class="processing-subtitle">{{ sidebarStatusText }}</p>
         </div>
       </aside>
 
@@ -66,66 +74,31 @@
 
         <!-- Chat Content -->
         <div class="chat-content">
-          <!-- IDLE State: Welcome Message -->
-          <template v-if="aiManagerStore.isIdle">
-            <div class="welcome-message">
-              <div class="message message-ai">
-                <div class="message-avatar">레제</div>
-                <div class="message-bubble">
-                  {{ authStore.userName }}~ 오늘 지출 검토할 거 있어?
-                </div>
+          <!-- AI Message -->
+          <div class="messages-container">
+            <div class="message message-ai">
+              <div class="message-avatar">레제</div>
+              <div class="message-bubble">
+                {{ aiMessageText }}
               </div>
             </div>
-          </template>
+          </div>
 
-          <!-- ANALYZED State: AI Script + Excuse Selection -->
-          <template v-else-if="aiManagerStore.isAnalyzed">
-            <div class="messages-container">
-              <div class="message message-ai">
-                <div class="message-avatar">레제</div>
-                <div class="message-bubble">
-                  {{ aiManagerStore.currentScript }}
-                </div>
-              </div>
-            </div>
-
-            <ExcuseSelector 
-              :excuses="aiManagerStore.suggestedExcuses"
-              @submitted="handleJudgmentSubmitted"
-            />
-          </template>
+          <!-- ANALYZED State: Excuse Selection -->
+          <ExcuseSelector
+            v-if="aiManagerStore.isAnalyzed"
+            :excuses="aiManagerStore.suggestedExcuses"
+          />
 
           <!-- JUDGED State: Result Display -->
-          <template v-else-if="aiManagerStore.isJudged">
-            <div class="messages-container">
-              <div class="message message-ai">
-                <div class="message-avatar">레제</div>
-                <div class="message-bubble">
-                  {{ aiManagerStore.currentScript }}
-                </div>
-              </div>
-            </div>
-
-            <JudgmentResult
-              :judgment="aiManagerStore.judgmentResult?.judgment"
-              :growth="aiManagerStore.judgmentResult?.growth"
-              :character="aiManagerStore.judgmentResult?.character"
-              @newEntry="handleNewEntry"
-              @viewHistory="toggleHistoryView"
-            />
-          </template>
-
-          <!-- EXTRACTING State: Wait message -->
-          <template v-else-if="aiManagerStore.isExtracting">
-            <div class="messages-container">
-              <div class="message message-ai">
-                <div class="message-avatar">레제</div>
-                <div class="message-bubble">
-                  {{ aiManagerStore.currentScript || '영수증 확인 중...' }}
-                </div>
-              </div>
-            </div>
-          </template>
+          <JudgmentResult
+            v-else-if="aiManagerStore.isJudged"
+            :judgment="aiManagerStore.judgmentResult?.judgment"
+            :growth="aiManagerStore.judgmentResult?.growth"
+            :character="aiManagerStore.judgmentResult?.character"
+            @newEntry="handleNewEntry"
+            @viewHistory="toggleHistoryView"
+          />
 
           <!-- Error Message -->
           <div v-if="aiManagerStore.error" class="error-banner">
@@ -146,7 +119,6 @@
     <SpendingInputModal
       :isOpen="isInputModalOpen"
       @close="closeInputModal"
-      @analyzed="handleAnalyzed"
     />
 
     <!-- Loading Overlay -->
@@ -159,10 +131,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useAiManagerStore } from '@/stores/aiManagerStore'
+import { useAiManagerStore, AI_MANAGER_STATUS } from '@/stores/aiManagerStore'
 import { useAuthStore } from '@/stores/authStore'
 import { getCategoryEmoji } from '@/constants/spendingCategories'
 import AppIcon from '@/components/common/AppIcon.vue'
+import rezeImageUrl from '@/assets/images/reze.png'
 import SpendingInputModal from '@/components/ai/SpendingInputModal.vue'
 import ExcuseSelector from '@/components/ai/ExcuseSelector.vue'
 import JudgmentResult from '@/components/ai/JudgmentResult.vue'
@@ -183,49 +156,63 @@ const authStore = useAuthStore()
 const currentTimeDisplay = ref('')
 const isInputModalOpen = ref(false)
 const showHistory = ref(false)
-let clockTimer = null
+let clockTimeoutId = null
+let clockIntervalId = null
 
 // ============================================================================
 // Computed
 // ============================================================================
 
+const receiptInfo = computed(() => aiManagerStore.receiptInfo)
+
+const isReasonableJudgment = computed(() => {
+  return (
+    aiManagerStore.isJudged &&
+    aiManagerStore.judgmentResult?.judgment?.result === 'REASONABLE'
+  )
+})
+
+const statusTone = computed(() => {
+  if (aiManagerStore.isJudged) return isReasonableJudgment.value ? 'happy' : 'angry'
+
+  const mood = aiManagerStore.currentMood
+  if (['ANGRY', 'STRICT', 'ANNOYED'].includes(mood)) return 'angry'
+  if (['HAPPY', 'NORMAL'].includes(mood)) return 'happy'
+  return 'neutral'
+})
+
+const badgeTone = computed(() => {
+  if (aiManagerStore.isJudged) return isReasonableJudgment.value ? 'happy' : 'angry'
+
+  const mood = aiManagerStore.currentMood
+  if (['ANGRY', 'STRICT', 'ANNOYED'].includes(mood)) return 'angry'
+  if (mood === 'HAPPY') return 'happy'
+  return 'neutral'
+})
+
 const statusText = computed(() => {
   if (aiManagerStore.isJudged) {
-    return aiManagerStore.judgmentResult?.judgment?.result === 'REASONABLE' 
-      ? '만족' 
-      : '불만'
+    return isReasonableJudgment.value ? '만족' : '불만'
   }
   if (!aiManagerStore.isIdle) return aiManagerStore.currentMoodLabel
   return '대기 중'
 })
 
 const statusClass = computed(() => {
-  if (aiManagerStore.isJudged) {
-    return aiManagerStore.judgmentResult?.judgment?.result === 'REASONABLE'
-      ? 'status-satisfied'
-      : 'status-strict'
-  }
-  const mood = aiManagerStore.currentMood
-  if (['ANGRY', 'STRICT', 'ANNOYED'].includes(mood)) return 'status-strict'
-  if (['HAPPY', 'NORMAL'].includes(mood)) return 'status-satisfied'
+  if (statusTone.value === 'angry') return 'status-strict'
+  if (statusTone.value === 'happy') return 'status-satisfied'
   return 'status-neutral'
 })
 
 const badgeClass = computed(() => {
-  if (aiManagerStore.isJudged) {
-    return aiManagerStore.judgmentResult?.judgment?.result === 'REASONABLE'
-      ? 'badge-happy'
-      : 'badge-angry'
-  }
-  const mood = aiManagerStore.currentMood
-  if (['ANGRY', 'STRICT', 'ANNOYED'].includes(mood)) return 'badge-angry'
-  if (['HAPPY'].includes(mood)) return 'badge-happy'
+  if (badgeTone.value === 'angry') return 'badge-angry'
+  if (badgeTone.value === 'happy') return 'badge-happy'
   return 'badge-neutral'
 })
 
 const statusEmoji = computed(() => {
   if (aiManagerStore.isJudged) {
-    return aiManagerStore.judgmentResult?.judgment?.result === 'REASONABLE' ? '😊' : '😤'
+    return isReasonableJudgment.value ? '😊' : '😤'
   }
   const mood = aiManagerStore.currentMood
   const emojiMap = {
@@ -240,30 +227,73 @@ const statusEmoji = computed(() => {
   return emojiMap[mood] ?? '😐'
 })
 
+const aiMessageText = computed(() => {
+  const userName = authStore.userName || '회원님'
+
+  if (aiManagerStore.isIdle) return `${userName}~ 오늘 지출 검토할 거 있어?`
+  if (aiManagerStore.isExtracting) return aiManagerStore.currentScript || '영수증 확인 중...'
+  if (aiManagerStore.isAnalyzed || aiManagerStore.isJudged) return aiManagerStore.currentScript
+
+  switch (aiManagerStore.status) {
+    case AI_MANAGER_STATUS.ANALYZING:
+      return '영수증 분석 중...'
+    case AI_MANAGER_STATUS.JUDGING:
+      return '판결 중...'
+    default:
+      return aiManagerStore.currentScript || '처리 중...'
+  }
+})
+
+const sidebarStatusText = computed(() => {
+  if (aiManagerStore.isExtracting) return '영수증에서 정보를 추출하고 있어요'
+  switch (aiManagerStore.status) {
+    case AI_MANAGER_STATUS.ANALYZING:
+      return '영수증을 분석하고 있어요'
+    case AI_MANAGER_STATUS.JUDGING:
+      return '판결을 준비하고 있어요'
+    default:
+      return '잠시만 기다려 주세요'
+  }
+})
+
 // ============================================================================
 // Methods
 // ============================================================================
 
+const amountFormatter = new Intl.NumberFormat('ko-KR')
+const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+})
+
 const formatAmount = (amount) => {
-  return amount?.toLocaleString() ?? '0'
+  const numericAmount = Number(amount)
+  return amountFormatter.format(Number.isFinite(numericAmount) ? numericAmount : 0)
 }
 
-const formatTime = (date = new Date()) => {
-  return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+const updateTimeDisplay = (date = new Date()) => {
+  currentTimeDisplay.value = timeFormatter.format(date)
 }
 
 const startClock = () => {
-  currentTimeDisplay.value = formatTime()
-  clockTimer = setInterval(() => {
-    currentTimeDisplay.value = formatTime()
-  }, 60000)
+  stopClock()
+
+  updateTimeDisplay()
+  const now = new Date()
+  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds()
+
+  clockTimeoutId = setTimeout(() => {
+    updateTimeDisplay()
+    clockIntervalId = setInterval(() => updateTimeDisplay(), 60000)
+  }, Math.max(0, msToNextMinute))
 }
 
 const stopClock = () => {
-  if (clockTimer) {
-    clearInterval(clockTimer)
-    clockTimer = null
-  }
+  if (clockTimeoutId) clearTimeout(clockTimeoutId)
+  if (clockIntervalId) clearInterval(clockIntervalId)
+  clockTimeoutId = null
+  clockIntervalId = null
 }
 
 // Modal Controls
@@ -273,16 +303,6 @@ const openInputModal = () => {
 
 const closeInputModal = () => {
   isInputModalOpen.value = false
-}
-
-// Event Handlers
-const handleAnalyzed = () => {
-  // Modal already closed by component
-  // Store state updated automatically
-}
-
-const handleJudgmentSubmitted = () => {
-  // Judgment complete, results shown via store state
 }
 
 const handleNewEntry = () => {
@@ -315,7 +335,7 @@ onUnmounted(() => {
   width: 100%;
   min-height: 100vh;
   padding: 2rem;
-  background: #F5F5F5;
+  background: var(--surface-muted, #F5F5F5);
 }
 
 html[data-theme="night"] .ai-manager-view {
@@ -358,14 +378,14 @@ html[data-theme="night"] .page-title {
 
 /* Card Base */
 .card {
-  background: white;
+  background: var(--showroom-shadow-light-day, #ffffff);
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 html[data-theme="night"] .card {
-  background: var(--showroom-shadow-dark-night, #2a2520);
+  background: var(--showroom-card-bg-night, #2a2520);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -509,20 +529,46 @@ html[data-theme="night"] .receipt-details {
   cursor: pointer;
   transition: all 0.2s ease;
   border: 2px dashed transparent;
+  width: 100%;
+  appearance: none;
 }
 
 .input-trigger-card:hover {
-  border-color: #6366f1;
-  background: #f8f7ff;
+  border-color: var(--brand-accent, #ff6b3d);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.06);
   transform: translateY(-2px);
 }
 
 html[data-theme="night"] .input-trigger-card:hover {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.1);
 }
 
 .input-trigger-card svg {
-  color: #6366f1;
+  color: var(--brand-accent, #ff6b3d);
+}
+
+.input-trigger-card:focus-visible {
+  outline: 3px solid rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
+  outline-offset: 2px;
+}
+
+.processing-card {
+  text-align: center;
+}
+
+.processing-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--bento-text-muted, #6D5D4F);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.processing-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--bento-text-muted, #6D5D4F);
 }
 
 .trigger-text {
@@ -544,7 +590,7 @@ html[data-theme="night"] .trigger-text {
 
 /* Chat Area */
 .chat-area {
-  background: white;
+  background: var(--showroom-shadow-light-day, #ffffff);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -553,7 +599,7 @@ html[data-theme="night"] .trigger-text {
 }
 
 html[data-theme="night"] .chat-area {
-  background: var(--showroom-shadow-dark-night, #2a2520);
+  background: var(--showroom-card-bg-night, #2a2520);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -577,12 +623,6 @@ html[data-theme="night"] .time-indicator {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.welcome-message {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 .messages-container {
@@ -631,7 +671,7 @@ html[data-theme="night"] .time-indicator {
 }
 
 .message-ai .message-bubble {
-  background: #F5F5F5;
+  background: var(--surface-muted, #F5F5F5);
   color: var(--showroom-text-day, #2C2420);
   border-bottom-left-radius: 4px;
 }

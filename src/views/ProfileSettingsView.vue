@@ -6,7 +6,7 @@
       </h1>
       <p class="page-subtitle">내 정보를 관리하세요</p>
 
-      <div v-if="user" class="settings-sections">
+      <div v-if="isProfileReady" class="settings-sections">
         <!-- Personal Info Section -->
         <section class="settings-section">
           <h2 class="section-title">
@@ -15,12 +15,12 @@
           </h2>
           
           <div class="form-field">
-            <label class="field-label">이름</label>
+            <label class="field-label">닉네임</label>
             <input
-              v-model="editableUser.name"
+              v-model="editableUser.nickname"
               type="text"
               class="field-input"
-              placeholder="이름을 입력하세요"
+              placeholder="닉네임을 입력하세요"
             />
           </div>
 
@@ -31,8 +31,8 @@
               type="number"
               class="field-input"
               placeholder="예: 1995"
-              :min="1950"
-              :max="new Date().getFullYear() - 19"
+              :min="birthYearMin"
+              :max="birthYearMax"
             />
           </div>
         </section>
@@ -93,7 +93,7 @@
 
           <div class="form-field">
             <label class="field-label">이메일</label>
-            <div class="field-input readonly">{{ user.email }}</div>
+            <div class="field-input readonly">{{ user.email || '-' }}</div>
             <div class="field-description">이메일은 변경할 수 없습니다</div>
           </div>
 
@@ -162,6 +162,8 @@
     <!-- Delete Account Modal -->
     <DeleteAccountModal
       v-if="showDeleteModal"
+      :is-deleting="isDeletingAccount"
+      :error-message="deleteAccountErrorMessage"
       @close="showDeleteModal = false"
       @confirm="handleDeleteAccount"
     />
@@ -184,27 +186,65 @@ const isSaving = ref(false)
 const showSuccessMessage = ref(false)
 const showDeleteModal = ref(false)
 const isLoggingOut = ref(false)
+const isDeletingAccount = ref(false)
+const deleteAccountErrorMessage = ref('')
+let successMessageTimeoutId = null
+const birthYearMin = 1950
+const birthYearMax = new Date().getFullYear() - 19
+
+const isProfileReady = computed(() => {
+  const currentUser = user.value
+  if (!currentUser) return false
+  return Boolean(currentUser.name || currentUser.nickname || currentUser.email)
+})
+
+function toFiniteNumber(value, fallback = 0) {
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : fallback
+}
+
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function normalizeProfileForCompare(raw) {
+  const rawBirthYear = raw?.birthYear
+  const birthYearValue = rawBirthYear === '' || rawBirthYear === null || rawBirthYear === undefined
+    ? null
+    : Math.trunc(toFiniteNumber(rawBirthYear, NaN))
+
+  return {
+    nickname: String(raw?.nickname ?? raw?.name ?? '').trim(),
+    birthYear: Number.isFinite(birthYearValue) ? birthYearValue : null,
+    annualIncome: Math.trunc(toFiniteNumber(raw?.annualIncome, 0)),
+    existingLoanMonthly: Math.trunc(toFiniteNumber(raw?.existingLoanMonthly, 0))
+  }
+}
 
 // Check if there are unsaved changes
 const hasChanges = computed(() => {
-  if (!user.value) return false
-  
+  if (!isProfileReady.value) return false
+
+  const currentUser = normalizeProfileForCompare(user.value)
+  const currentEditable = normalizeProfileForCompare(editableUser.value)
+
   return (
-    editableUser.value.name !== user.value.name ||
-    editableUser.value.birthYear !== user.value.birthYear ||
-    editableUser.value.annualIncome !== user.value.annualIncome ||
-    editableUser.value.existingLoanMonthly !== user.value.existingLoanMonthly
+    currentEditable.nickname !== currentUser.nickname ||
+    currentEditable.birthYear !== currentUser.birthYear ||
+    currentEditable.annualIncome !== currentUser.annualIncome ||
+    currentEditable.existingLoanMonthly !== currentUser.existingLoanMonthly
   )
 })
 
 // Initialize editable user data
 function initializeEditableUser() {
   if (user.value) {
+    const currentUser = normalizeProfileForCompare(user.value)
     editableUser.value = {
-      name: user.value.name || '',
-      birthYear: user.value.birthYear || null,
-      annualIncome: user.value.annualIncome || 0,
-      existingLoanMonthly: user.value.existingLoanMonthly || 0
+      nickname: currentUser.nickname,
+      birthYear: currentUser.birthYear,
+      annualIncome: currentUser.annualIncome,
+      existingLoanMonthly: currentUser.existingLoanMonthly
     }
   }
 }
@@ -227,18 +267,46 @@ async function handleSave() {
   isSaving.value = true
   
   try {
-    await authStore.updateProfile({
-      name: editableUser.value.name,
-      birthYear: editableUser.value.birthYear,
-      annualIncome: editableUser.value.annualIncome,
-      existingLoanMonthly: editableUser.value.existingLoanMonthly
-    })
+    const normalizedEditable = normalizeProfileForCompare(editableUser.value)
+    const normalizedUser = normalizeProfileForCompare(user.value)
+
+    const profileUpdatePayload = {}
+
+    if (normalizedEditable.nickname !== normalizedUser.nickname) {
+      const nextNickname = normalizedEditable.nickname
+      if (nextNickname.length < 2 || nextNickname.length > 20) {
+        alert('닉네임은 2~20자로 입력해주세요.')
+        return
+      }
+
+      profileUpdatePayload.nickname = normalizedEditable.nickname
+    }
+
+    if (normalizedEditable.birthYear !== normalizedUser.birthYear) {
+      if (!normalizedEditable.birthYear) {
+        alert('생년월일(출생년도)을 입력해주세요.')
+        return
+      }
+
+      profileUpdatePayload.birthYear = clampNumber(normalizedEditable.birthYear, birthYearMin, birthYearMax)
+    }
+
+    if (normalizedEditable.annualIncome !== normalizedUser.annualIncome) {
+      profileUpdatePayload.annualIncome = clampNumber(normalizedEditable.annualIncome, 0, 50000)
+    }
+
+    if (normalizedEditable.existingLoanMonthly !== normalizedUser.existingLoanMonthly) {
+      profileUpdatePayload.existingLoanMonthly = clampNumber(normalizedEditable.existingLoanMonthly, 0, 1000)
+    }
+
+    await authStore.updateProfile(profileUpdatePayload)
 
     initializeEditableUser()
 
     // Show success message
     showSuccessMessage.value = true
-    setTimeout(() => {
+    if (successMessageTimeoutId) clearTimeout(successMessageTimeoutId)
+    successMessageTimeoutId = setTimeout(() => {
       showSuccessMessage.value = false
     }, 3000)
   } catch (error) {
@@ -273,13 +341,19 @@ async function handleLogout() {
 
 // Handle delete account
 async function handleDeleteAccount(password) {
+  deleteAccountErrorMessage.value = ''
+  isDeletingAccount.value = true
+
   try {
     await authStore.deleteAccount(password)
+    showDeleteModal.value = false
     router.push('/login')
   } catch (error) {
     console.error('Failed to delete account:', error)
-    alert(error.response?.data?.message || '회원탈퇴에 실패했습니다. 비밀번호를 확인해주세요.')
-    showDeleteModal.value = false
+    deleteAccountErrorMessage.value = error?.message || '회원탈퇴에 실패했습니다. 비밀번호를 확인해주세요.'
+  }
+  finally {
+    isDeletingAccount.value = false
   }
 }
 
@@ -290,6 +364,12 @@ watch(user, (newUser) => {
     editableUser.value = {}
   }
 }, { immediate: true })
+
+watch(showDeleteModal, (isOpen) => {
+  if (isOpen) {
+    deleteAccountErrorMessage.value = ''
+  }
+})
 </script>
 
 <style scoped>

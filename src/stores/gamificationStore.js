@@ -156,7 +156,7 @@ export const useGamificationStore = defineStore('gamification', () => {
 
   async function saveGamification(updatedGamification) {
     try {
-      await authStore.updateProfile({ gamification: updatedGamification })
+      authStore.updateUserData({ gamification: updatedGamification })
     } catch (error) {
       console.error('Failed to update gamification data:', error)
       throw error

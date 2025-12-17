@@ -121,3 +121,17 @@ export const THEME_ENDPOINTS = {
     /** 활성 테마 목록 조회 (GET) */
     LIST: '/themes'
 }
+
+/**
+ * 컬렉션(완성된 집) 관련 엔드포인트
+ * 
+ * @description 백엔드 /api/collection/* 엔드포인트
+ */
+export const COLLECTION_ENDPOINTS = {
+    /** 완성된 집 목록 조회 (GET) */
+    LIST: '/collection',
+    /** 저축 여정 상세 조회 (GET) */
+    JOURNEY: (collectionId) => `/collection/${collectionId}/journey`,
+    /** 대표 컬렉션 설정 (PUT) */
+    MAIN_DISPLAY: (collectionId) => `/collection/${collectionId}/main-display`
+}
