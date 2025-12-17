@@ -36,8 +36,9 @@ import { AUTH_ENDPOINTS, USER_ENDPOINTS } from '@/api/endpoints'
 /**
  * @typedef {Object} ProfileUpdateRequest
  * @property {string} nickname - 닉네임 (2-20자)
- * @property {number} annualIncome - 연소득 (원 단위)
- * @property {number} existingLoanMonthly - 월 대출 상환액 (원 단위)
+ * @property {number} birthYear - 출생년도
+ * @property {number} annualIncome - 연소득
+ * @property {number} existingLoanMonthly - 월 대출 상환액
  */
 
 export const authService = {

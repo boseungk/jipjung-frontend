@@ -16,9 +16,17 @@ import { authService } from '@/api/services/authService'
 import { dashboardService } from '@/api/services/dashboardService'
 import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
 import { SHOWROOM_TOTAL_STAGES } from '@/constants/showroomWebp'
+import { VALIDATION } from '@/constants/onboardingConstants'
 
 const HOUSE_TOTAL_STAGES = SHOWROOM_TOTAL_STAGES.house
 const FURNITURE_TOTAL_STAGES = SHOWROOM_TOTAL_STAGES.furniture
+
+const KRW_PER_MANWON = 10000
+const PROFILE_LIMITS_MANWON = {
+    annualIncome: 50000,
+    existingLoanMonthly: 1000,
+    currentAssets: 100000
+}
 
 /**
  * localStorage 키 상수
@@ -57,8 +65,8 @@ export const useAuthStore = defineStore('auth', () => {
     /** 온보딩 완료 여부 */
     const onboardingCompleted = computed(() => user.value?.onboardingCompleted || false)
 
-    /** 사용자 이름 */
-    const userName = computed(() => user.value?.name || '사용자')
+    /** 사용자 이름 (닉네임 우선) */
+    const userName = computed(() => user.value?.nickname || user.value?.name || '사용자')
 
     /** 사용자 ID */
     const userId = computed(() => user.value?.id ?? null)
@@ -83,6 +91,17 @@ export const useAuthStore = defineStore('auth', () => {
 
     /** 쇼룸 정보 (집짓기 시각화) */
     const userShowroom = computed(() => user.value?.showroom || null)
+
+    /** 목표 설정 여부 (대시보드 응답을 우선 사용) */
+    const hasDreamHomeGoal = computed(() => {
+        const rawHasTarget = user.value?._raw?.gapAnalysis?.hasTarget
+        if (typeof rawHasTarget === 'boolean') return rawHasTarget
+
+        const dreamHome = userDreamHome.value
+        if (!dreamHome) return false
+        if (dreamHome.propertyName && dreamHome.propertyName !== DEFAULT_DREAM_HOME.propertyName) return true
+        return Boolean(dreamHome.targetAmount || dreamHome.currentAmount)
+    })
 
     // ============================================
     // Private Helpers
@@ -165,6 +184,29 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
         localStorage.removeItem(furnitureProgressKey)
+    }
+
+    function toFiniteInteger(value, fallback = 0) {
+        if (value === null || value === undefined || value === '') return fallback
+        const numeric = Number(value)
+        if (!Number.isFinite(numeric)) return fallback
+        return Math.trunc(numeric)
+    }
+
+    function toWonMaybe(value, maxManwon) {
+        const intValue = Math.max(0, toFiniteInteger(value, 0))
+        if (intValue <= maxManwon) {
+            return intValue * KRW_PER_MANWON
+        }
+        return intValue
+    }
+
+    function toManwonMaybe(value, maxManwon) {
+        const intValue = Math.max(0, toFiniteInteger(value, 0))
+        if (intValue > maxManwon) {
+            return Math.round(intValue / KRW_PER_MANWON)
+        }
+        return intValue
     }
 
     // ============================================
@@ -281,7 +323,15 @@ export const useAuthStore = defineStore('auth', () => {
      * @returns {Promise<Object>} 업데이트된 사용자 정보
      */
     async function completeOnboarding(onboardingData) {
-        const response = await authService.completeOnboarding(onboardingData)
+        const apiPayload = {
+            birthYear: toFiniteInteger(onboardingData?.birthYear, null),
+            annualIncome: toWonMaybe(onboardingData?.annualIncome, VALIDATION.ANNUAL_INCOME.MAX),
+            existingLoanMonthly: toWonMaybe(onboardingData?.existingLoanMonthly, VALIDATION.EXISTING_LOAN.MAX),
+            currentAssets: toWonMaybe(onboardingData?.currentAssets, VALIDATION.CURRENT_ASSETS.MAX),
+            preferredAreas: normalizePreferredAreas(onboardingData?.preferredAreas)
+        }
+
+        const response = await authService.completeOnboarding(apiPayload)
 
         // 백엔드 응답 구조: { code, status, message, data: { user, dsrResult } }
         const userData = response.data?.user || response.user
@@ -292,7 +342,15 @@ export const useAuthStore = defineStore('auth', () => {
                 userData.preferredAreas,
                 onboardingData?.preferredAreas
             )
-            user.value = { ...user.value, ...userData, onboardingCompleted: true, preferredAreas }
+
+            const localPatch = {
+                birthYear: toFiniteInteger(onboardingData?.birthYear, null),
+                annualIncome: toFiniteInteger(onboardingData?.annualIncome, 0),
+                existingLoanMonthly: toFiniteInteger(onboardingData?.existingLoanMonthly, 0),
+                currentAssets: toFiniteInteger(onboardingData?.currentAssets, 0)
+            }
+
+            user.value = { ...user.value, ...userData, ...localPatch, onboardingCompleted: true, preferredAreas }
             // localStorage에도 저장
             localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true')
         }
@@ -325,12 +383,75 @@ export const useAuthStore = defineStore('auth', () => {
      * @returns {Promise<Object>} 업데이트된 사용자 정보
      */
     async function updateProfile(profileData) {
-        const data = await authService.updateProfile(profileData)
+        const hasApiPatch = profileData && typeof profileData === 'object' && (
+            Object.prototype.hasOwnProperty.call(profileData, 'nickname') ||
+            Object.prototype.hasOwnProperty.call(profileData, 'annualIncome') ||
+            Object.prototype.hasOwnProperty.call(profileData, 'existingLoanMonthly')
+        )
 
-        // 기존 사용자 정보와 병합
-        user.value = { ...user.value, ...data.user }
+        if (profileData && typeof profileData === 'object') {
+            // 서버에 없는 필드는 로컬 상태만 업데이트 (예: birthYear, gamification 등)
+            const localOnlyPatch = { ...profileData }
+            delete localOnlyPatch.nickname
+            delete localOnlyPatch.annualIncome
+            delete localOnlyPatch.existingLoanMonthly
+            if (Object.keys(localOnlyPatch).length > 0) {
+                updateUserData(localOnlyPatch)
+            }
+        }
 
-        return data
+        if (!hasApiPatch) {
+            return { user: user.value }
+        }
+
+        const currentNickname = String(user.value?.nickname ?? user.value?.name ?? '').trim()
+        const nextNickname = String(profileData?.nickname ?? currentNickname).trim()
+        const nextAnnualIncomeManwon = toFiniteInteger(
+            profileData?.annualIncome ?? user.value?.annualIncome ?? 0,
+            0
+        )
+        const nextExistingLoanMonthlyManwon = toFiniteInteger(
+            profileData?.existingLoanMonthly ?? user.value?.existingLoanMonthly ?? 0,
+            0
+        )
+
+        const apiPayload = {
+            nickname: nextNickname,
+            annualIncome: toWonMaybe(nextAnnualIncomeManwon, PROFILE_LIMITS_MANWON.annualIncome),
+            existingLoanMonthly: toWonMaybe(nextExistingLoanMonthlyManwon, PROFILE_LIMITS_MANWON.existingLoanMonthly)
+        }
+
+        const response = await authService.updateProfile(apiPayload)
+
+        // 지원 형태:
+        // - { user: {...} } (mock)
+        // - { code, status, message, data: { user: {...} } } (ApiResponse)
+        const userPatch = response?.user ?? response?.data?.user ?? null
+        const patchSource = userPatch ?? profileData ?? null
+
+        if (patchSource && typeof patchSource === 'object') {
+            const normalizedPatch = { ...patchSource }
+
+            if (patchSource.nickname != null && patchSource.name == null) {
+                normalizedPatch.name = patchSource.nickname
+            }
+            if (patchSource.name != null && patchSource.nickname == null) {
+                normalizedPatch.nickname = patchSource.name
+            }
+
+            // Backend is 원 단위, UI/store는 만원 단위로 사용
+            if (normalizedPatch.annualIncome != null) {
+                normalizedPatch.annualIncome = toManwonMaybe(normalizedPatch.annualIncome, PROFILE_LIMITS_MANWON.annualIncome)
+            }
+            if (normalizedPatch.existingLoanMonthly != null) {
+                normalizedPatch.existingLoanMonthly = toManwonMaybe(normalizedPatch.existingLoanMonthly, PROFILE_LIMITS_MANWON.existingLoanMonthly)
+            }
+
+            // 기존 사용자 정보와 병합
+            user.value = { ...user.value, ...normalizedPatch }
+        }
+
+        return response
     }
 
     /**
@@ -399,13 +520,16 @@ export const useAuthStore = defineStore('auth', () => {
             }
 
             // 드림홈 정보 매핑 (goal -> dreamHome)
+            const previousDreamHome = user.value?.dreamHome || DEFAULT_DREAM_HOME
             const mappedDreamHome = {
-                propertyName: response.goal?.targetPropertyName || '목표를 설정해주세요',
-                targetAmount: response.goal?.totalAmount || 0,
-                currentAmount: response.goal?.savedAmount || 0,
-                remainingAmount: response.goal?.remainingAmount || 0,
-                achievementRate: response.goal?.achievementRate || 0,
-                isCompleted: response.goal?.isCompleted || false
+                ...previousDreamHome,
+                dreamHomeId: response.goal?.dreamHomeId ?? previousDreamHome.dreamHomeId ?? null,
+                propertyName: response.goal?.targetPropertyName ?? previousDreamHome.propertyName ?? DEFAULT_DREAM_HOME.propertyName,
+                targetAmount: response.goal?.totalAmount ?? previousDreamHome.targetAmount ?? 0,
+                currentAmount: response.goal?.savedAmount ?? previousDreamHome.currentAmount ?? 0,
+                remainingAmount: response.goal?.remainingAmount ?? previousDreamHome.remainingAmount ?? 0,
+                achievementRate: response.goal?.achievementRate ?? previousDreamHome.achievementRate ?? 0,
+                isCompleted: response.goal?.isCompleted ?? previousDreamHome.isCompleted ?? false
             }
 
             // 게임화 정보 매핑 (profile + streak -> gamification)
@@ -515,6 +639,7 @@ export const useAuthStore = defineStore('auth', () => {
         userDreamHome,
         userGamification,
         userShowroom,
+        hasDreamHomeGoal,
 
         // Actions
         register,

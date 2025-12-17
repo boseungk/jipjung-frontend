@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
+  <div class="modal-overlay" @click.self="handleOverlayClick">
     <div class="modal-content">
       <div class="modal-header">
         <div class="warning-icon">
@@ -57,22 +57,27 @@ import AppIcon from '@/components/common/AppIcon.vue'
 
 const emit = defineEmits(['close', 'confirm'])
 
-const password = ref('')
-const isDeleting = ref(false)
-const errorMessage = ref('')
-
-async function handleSubmit() {
-  if (!password.value) return
-  
-  errorMessage.value = ''
-  isDeleting.value = true
-  
-  try {
-    emit('confirm', password.value)
-  } catch (error) {
-    errorMessage.value = error.message || '회원탈퇴에 실패했습니다'
-    isDeleting.value = false
+const props = defineProps({
+  isDeleting: {
+    type: Boolean,
+    default: false
+  },
+  errorMessage: {
+    type: String,
+    default: ''
   }
+})
+
+const password = ref('')
+
+function handleOverlayClick() {
+  if (props.isDeleting) return
+  emit('close')
+}
+
+function handleSubmit() {
+  if (!password.value) return
+  emit('confirm', password.value)
 }
 </script>
 
