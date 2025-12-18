@@ -3,16 +3,24 @@
     <slot />
     <button
       type="button"
-      class="info-trigger"
+      :class="['info-trigger', { 'is-open': showTooltip }]"
       :id="triggerId"
       :aria-expanded="showTooltip"
       :aria-describedby="tooltipId"
-      aria-label="설명 보기"
+      :aria-label="showTooltip ? '설명 닫기' : '설명 보기'"
       @click.stop="toggleTooltip"
       @keydown.esc="closeTooltip"
       @keydown.enter.space.prevent="toggleTooltip"
     >
-      <AppIcon name="question" :size="14" />
+      <AppIcon
+        name="question"
+        :size="12"
+        weight="bold"
+        color="currentColor"
+        customClass="info-trigger__icon"
+        aria-hidden="true"
+        focusable="false"
+      />
     </button>
     <Transition name="tooltip-fade">
       <div 
@@ -29,7 +37,7 @@
           @click.stop="closeTooltip"
           aria-label="닫기"
         >
-          <AppIcon name="x" :size="12" />
+          <AppIcon name="x" :size="12" weight="bold" color="currentColor" aria-hidden="true" focusable="false" />
         </button>
       </div>
     </Transition>
@@ -138,6 +146,10 @@ onUnmounted(() => {
   transition: background 0.2s, transform 0.2s;
 }
 
+.info-trigger :deep(.info-trigger__icon) {
+  transition: opacity 0.15s ease;
+}
+
 .info-trigger:hover,
 .info-trigger:focus {
   background: var(--brand-accent-soft, #ffe4d9);
@@ -146,8 +158,22 @@ onUnmounted(() => {
   outline: none;
 }
 
+.info-trigger.is-open {
+  background: var(--brand-accent, #ff6b3d);
+  color: #fff;
+  transform: none;
+}
+
+.info-trigger.is-open :deep(.info-trigger__icon) {
+  opacity: 0;
+}
+
 .info-trigger:focus-visible {
   box-shadow: 0 0 0 2px var(--brand-accent);
+}
+
+.info-trigger.is-open:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand-accent);
 }
 
 .tooltip-content {
