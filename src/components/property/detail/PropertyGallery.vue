@@ -2,49 +2,67 @@
   <div class="property-gallery">
     <!-- 메인 이미지 -->
     <div class="main-image">
-      <img :src="currentImage" :alt="title" />
+      <!-- 유효한 이미지가 있을 때 -->
+      <img
+        v-if="!hasCurrentImageError"
+        :src="currentImageUrl"
+        :alt="currentImageAlt"
+        @error="handleImageError(currentIndex)"
+      />
 
-      <!-- 네비게이션 버튼 -->
-      <button
-        v-if="images.length > 1"
-        @click="prevImage"
-        class="nav-btn prev-btn"
-        :disabled="currentIndex === 0"
-      >
-        ‹
-      </button>
-      <button
-        v-if="images.length > 1"
-        @click="nextImage"
-        class="nav-btn next-btn"
-        :disabled="currentIndex === images.length - 1"
-      >
-        ›
-      </button>
-
-      <!-- 이미지 카운터 -->
-      <div v-if="images.length > 1" class="image-counter">
-        {{ currentIndex + 1 }} / {{ images.length }}
+      <!-- 이미지 에러/없음 시 fallback -->
+      <div v-else class="image-fallback">
+        <PhImage :size="64" weight="thin" />
+        <span class="fallback-text">이미지를 불러올 수 없습니다</span>
+        <span class="fallback-title">{{ title }}</span>
       </div>
+
+      <!-- 네비게이션 버튼: 모든 이미지 에러 시 숨김 -->
+      <template v-if="!allImagesHaveError && validImageCount > 1">
+        <button
+          @click="prevImage"
+          class="nav-btn prev-btn"
+          :disabled="currentIndex === 0"
+        >
+          ‹
+        </button>
+        <button
+          @click="nextImage"
+          class="nav-btn next-btn"
+          :disabled="currentIndex === images.length - 1"
+        >
+          ›
+        </button>
+
+        <!-- 이미지 카운터 -->
+        <div class="image-counter">
+          {{ currentIndex + 1 }} / {{ images.length }}
+        </div>
+      </template>
     </div>
 
-    <!-- 썸네일 -->
-    <div v-if="images.length > 1" class="thumbnails">
+    <!-- 썸네일: 모든 이미지 에러 시 숨김 -->
+    <div v-if="!allImagesHaveError && validImageCount > 1" class="thumbnails">
       <div
         v-for="(image, index) in images"
         :key="index"
         class="thumbnail"
-        :class="{ active: index === currentIndex }"
+        :class="{ active: index === currentIndex, error: isImageError(index, image) }"
         @click="currentIndex = index"
       >
-        <img :src="image" :alt="`${title} - 이미지 ${index + 1}`" />
+        <img
+          :src="getImageUrl(image)"
+          :alt="getImageAlt(image, index)"
+          @error="handleImageError(index)"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { PhImage } from '@phosphor-icons/vue'
 
 const props = defineProps({
   images: {
@@ -58,8 +76,67 @@ const props = defineProps({
 })
 
 const currentIndex = ref(0)
+const imageErrors = ref(new Set())
 
-const currentImage = computed(() => props.images[currentIndex.value])
+/**
+ * 이미지 객체 또는 문자열에서 URL 추출
+ * - { url, alt } 객체 또는 문자열 모두 지원
+ */
+function getImageUrl(image) {
+  if (!image) return null
+  if (typeof image === 'string') return image
+  return image.url || null
+}
+
+/**
+ * 이미지 객체에서 alt 텍스트 추출
+ */
+function getImageAlt(image, index = 0) {
+  if (!image) return props.title
+  if (typeof image === 'string') return `${props.title} - 이미지 ${index + 1}`
+  return image.alt || `${props.title} - 이미지 ${index + 1}`
+}
+
+// 이미지 배열이 비어있는지 확인
+const hasNoImages = computed(() => !props.images || props.images.length === 0)
+
+// 현재 이미지 URL/Alt
+const currentImageUrl = computed(() => getImageUrl(props.images?.[currentIndex.value]))
+const currentImageAlt = computed(() => getImageAlt(props.images?.[currentIndex.value], currentIndex.value))
+
+// 현재 이미지가 에러인지 확인
+const hasCurrentImageError = computed(() => {
+  if (hasNoImages.value) return true
+  if (!currentImageUrl.value) return true
+  return imageErrors.value.has(currentIndex.value)
+})
+
+// 특정 인덱스 이미지가 에러인지 확인
+function isImageError(index, image) {
+  return !getImageUrl(image) || imageErrors.value.has(index)
+}
+
+// 모든 이미지가 에러인지 확인
+const allImagesHaveError = computed(() => {
+  if (hasNoImages.value) return true
+  return props.images.every((img, idx) => !getImageUrl(img) || imageErrors.value.has(idx))
+})
+
+// 유효한 이미지 개수
+const validImageCount = computed(() => {
+  if (hasNoImages.value) return 0
+  return props.images.filter((img, idx) => getImageUrl(img) && !imageErrors.value.has(idx)).length
+})
+
+// 이미지 변경 시 에러 상태 초기화
+watch(() => props.images, () => {
+  imageErrors.value = new Set()
+  currentIndex.value = 0
+}, { deep: true })
+
+function handleImageError(index) {
+  imageErrors.value = new Set([...imageErrors.value, index])
+}
 
 function prevImage() {
   if (currentIndex.value > 0) {
@@ -179,6 +256,40 @@ html[data-theme="night"] .property-gallery {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.thumbnail.error {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* 이미지 에러/없음 시 fallback UI */
+.image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(255, 107, 61, 0.03), rgba(0, 0, 0, 0.02));
+  color: var(--showroom-text-day);
+  opacity: 0.5;
+}
+
+html[data-theme="night"] .image-fallback {
+  background: linear-gradient(135deg, rgba(255, 107, 61, 0.05), rgba(255, 255, 255, 0.02));
+  color: var(--showroom-text-night);
+}
+
+.fallback-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.fallback-title {
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 
 @media (max-width: 767px) {

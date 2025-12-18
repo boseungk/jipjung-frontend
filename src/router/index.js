@@ -123,6 +123,18 @@ const routes = [
             requiresOnboarding: true,
             hideNavbar: true
         }
+    },
+    {
+        path: '/collection/in-progress/journey',
+        name: 'InProgressJourneyReplay',
+        component: () => import('../views/JourneyReplayView.vue'),
+        meta: {
+            title: '집-중 - 진행 중 저축 여정',
+            requiresAuth: true,
+            requiresOnboarding: true,
+            hideNavbar: true,
+            isInProgress: true
+        }
     }
 ]
 

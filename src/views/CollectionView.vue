@@ -35,9 +35,29 @@
       
       <!-- Grid of Mini CrystalBalls -->
       <section class="mini-crystals-section">
-        <h2 class="section-subtitle">저장된 컬렉션</h2>
+        <h2 class="section-subtitle">컬렉션</h2>
         
-        <div v-if="collections.length > 0" class="mini-crystals-grid">
+        <div class="mini-crystals-grid">
+          <!-- 진행 중인 드림홈 (가장 먼저 표시) -->
+          <div
+            v-if="inProgressHome"
+            class="mini-crystal-item in-progress"
+            @click="goToInProgressJourney"
+            role="button"
+            tabindex="0"
+            aria-label="진행 중인 드림홈 여정 보기"
+            @keydown.enter="goToInProgressJourney"
+            @keydown.space.prevent="goToInProgressJourney"
+          >
+            <div class="mini-crystal-wrapper">
+              <CrystalBall class="mini-crystal" />
+              <span class="progress-badge">{{ inProgressHome.currentPhase }}/{{ inProgressHome.totalPhases }}</span>
+            </div>
+            <span class="mini-crystal-label">{{ inProgressHome.propertyName }}</span>
+            <span class="mini-crystal-sublabel">🏗️ 진행 중 · {{ inProgressHome.location }}</span>
+          </div>
+
+          <!-- 완성된 컬렉션 목록 -->
           <div
             v-for="(item, index) in collections"
             :key="item.collectionId"
@@ -59,14 +79,14 @@
           </div>
         </div>
         
-        <!-- Empty State -->
-        <div v-else class="empty-state">
+        <!-- Empty State: 완성된 컬렉션도 없고 진행 중도 없을 때만 표시 -->
+        <div v-if="!inProgressHome && collections.length === 0" class="empty-state">
           <div class="empty-icon">
             <AppIcon name="house" :size="64" />
           </div>
           <template v-if="activeGoalExists">
-            <p class="empty-text">곧 첫 번째 집이 완성돼요! 🏗️</p>
-            <p class="empty-subtext">조금만 더 힘내면 이 컬렉션이 채워져요</p>
+            <p class="empty-text">진행 중인 드림홈을 불러올 수 없어요</p>
+            <p class="empty-subtext">잠시 후 다시 시도해주세요</p>
           </template>
           <template v-else>
             <p class="empty-text">아직 시작 전이에요!</p>
@@ -93,12 +113,14 @@ const router = useRouter()
 const isLoading = ref(true)
 const collections = ref([])
 const activeGoalExists = ref(false)
+const inProgressData = ref(null)
 const selectedIndex = ref(0)
 
 const brandAccent = BRAND_ACCENT
 
 // Computed
 const selectedCollection = computed(() => collections.value[selectedIndex.value] || null)
+const inProgressHome = computed(() => inProgressData.value)
 
 // Methods
 const fetchCollections = async () => {
@@ -107,6 +129,7 @@ const fetchCollections = async () => {
     const response = await collectionService.getCollections()
     collections.value = response.collections || []
     activeGoalExists.value = response.activeGoalExists || false
+    inProgressData.value = response.inProgress || null
     
     // 대표 컬렉션이 있으면 선택
     const mainIndex = collections.value.findIndex(c => c.isMainDisplay)
@@ -116,6 +139,7 @@ const fetchCollections = async () => {
   } catch (error) {
     console.error('컬렉션 조회 실패:', error)
     collections.value = []
+    inProgressData.value = null
   } finally {
     isLoading.value = false
   }
@@ -130,6 +154,10 @@ const goToJourney = () => {
   if (collection?.collectionId) {
     router.push(`/collection/${collection.collectionId}/journey`)
   }
+}
+
+const goToInProgressJourney = () => {
+  router.push('/collection/in-progress/journey')
 }
 
 const formatCompletedAt = (dateString) => {
@@ -405,6 +433,52 @@ html[data-theme="night"] .mini-crystal-label {
 
 html[data-theme="night"] .mini-crystal-sublabel {
   color: var(--showroom-text-secondary-night, #D7CCC8);
+}
+
+/* 진행 중 드림홈 아이템 스타일 */
+.mini-crystal-item.in-progress {
+  position: relative;
+}
+
+.mini-crystal-item.in-progress .mini-crystal-wrapper {
+  animation: in-progress-pulse 2s ease-in-out infinite;
+}
+
+@keyframes in-progress-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.02); filter: brightness(1.08); }
+}
+
+.mini-crystal-item.in-progress .mini-crystal-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px dashed var(--showroom-accent-day, #D4A574);
+  animation: in-progress-border-rotate 4s linear infinite;
+}
+
+@keyframes in-progress-border-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+html[data-theme="night"] .mini-crystal-item.in-progress .mini-crystal-wrapper::after {
+  border-color: var(--showroom-accent-night, #D4A574);
+}
+
+.progress-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .mini-crystal-item:hover .mini-crystal-label {

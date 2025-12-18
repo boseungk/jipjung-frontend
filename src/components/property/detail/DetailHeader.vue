@@ -18,10 +18,15 @@
         :class="{ active: isSaved }"
         @click="$emit('toggle-save')"
         aria-label="Save property"
+        title="관심 매물"
       >
         <PhHeart :size="24" :weight="isSaved ? 'fill' : 'regular'" />
       </button>
-      <button class="icon-btn action-btn" aria-label="Share property">
+      <button 
+        class="icon-btn action-btn" 
+        aria-label="Share property"
+        title="공유하기"
+      >
         <PhShareNetwork :size="24" />
       </button>
     </div>

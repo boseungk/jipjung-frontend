@@ -52,15 +52,22 @@
               v-for="phase in totalPhases" 
               :key="phase"
               class="dot"
-              :class="{ active: phase <= currentPhase, current: phase === currentPhase }"
+              :class="{
+                active: phase <= currentPhase,
+                current: phase === currentPhase,
+                locked: isInProgress && phase > maxUnlockedPhase
+              }"
             ></span>
           </div>
         </div>
 
         <!-- Scroll Indicator (only if not at end) -->
-        <div v-if="currentPhase < totalPhases" class="scroll-indicator">
+        <div v-if="showScrollHint" class="scroll-indicator">
           <span>아래로 스크롤하여 여정 진행</span>
           <div class="scroll-arrow">↓</div>
+        </div>
+        <div v-else-if="showLockedHint" class="scroll-indicator locked-indicator">
+          <span>🔒 아직 잠겨 있어요 · 저축을 더 하면 다음 단계가 열려요</span>
         </div>
       </main>
 
@@ -117,7 +124,7 @@
       </aside>
 
       <!-- Completion Celebration (when at 100%) -->
-      <div v-if="currentPhase === totalPhases" class="completion-overlay">
+      <div v-if="isJourneyCompleted && currentPhase === totalPhases" class="completion-overlay">
         <div class="confetti-container" ref="confettiRef"></div>
         <div class="completion-card">
           <h2 class="completion-title">🎉 축하해요!</h2>
@@ -155,6 +162,27 @@ const isSheetExpanded = ref(false)
 const totalPhases = 11
 
 // Computed
+const isInProgress = computed(() => route.meta.isInProgress === true)
+
+const maxUnlockedPhase = computed(() => {
+  const phases = journeyData.value?.phases
+  if (!Array.isArray(phases) || phases.length === 0) return 1
+
+  const reached = phases
+    .filter(p => p?.reachedAt != null)
+    .map(p => p.phaseNumber)
+    .filter(n => Number.isInteger(n) && n >= 1 && n <= totalPhases)
+
+  if (reached.length === 0) return 1
+  return Math.max(1, Math.min(totalPhases, Math.max(...reached)))
+})
+
+const scrollPhases = computed(() => (isInProgress.value ? maxUnlockedPhase.value : totalPhases))
+
+const isJourneyCompleted = computed(() => {
+  return Boolean(journeyData.value?.summary?.completedDate)
+})
+
 const currentPhaseData = computed(() => {
   if (!journeyData.value?.phases) return null
   return journeyData.value.phases.find(p => p.phaseNumber === currentPhase.value)
@@ -181,10 +209,27 @@ const progressPercent = computed(() => {
   return ((currentPhase.value - 1) / (totalPhases - 1)) * 100
 })
 
+const showScrollHint = computed(() => {
+  if (scrollPhases.value <= 1) return false
+  if (isInProgress.value) {
+    return currentPhase.value < maxUnlockedPhase.value
+  }
+  return currentPhase.value < totalPhases
+})
+
+const showLockedHint = computed(() => {
+  if (!isInProgress.value) return false
+  if (scrollPhases.value <= 1) return false
+  return currentPhase.value >= maxUnlockedPhase.value && maxUnlockedPhase.value < totalPhases
+})
+
 // Methods
 const fetchJourney = async () => {
+  const inProgressMode = isInProgress.value
   const collectionId = route.params.id
-  if (!collectionId) {
+
+  // 진행 중 모드가 아닌데 collectionId도 없으면 에러
+  if (!inProgressMode && !collectionId) {
     error.value = '잘못된 접근입니다'
     isLoading.value = false
     return
@@ -192,7 +237,15 @@ const fetchJourney = async () => {
 
   try {
     isLoading.value = true
-    journeyData.value = await collectionService.getJourney(collectionId)
+    error.value = null
+    if (inProgressMode) {
+      // 진행 중인 드림홈 여정 조회
+      journeyData.value = await collectionService.getInProgressJourney()
+    } else {
+      // 완성된 컬렉션 여정 조회
+      journeyData.value = await collectionService.getJourney(collectionId)
+    }
+    currentPhase.value = 1
   } catch (err) {
     console.error('여정 조회 실패:', err)
     error.value = err.response?.data?.message || '여정 데이터를 불러올 수 없습니다'
@@ -236,8 +289,12 @@ const shareJourney = async () => {
   try {
     if (navigator.share) {
       await navigator.share({
-        title: `${journeyData.value.collection.propertyName} 저축 완료!`,
-        text: `${journeyData.value.summary.totalDays}일간 ${formatMoney(journeyData.value.summary.targetAmount)} 저축 완료!`,
+        title: isJourneyCompleted.value
+          ? `${journeyData.value.collection.propertyName} 저축 완료!`
+          : `${journeyData.value.collection.propertyName} 저축 여정`,
+        text: isJourneyCompleted.value
+          ? `${journeyData.value.summary.totalDays}일간 ${formatMoney(journeyData.value.summary.targetAmount)} 저축 완료!`
+          : `${journeyData.value.summary.totalDays}일째 저축 여정 진행 중`,
         url: window.location.href
       })
     } else {
@@ -252,21 +309,30 @@ const shareJourney = async () => {
 // Scroll-based Phase Transition
 let scrollHandler = null
 
+const teardownScrollEffect = () => {
+  if (scrollHandler) {
+    window.removeEventListener('scroll', scrollHandler)
+    scrollHandler = null
+  }
+  document.body.style.height = ''
+}
+
 const setupScrollListener = () => {
   if (!containerRef.value) return
 
   scrollHandler = () => {
-    const container = containerRef.value
     const scrollTop = window.scrollY
     const windowHeight = window.innerHeight
     const docHeight = document.documentElement.scrollHeight
 
     // Calculate progress (0 to 1)
-    const scrollProgress = Math.min(1, scrollTop / (docHeight - windowHeight))
+    const maxScroll = docHeight - windowHeight
+    const scrollProgress = maxScroll <= 0 ? 0 : Math.min(1, scrollTop / maxScroll)
     
     // Map to phase (1 to 11)
-    const newPhase = Math.floor(scrollProgress * (totalPhases - 1)) + 1
-    const clampedPhase = Math.max(1, Math.min(totalPhases, newPhase))
+    const phaseCount = Math.max(1, scrollPhases.value)
+    const newPhase = Math.floor(scrollProgress * (phaseCount - 1)) + 1
+    const clampedPhase = Math.max(1, Math.min(phaseCount, newPhase))
     
     if (clampedPhase !== currentPhase.value) {
       currentPhase.value = clampedPhase
@@ -278,22 +344,27 @@ const setupScrollListener = () => {
 
 // Lifecycle
 onMounted(() => {
-  fetchJourney()
-  // Delay scroll listener setup to after data is loaded
-  watch(journeyData, (newVal) => {
-    if (newVal) {
-      // Set body height for scroll effect
-      document.body.style.height = `${totalPhases * 100}vh`
-      setupScrollListener()
-    }
+  watch(
+    () => route.fullPath,
+    () => {
+      teardownScrollEffect()
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      fetchJourney()
+    },
+    { immediate: true }
+  )
+
+  watch([journeyData, scrollPhases], ([newJourney]) => {
+    if (!newJourney) return
+
+    teardownScrollEffect()
+    document.body.style.height = `${Math.max(1, scrollPhases.value) * 100}vh`
+    setupScrollListener()
   })
 })
 
 onUnmounted(() => {
-  if (scrollHandler) {
-    window.removeEventListener('scroll', scrollHandler)
-  }
-  document.body.style.height = ''
+  teardownScrollEffect()
 })
 </script>
 
@@ -484,11 +555,20 @@ html[data-theme="night"] .journey-subtitle {
 }
 
 .dot {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+}
+
+.dot.locked {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html[data-theme="night"] .dot.locked {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .dot.active {
@@ -522,6 +602,10 @@ html[data-theme="night"] .journey-subtitle {
 
 html[data-theme="night"] .scroll-indicator {
   color: #D7CCC8;
+}
+
+.locked-indicator {
+  animation: none;
 }
 
 .scroll-arrow {

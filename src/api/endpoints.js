@@ -132,6 +132,8 @@ export const COLLECTION_ENDPOINTS = {
     LIST: '/collection',
     /** 저축 여정 상세 조회 (GET) */
     JOURNEY: (collectionId) => `/collection/${collectionId}/journey`,
+    /** 진행 중인 드림홈 여정 조회 (GET) */
+    IN_PROGRESS_JOURNEY: '/collection/in-progress/journey',
     /** 대표 컬렉션 설정 (PUT) */
     MAIN_DISPLAY: (collectionId) => `/collection/${collectionId}/main-display`
 }

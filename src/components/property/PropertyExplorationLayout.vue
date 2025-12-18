@@ -1,5 +1,5 @@
 <template>
-  <div class="property-exploration-layout">
+  <div class="property-exploration-layout" :class="{ 'modal-open': showFilters }">
     <div class="split-container">
       <!-- 지도 패널 -->
       <div class="map-panel">
@@ -59,7 +59,6 @@ onMounted(async () => {
  */
 function handleFilterApply() {
   showFilters.value = false
-  propertyStore.fetchProperties()
 }
 
 /**
@@ -119,6 +118,10 @@ function handleResizeEnd() {
   flex-shrink: 0;
   overflow: hidden;
   transition: width 0.1s ease-out;
+}
+
+.modal-open .split-container {
+  pointer-events: none;
 }
 
 /* Desktop & Tablet: 좌우 배치 */

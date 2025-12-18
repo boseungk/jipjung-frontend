@@ -32,6 +32,13 @@ import { COLLECTION_ENDPOINTS } from '@/api/endpoints'
  * @property {CollectionItem[]} collections - 컬렉션 목록
  * @property {number} totalCount - 총 컬렉션 수
  * @property {boolean} activeGoalExists - 활성 드림홈 존재 여부
+ * @property {Object|null} inProgress - 진행 중 드림홈 요약 (없으면 null)
+ * @property {number} inProgress.dreamHomeId - 드림홈 ID
+ * @property {string} inProgress.themeCode - 테마 코드 (CLASSIC, HANOK 등)
+ * @property {string} inProgress.propertyName - 매물명
+ * @property {string} inProgress.location - 위치
+ * @property {number} inProgress.currentPhase - 현재 단계 (1-11)
+ * @property {number} inProgress.totalPhases - 총 단계 수 (11)
  */
 
 /**
@@ -111,6 +118,24 @@ export const collectionService = {
      */
     async setMainDisplay(collectionId) {
         const response = await apiClient.put(COLLECTION_ENDPOINTS.MAIN_DISPLAY(collectionId))
+        return response.data.data
+    },
+
+    /**
+     * 진행 중인 드림홈 여정 조회
+     * 
+     * 현재 ACTIVE 상태의 드림홈 저축 여정을 리플레이용으로 조회합니다.
+     * 완성된 컬렉션 여정과 동일한 응답 형식을 사용합니다.
+     * 
+     * @호출부 JourneyReplayView.vue (진행 중 모드)
+     * @returns {Promise<JourneyResponse>} 저축 여정 상세 정보
+     * @throws {ApiError} 인증 필요(401), 진행 중인 드림홈 없음(404)
+     * 
+     * @example
+     * const { collection, summary, phases } = await collectionService.getInProgressJourney()
+     */
+    async getInProgressJourney() {
+        const response = await apiClient.get(COLLECTION_ENDPOINTS.IN_PROGRESS_JOURNEY)
         return response.data.data
     }
 }

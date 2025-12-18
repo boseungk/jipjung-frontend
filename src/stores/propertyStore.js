@@ -106,14 +106,14 @@ export const usePropertyStore = defineStore('property', () => {
             result = result.filter((p) => p.sigungu === filters.value.sigungu)
         }
 
-        // 방 개수 필터
+        // 방 개수 필터 (null 안전 처리)
         if (filters.value.rooms) {
-            result = result.filter((p) => p.rooms >= filters.value.rooms)
+            result = result.filter((p) => (p.rooms ?? 0) >= filters.value.rooms)
         }
 
-        // 욕실 개수 필터
+        // 욕실 개수 필터 (null 안전 처리)
         if (filters.value.bathrooms) {
-            result = result.filter((p) => p.bathrooms >= filters.value.bathrooms)
+            result = result.filter((p) => (p.bathrooms ?? 0) >= filters.value.bathrooms)
         }
 
         // 특징 필터
@@ -135,6 +135,23 @@ export const usePropertyStore = defineStore('property', () => {
             )
         }
 
+        // 정렬 (백엔드 정렬 미지원 대비: 클라이언트에서 반영)
+        const direction = sortOrder.value === 'asc' ? 1 : -1
+        const sortKey = sortBy.value || 'createdAt'
+
+        result.sort((a, b) => {
+            if (sortKey === 'price') {
+                return ((Number(a.price) || 0) - (Number(b.price) || 0)) * direction
+            }
+            if (sortKey === 'area') {
+                return ((Number(a.area) || 0) - (Number(b.area) || 0)) * direction
+            }
+
+            const aTime = Date.parse(a.createdAt) || 0
+            const bTime = Date.parse(b.createdAt) || 0
+            return (aTime - bTime) * direction
+        })
+
         return result
     })
 
@@ -150,9 +167,17 @@ export const usePropertyStore = defineStore('property', () => {
      */
     const affordableProperties = computed(() => {
         const dreamHomeStore = useDreamHomeStore()
-        const budget = dreamHomeStore.targetAmount
+        const targetAmountWon = dreamHomeStore.targetAmount
 
-        return properties.value.filter((p) => p.isAffordable(budget))
+        return properties.value.filter((p) => {
+            if (typeof p?.isAffordableByTargetAmount === 'function') {
+                return p.isAffordableByTargetAmount(targetAmountWon)
+            }
+
+            const priceManwon = Number(p?.price) || 0
+            const downPaymentWon = Math.ceil(priceManwon * 10000 * 0.3)
+            return downPaymentWon <= (Number(targetAmountWon) || 0)
+        })
     })
 
     /**
@@ -170,7 +195,8 @@ export const usePropertyStore = defineStore('property', () => {
             filters.value.rooms !== null ||
             filters.value.bathrooms !== null ||
             (filters.value.features && filters.value.features.length > 0) ||
-            filters.value.keyword !== ''
+            filters.value.keyword !== '' ||
+            filters.value.favoritesOnly === true
         )
     })
 
@@ -206,7 +232,7 @@ export const usePropertyStore = defineStore('property', () => {
             properties.value = (response.apartments || []).map(mapApartmentToProperty)
             totalProperties.value = response.totalCount || 0
             totalPages.value = response.totalPages || 1
-            currentPage.value = response.page || 0
+            currentPage.value = (response.page ?? 0) + 1
         } catch (err) {
             error.value = err.message || '매물 목록을 불러오는데 실패했습니다.'
             console.error('Failed to fetch properties:', err)
@@ -224,7 +250,7 @@ export const usePropertyStore = defineStore('property', () => {
         // 백엔드 ApartmentListResponse는 aptSeq를 직접 필드로 가짐
         const aptId = apt.aptSeq || apt.id
         const aptName = apt.aptNm || apt.title || '아파트'
-        const price = Number(apt.dealAmount ?? apt.recentPrice ?? apt.price) || 0
+        const price = resolveAptPriceManwon(apt)
         const exclusiveArea = Number(apt.exclusiveArea ?? apt.area) || 0
         const areaPyeong = exclusiveArea ? Math.round(exclusiveArea * 0.3025) : 0
         const coordinates = buildCoordinates(apt)
@@ -237,9 +263,9 @@ export const usePropertyStore = defineStore('property', () => {
             price,
             area: areaPyeong,
             sqm: exclusiveArea,
-            rooms: apt.rooms ?? apt.roomCnt ?? 0,
-            bathrooms: apt.bathrooms ?? apt.bathCnt ?? 0,
-            floor: apt.floor || '-',
+            rooms: (apt.rooms ?? apt.roomCnt ?? 0) > 0 ? (apt.rooms ?? apt.roomCnt) : null,
+            bathrooms: (apt.bathrooms ?? apt.bathCnt ?? 0) > 0 ? (apt.bathrooms ?? apt.bathCnt) : null,
+            floor: cleanFloor(apt.floor),
             buildYear: apt.buildYear,
             sido: '서울특별시',
             sigungu: apt.umdNm || '',
@@ -248,7 +274,12 @@ export const usePropertyStore = defineStore('property', () => {
             images: [{ url: null, alt: aptName }],
             features: buildFeatures(apt, areaPyeong),
             description: apt.description || '',
-            agentInfo: apt.agentInfo || {},
+            agentInfo:
+                apt.agentInfo &&
+                typeof apt.agentInfo === 'object' &&
+                Object.keys(apt.agentInfo).length > 0
+                    ? apt.agentInfo
+                    : null,
             createdAt: apt.dealDate || apt.createdAt || new Date().toISOString()
         })
 
@@ -266,10 +297,18 @@ export const usePropertyStore = defineStore('property', () => {
     }
 
     /**
+     * 계약금 층수 따옴표 제거
+     */
+    function cleanFloor(floor) {
+        if (!floor || floor === '-') return null
+        return String(floor).replace(/['"]/g, '').trim() || null
+    }
+
+    /**
      * 가격 포맷팅 (만원 → "X억 Y천만원" 형식)
      */
     function formatPrice(priceInManwon) {
-        if (!priceInManwon) return '가격 미정'
+        if (!priceInManwon || priceInManwon === 0) return '가격 문의'
         const eok = Math.floor(priceInManwon / 10000)
         const remainder = priceInManwon % 10000
         const chun = Math.floor(remainder / 1000)
@@ -283,6 +322,48 @@ export const usePropertyStore = defineStore('property', () => {
         } else {
             return `${priceInManwon}만원`
         }
+    }
+
+    /**
+     * 숫자/문자(콤마 포함) 형태의 값을 안전하게 number로 파싱
+     * - 거래금액이 "45,000" 같은 문자열로 내려오는 케이스 방어
+     */
+    function parseNumberLike(value) {
+        if (value === null || value === undefined) return null
+
+        if (typeof value === 'number') {
+            return Number.isFinite(value) ? value : null
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim()
+            if (!trimmed) return null
+
+            const normalized = trimmed.replace(/,/g, '').replace(/[^\d.-]/g, '')
+            if (!normalized) return null
+
+            const parsed = Number(normalized)
+            return Number.isFinite(parsed) ? parsed : null
+        }
+
+        return null
+    }
+
+    function parsePriceManwon(value) {
+        const parsed = parseNumberLike(value)
+        if (parsed === null) return 0
+        return Math.round(parsed)
+    }
+
+    function resolveAptPriceManwon(apt) {
+        if (!apt) return 0
+        const raw =
+            apt.dealAmount ??
+            apt.recentPrice ??
+            apt.price ??
+            apt.latestDeal?.dealAmount ??
+            apt.latestDeal?.dealAmountNum
+        return parsePriceManwon(raw)
     }
 
     /**
@@ -320,11 +401,20 @@ export const usePropertyStore = defineStore('property', () => {
         const { info, deals } = normalizeAptDetail(apt)
 
         const latestDeal = deals && deals.length > 0 ? deals[0] : null
-        const price = Number(latestDeal?.dealAmount ?? info?.recentPrice ?? 0) || 0
+        const price = parsePriceManwon(
+            latestDeal?.dealAmount ??
+                latestDeal?.dealAmountNum ??
+                info?.recentPrice ??
+                info?.dealAmount ??
+                info?.price ??
+                0
+        )
         const exclusiveArea =
             Number(latestDeal?.exclusiveArea ?? info?.area ?? info?.exclusiveArea) || 0
         const areaPyeong = exclusiveArea ? Math.round(exclusiveArea * 0.3025) : 0
         const coordinates = buildCoordinates(info || apt)
+        const rooms = info?.rooms ?? info?.roomCnt
+        const bathrooms = info?.bathrooms ?? info?.bathCnt
 
         const property = new Property({
             id: info?.aptSeq,
@@ -334,9 +424,9 @@ export const usePropertyStore = defineStore('property', () => {
             price,
             area: areaPyeong,
             sqm: exclusiveArea,
-            rooms: info?.rooms ?? info?.roomCnt ?? 0,
-            bathrooms: info?.bathrooms ?? info?.bathCnt ?? 0,
-            floor: latestDeal?.floor || info?.floor || '-',
+            rooms: rooms > 0 ? rooms : null,
+            bathrooms: bathrooms > 0 ? bathrooms : null,
+            floor: cleanFloor(latestDeal?.floor || info?.floor),
             buildYear: info?.buildYear,
             sido: '서울특별시',
             sigungu: info?.umdNm || '',
@@ -347,7 +437,12 @@ export const usePropertyStore = defineStore('property', () => {
                 : [{ url: null, alt: info?.aptNm || '아파트' }],
             features: buildFeatures(info || apt, areaPyeong),
             description: apt.description || '',
-            agentInfo: apt.agentInfo || {},
+            agentInfo:
+                apt.agentInfo &&
+                typeof apt.agentInfo === 'object' &&
+                Object.keys(apt.agentInfo).length > 0
+                    ? apt.agentInfo
+                    : null,
             createdAt:
                 latestDeal?.dealDate || apt.dealDate || apt.createdAt || new Date().toISOString()
         })
@@ -511,7 +606,31 @@ export const usePropertyStore = defineStore('property', () => {
      * @param {Object} newFilters - 새로운 필터
      */
     function updateFilters(newFilters) {
-        filters.value = { ...filters.value, ...newFilters }
+        function normalizeNullableNumber(value) {
+            if (value === null || value === undefined || value === '') return null
+            const parsed = Number(value)
+            return Number.isFinite(parsed) ? parsed : null
+        }
+
+        const normalized = { ...newFilters }
+        if (normalized.sigungu === '') normalized.sigungu = null
+        if (normalized.keyword === null || normalized.keyword === undefined) normalized.keyword = ''
+
+        for (const key of ['priceMin', 'priceMax', 'areaMin', 'areaMax', 'rooms', 'bathrooms']) {
+            if (Object.prototype.hasOwnProperty.call(normalized, key)) {
+                normalized[key] = normalizeNullableNumber(normalized[key])
+            }
+        }
+
+        for (const key of ['propertyType', 'transactionType']) {
+            if (normalized[key] === '') normalized[key] = null
+        }
+
+        if (Object.prototype.hasOwnProperty.call(normalized, 'favoritesOnly')) {
+            normalized.favoritesOnly = Boolean(normalized.favoritesOnly)
+        }
+
+        filters.value = { ...filters.value, ...normalized }
     }
 
     /**
@@ -530,7 +649,8 @@ export const usePropertyStore = defineStore('property', () => {
             rooms: null,
             bathrooms: null,
             features: [],
-            keyword: ''
+            keyword: '',
+            favoritesOnly: false
         }
     }
 

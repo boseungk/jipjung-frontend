@@ -36,7 +36,12 @@ export class Property {
         this.images = data.images || [] // 이미지 URL 배열
         this.features = data.features || [] // 특징 배열
         this.description = data.description || ''
-        this.agentInfo = data.agentInfo || {} // 중개인 정보
+        const rawAgentInfo = data.agentInfo
+        if (rawAgentInfo && typeof rawAgentInfo === 'object' && Object.keys(rawAgentInfo).length === 0) {
+            this.agentInfo = null
+        } else {
+            this.agentInfo = rawAgentInfo ?? null
+        }
         this.createdAt = data.createdAt || new Date().toISOString()
     }
 
@@ -71,6 +76,27 @@ export class Property {
      */
     getDownPayment() {
         return Math.round(this.price * 0.3)
+    }
+
+    /**
+     * 계약금(기본 30%)을 계산
+     * @param {number} [rate=0.3] - 계약금 비율
+     * @returns {number} 계약금 (원 단위)
+     */
+    getDownPaymentWon(rate = 0.3) {
+        const priceManwon = Number(this.price) || 0
+        return Math.ceil(priceManwon * 10000 * rate)
+    }
+
+    /**
+     * 드림홈 목표금(원) 기준으로 구매 가능한지 확인 (계약금 30% 기준)
+     * @param {number} targetAmountWon - 드림홈 목표 금액 (원)
+     * @param {number} [rate=0.3] - 계약금 비율
+     * @returns {boolean} 구매 가능 여부
+     */
+    isAffordableByTargetAmount(targetAmountWon, rate = 0.3) {
+        const budgetWon = Number(targetAmountWon) || 0
+        return this.getDownPaymentWon(rate) <= budgetWon
     }
 
     /**

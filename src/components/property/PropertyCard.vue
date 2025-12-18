@@ -12,15 +12,14 @@
     <div class="card-image-wrapper">
       <div class="card-image" :class="{ 'image-error': imageError }">
         <img
-          v-if="!imageError"
-          :src="property.images[0].url"
-          :alt="property.images[0].alt"
+          v-if="!imageError && imageUrl"
+          :src="imageUrl"
+          :alt="imageAlt"
           loading="lazy"
           @error="handleImageError"
         />
         <div v-else class="image-fallback">
           <PhHouse :size="48" weight="thin" class="fallback-icon" />
-          <span class="fallback-text">{{ property.propertyType }}</span>
         </div>
       </div>
       
@@ -51,26 +50,28 @@
         <span>{{ property.sido }} {{ property.sigungu }}</span>
       </div>
 
-      <!-- 정보 (rooms/floor UI 가드) -->
-      <div class="card-specs">
-        <div class="spec-item">
-          <PhRuler :size="14" />
-          <span>{{ property.area }}평</span>
-        </div>
-        <div class="spec-divider" v-if="property.rooms">•</div>
+      <!-- 정보 (rooms/floor/area UI 가드) -->
+      <div class="card-specs" v-if="hasValidSpecs">
+        <template v-if="displayArea">
+          <div class="spec-item">
+            <PhRuler :size="14" />
+            <span>{{ displayArea }}</span>
+          </div>
+          <div class="spec-divider" v-if="property.rooms || cleanFloor(property.floor)">•</div>
+        </template>
         <div class="spec-item" v-if="property.rooms">
           <PhBed :size="14" />
           <span>{{ property.rooms }}</span>
         </div>
-        <div class="spec-divider" v-if="cleanFloor(property.floor)">•</div>
+        <div class="spec-divider" v-if="property.rooms && cleanFloor(property.floor)">•</div>
         <div class="spec-item" v-if="cleanFloor(property.floor)">
           <PhBuildings :size="14" />
           <span>{{ cleanFloor(property.floor) }}층</span>
         </div>
       </div>
 
-      <!-- 특징 태그 -->
-      <div class="card-features">
+      <!-- 특징 태그 (feature 있을 때만) -->
+      <div class="card-features" v-if="hasFeatures">
         <span
           v-for="feature in property.features.slice(0, 3)"
           :key="feature"
@@ -130,9 +131,42 @@ const isAffordable = computed(() => {
 })
 
 function cleanFloor(floor) {
-  if (!floor || floor === '-') return null
+  if (!floor || floor === '-' || floor === '0') return null
   return String(floor).replace(/['"]/g, '').trim() || null
 }
+
+// 면적 표시: 0 이상만
+const displayArea = computed(() => {
+  const area = Number(props.property?.area) || 0
+  return area > 0 ? `${area}평` : null
+})
+
+// 유효한 스펙이 하나라도 있는지
+const hasValidSpecs = computed(() => {
+  return displayArea.value || props.property?.rooms || cleanFloor(props.property?.floor)
+})
+
+// feature 배열이 있고 내용이 있는지
+const hasFeatures = computed(() => {
+  return props.property?.features && props.property.features.length > 0
+})
+
+// 이미지 URL/Alt 안전 접근
+const imageUrl = computed(() => {
+  const images = props.property?.images
+  if (!images || images.length === 0) return null
+  const first = images[0]
+  if (!first) return null
+  return typeof first === 'string' ? first : first.url || null
+})
+
+const imageAlt = computed(() => {
+  const images = props.property?.images
+  if (!images || images.length === 0) return props.property?.title || '매물'
+  const first = images[0]
+  if (!first) return props.property?.title || '매물'
+  return (typeof first === 'string' ? props.property?.title : first.alt) || '매물'
+})
 
 // 이미지 에러 처리
 const imageError = ref(false)

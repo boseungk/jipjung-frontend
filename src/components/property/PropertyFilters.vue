@@ -1,47 +1,53 @@
 <template>
-  <div class="property-filters-modal" v-if="isOpen" @click.self="closeModal">
-    <div class="filters-content">
+  <div
+    v-if="isOpen"
+    class="property-filters-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="매물 필터"
+    @click.self="closeModal"
+    @wheel.prevent
+    @touchmove.prevent
+  >
+    <div class="filters-content" @wheel.stop @touchmove.stop>
       <div class="filters-header">
         <h2>매물 필터</h2>
         <button @click="closeModal" class="close-btn">✕</button>
       </div>
 
       <div class="filters-body">
-        <!-- 검색 -->
-        <div class="filter-group">
-          <label class="filter-label">검색</label>
-          <input
-            type="text"
-            v-model="localFilters.keyword"
-            placeholder="아파트명, 지역 검색..."
-            class="filter-input"
-          />
-        </div>
+        <!-- 지역 선택 -->
+        <section class="filter-section">
+          <h3 class="section-title">지역</h3>
+          <div class="filter-content">
+            <select v-model="localFilters.sido" class="filter-select">
+              <option value="">시/도 선택</option>
+              <option v-for="sido in SIDO_LIST" :key="sido" :value="sido">{{ sido }}</option>
+            </select>
+            <select
+              v-model="localFilters.sigungu"
+              class="filter-select"
+              :disabled="!localFilters.sido"
+            >
+              <option value="">읍/면/동 선택</option>
+              <option v-for="sigungu in availableSigunguOptions" :key="sigungu" :value="sigungu">
+                {{ sigungu }}
+              </option>
+            </select>
+          </div>
+        </section>
 
-        <!-- 지역 선택: constants/regions.js 사용 -->
-        <div class="filter-group">
-          <label class="filter-label">지역</label>
-          <select v-model="localFilters.sido" class="filter-select">
-            <option value="">시/도 선택</option>
-            <option v-for="sido in SIDO_LIST" :key="sido" :value="sido">{{ sido }}</option>
-          </select>
-          <select
-            v-model="localFilters.sigungu"
-            class="filter-select"
-            :disabled="!localFilters.sido"
-          >
-            <option value="">읍/면/동 선택</option>
-            <option v-for="sigungu in availableSigunguOptions" :key="sigungu" :value="sigungu">
-              {{ sigungu }}
-            </option>
-          </select>
-        </div>
-
-        <!-- 가격 범위: 개별 필드 -->
-        <div class="filter-group">
-          <label class="filter-label">
-            가격 범위: {{ formatPrice(localFilters.priceMin) }} ~ {{ formatPrice(localFilters.priceMax) }}
-          </label>
+        <!-- 가격 범위 + 프리셋 -->
+        <section class="filter-section">
+          <h3 class="section-title">가격</h3>
+          <div class="preset-buttons">
+            <button
+              v-for="preset in pricePresets"
+              :key="preset.label"
+              :class="{ active: isPricePresetActive(preset) }"
+              @click="applyPricePreset(preset)"
+            >{{ preset.label }}</button>
+          </div>
           <div class="range-inputs">
             <input
               type="number"
@@ -59,28 +65,34 @@
               class="range-input"
             />
           </div>
-        </div>
+        </section>
 
-        <!-- 매물 유형: 단일 select -->
-        <div class="filter-group">
-          <label class="filter-label">매물 유형</label>
+        <!-- 매물 유형 -->
+        <section class="filter-section">
+          <h3 class="section-title">매물 유형</h3>
           <select v-model="localFilters.propertyType" class="filter-select">
             <option :value="null">전체</option>
             <option v-for="type in PROPERTY_TYPES" :key="type" :value="type">{{ type }}</option>
           </select>
-        </div>
+        </section>
 
-        <!-- 면적 범위: 개별 필드 -->
-        <div class="filter-group">
-          <label class="filter-label">
-            면적: {{ localFilters.areaMin || 0 }}평 ~ {{ localFilters.areaMax || '∞' }}평
-          </label>
+        <!-- 면적 범위 + 프리셋 -->
+        <section class="filter-section">
+          <h3 class="section-title">면적</h3>
+          <div class="preset-buttons">
+            <button
+              v-for="preset in areaPresets"
+              :key="preset.label"
+              :class="{ active: isAreaPresetActive(preset) }"
+              @click="applyAreaPreset(preset)"
+            >{{ preset.label }}</button>
+          </div>
           <div class="range-inputs">
             <input
               type="number"
               v-model.number="localFilters.areaMin"
               :max="localFilters.areaMax || undefined"
-              placeholder="최소"
+              placeholder="최소 (평)"
               class="range-input"
             />
             <span>~</span>
@@ -88,27 +100,27 @@
               type="number"
               v-model.number="localFilters.areaMax"
               :min="localFilters.areaMin || undefined"
-              placeholder="최대"
+              placeholder="최대 (평)"
               class="range-input"
             />
           </div>
-        </div>
+        </section>
 
         <!-- 관심 아파트 필터 -->
-        <div class="filter-group">
+        <section class="filter-section">
           <label class="checkbox-label favorite-filter">
             <input
               type="checkbox"
               v-model="localFilters.favoritesOnly"
               class="checkbox-input"
             />
-            <span>❤️ 내 관심 아파트만</span>
+            <span>내 관심 아파트만</span>
           </label>
-        </div>
+        </section>
 
         <!-- 정렬 -->
-        <div class="filter-group">
-          <label class="filter-label">정렬</label>
+        <section class="filter-section">
+          <h3 class="section-title">정렬</h3>
           <div class="sort-inputs">
             <select v-model="localSort.sortBy" class="filter-select">
               <option value="createdAt">최신순</option>
@@ -120,7 +132,7 @@
               <option value="asc">오름차순</option>
             </select>
           </div>
-        </div>
+        </section>
       </div>
 
       <div class="filters-footer">
@@ -174,6 +186,43 @@ const localSort = ref({
   sortOrder: 'desc'
 })
 
+// 가격 프리셋 (단위: 만원)
+const pricePresets = [
+  { label: '1억 이하', min: null, max: 10000 },
+  { label: '1~3억', min: 10000, max: 30000 },
+  { label: '3~5억', min: 30000, max: 50000 },
+  { label: '5~10억', min: 50000, max: 100000 },
+  { label: '10억 이상', min: 100000, max: null }
+]
+
+// 면적 프리셋 (단위: 평)
+const areaPresets = [
+  { label: '10평대', min: 10, max: 19 },
+  { label: '20평대', min: 20, max: 29 },
+  { label: '30평대', min: 30, max: 39 },
+  { label: '40평 이상', min: 40, max: null }
+]
+
+function applyPricePreset(preset) {
+  localFilters.value.priceMin = preset.min
+  localFilters.value.priceMax = preset.max
+}
+
+function applyAreaPreset(preset) {
+  localFilters.value.areaMin = preset.min
+  localFilters.value.areaMax = preset.max
+}
+
+function isPricePresetActive(preset) {
+  return localFilters.value.priceMin === preset.min &&
+         localFilters.value.priceMax === preset.max
+}
+
+function isAreaPresetActive(preset) {
+  return localFilters.value.areaMin === preset.min &&
+         localFilters.value.areaMax === preset.max
+}
+
 // 모달 열릴 때 현재 필터/정렬 값으로 초기화
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
@@ -201,14 +250,6 @@ watch(() => localFilters.value.sido, (next, prev) => {
   if (next !== prev) localFilters.value.sigungu = ''
 })
 
-function formatPrice(price) {
-  if (price === null || price === undefined) return '0'
-  if (price >= 10000) {
-    return `${(price / 10000).toFixed(1)}억`
-  }
-  return `${price.toLocaleString()}만원`
-}
-
 function closeModal() {
   emit('close')
 }
@@ -216,13 +257,16 @@ function closeModal() {
 function handleReset() {
   propertyStore.resetFilters()
   localSort.value = { sortBy: 'createdAt', sortOrder: 'desc' }
+  propertyStore.updateSort('createdAt', 'desc')
+  propertyStore.fetchProperties({ page: 1 })
+  emit('apply')
   closeModal()
 }
 
 async function handleApply() {
   propertyStore.updateFilters(localFilters.value)
   propertyStore.updateSort(localSort.value.sortBy, localSort.value.sortOrder)
-  await propertyStore.fetchProperties()
+  await propertyStore.fetchProperties({ page: 1 })
   emit('apply')
   closeModal()
 }
@@ -230,29 +274,29 @@ async function handleApply() {
 
 <style scoped>
 .property-filters-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: absolute;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 5000;
   padding: 1rem;
+  overscroll-behavior: contain;
+  isolation: isolate;
 }
 
 .filters-content {
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
   border-radius: 24px;
-  max-width: 600px;
+  max-width: 500px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 75vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overscroll-behavior: contain;
 }
 
 html[data-theme="night"] .filters-content {
@@ -301,26 +345,82 @@ html[data-theme="night"] .close-btn {
 }
 
 .filters-body {
-  padding: 2rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
-.filter-group {
+/* 필터 섹션 카드 스타일 */
+.filter-section {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="night"] .filter-section {
+  background: rgba(60, 60, 60, 0.4);
+  border-color: rgba(255, 255, 255, 0.03);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--showroom-text-day);
+}
+
+html[data-theme="night"] .section-title {
+  color: var(--showroom-text-night);
+}
+
+.filter-content {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.filter-label {
-  font-size: 1rem;
-  font-weight: 600;
+/* 프리셋 버튼 */
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.preset-buttons button {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: transparent;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
   color: var(--showroom-text-day);
 }
 
-html[data-theme="night"] .filter-label {
+html[data-theme="night"] .preset-buttons button {
+  border-color: rgba(255, 255, 255, 0.1);
   color: var(--showroom-text-night);
+}
+
+.preset-buttons button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .preset-buttons button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.preset-buttons button.active {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: white;
 }
 
 .filter-select,
@@ -358,15 +458,8 @@ html[data-theme="night"] .range-input {
   flex: 1;
 }
 
-.range-input,
-.filter-input {
+.range-input {
   flex: 1;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
 }
 
 .checkbox-label {

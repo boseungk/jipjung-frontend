@@ -195,11 +195,13 @@ watch(() => formData.value.targetAmount, () => {
 })
 
 /**
- * 30% 계약금 자동 계산
+ * 30% 계약금 자동 계산 (경계 변환: price 만원 → 원)
  */
 const calcDownPayment = () => {
   if (props.property?.price) {
-    formData.value.targetAmount = Math.ceil(props.property.price * 0.3)
+    const priceManwon = props.property.price
+    // 목표 금액은 원 단위 (UI suffix가 "원")
+    formData.value.targetAmount = Math.ceil(priceManwon * 10000 * 0.3)
   }
 }
 
@@ -235,8 +237,8 @@ const handleSubmit = async () => {
       aptSeq: props.property?.aptSeq || props.property?.id,
       targetAmount: formData.value.targetAmount,
       targetDate: formData.value.targetDate,
-      monthlyGoal: formData.value.monthlyGoal,
-      themeId: props.selectedTheme?.themeId || null
+      monthlyGoal: formData.value.monthlyGoal || 0,
+      ...(props.selectedTheme?.themeId && { themeId: props.selectedTheme.themeId })
     })
 
     showSuccess(`"${props.property?.title}"을(를) 드림홈으로 설정했습니다!`)
@@ -298,18 +300,25 @@ const formatMoney = (value) => {
   return value.toLocaleString('ko-KR')
 }
 
-// 모달 열릴 때 기본값 설정
-watch(() => props.isOpen, (isOpen) => {
-  if (isOpen && props.property?.price) {
-    // 기본 목표 금액: 30% 계약금
-    formData.value.targetAmount = Math.ceil(props.property.price * 0.3)
-    
-    // 기본 목표 날짜: 2년 후
-    const twoYearsLater = new Date()
-    twoYearsLater.setFullYear(twoYearsLater.getFullYear() + 2)
-    formData.value.targetDate = twoYearsLater.toISOString().split('T')[0]
-  }
-})
+// 모달 열릴 때 기본값 설정 (경계 변환: price 만원 → 원)
+watch(
+  () => [props.isOpen, props.property?.price],
+  ([isOpen, price]) => {
+    console.log('[DreamHomeSetModal] watch triggered:', { isOpen, price, property: props.property })
+    if (isOpen && price) {
+      const priceManwon = price
+      // 기본 목표 금액: 30% 계약금 (원 단위)
+      formData.value.targetAmount = Math.ceil(priceManwon * 10000 * 0.3)
+      console.log('[DreamHomeSetModal] targetAmount set:', formData.value.targetAmount)
+      
+      // 기본 목표 날짜: 2년 후
+      const twoYearsLater = new Date()
+      twoYearsLater.setFullYear(twoYearsLater.getFullYear() + 2)
+      formData.value.targetDate = twoYearsLater.toISOString().split('T')[0]
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

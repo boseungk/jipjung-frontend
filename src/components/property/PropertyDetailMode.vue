@@ -49,20 +49,16 @@
           <PropertySpecs :property="selectedProperty" />
         </section>
 
-        <!-- Main Content Split -->
-        <div class="content-split">
-          <!-- Left: Detailed Info (Description, Features, Map) -->
-          <div class="left-col">
-            <PropertyMainContent :property="selectedProperty" />
-          </div>
+        <!-- Main Content Stack (1열 레이아웃) -->
+        <div class="content-stack">
+          <!-- CTA 먼저 (스크롤 초반에 바로 노출) -->
+          <PropertyActions :property="selectedProperty" />
 
-          <!-- Right: Actions & Basic Info (Sticky) -->
-          <div class="right-col">
-            <div class="sticky-sidebar">
-              <PropertyActions :property="selectedProperty" />
-              <PropertyBasicInfo :property="selectedProperty" />
-            </div>
-          </div>
+          <!-- 상세 정보 -->
+          <PropertyMainContent :property="selectedProperty" />
+
+          <!-- 기본 정보 마지막 -->
+          <PropertyBasicInfo :property="selectedProperty" />
         </div>
       </div>
     </template>
@@ -243,26 +239,11 @@ html[data-theme="night"] .address-row {
   color: var(--brand-accent);
 }
 
-/* Split Layout */
-.content-split {
-  display: grid;
-  grid-template-columns: 1fr;
+/* Stack Layout (항상 1열) */
+.content-stack {
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
-}
-
-@media (min-width: 1024px) {
-  .content-split {
-    grid-template-columns: 1fr 380px; /* Fixed width sidebar */
-    align-items: start;
-  }
-
-  .sticky-sidebar {
-    position: sticky;
-    top: 90px; /* Header height + spacing */
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
 }
 
 .no-selection {
