@@ -119,15 +119,31 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh)
     }
 
-    function getFurnitureProgressStorageKey() {
-        const token = accessToken.value || ''
+    function getFurnitureProgressStorageKeyByUserId(rawUserId) {
+        const userId = Number(rawUserId)
+        if (!Number.isFinite(userId) || userId <= 0) return null
+        return `${STORAGE_KEYS.FURNITURE_PROGRESS_PREFIX}_user_${Math.trunc(userId)}`
+    }
+
+    function getLegacyFurnitureProgressStorageKeyByToken(rawToken) {
+        const token = typeof rawToken === 'string' ? rawToken : ''
         const suffix = token ? token.slice(-24) : 'guest'
         return `${STORAGE_KEYS.FURNITURE_PROGRESS_PREFIX}_${suffix}`
     }
 
-    function readFurnitureProgress() {
-        try {
-            const raw = localStorage.getItem(getFurnitureProgressStorageKey())
+    function getFurnitureProgressStorageKeys(options = {}) {
+        const userIdOverride = options?.userId
+        const tokenOverride = options?.token
+        return {
+            userKey: getFurnitureProgressStorageKeyByUserId(userIdOverride ?? user.value?.id),
+            legacyKey: getLegacyFurnitureProgressStorageKeyByToken(tokenOverride ?? accessToken.value)
+        }
+    }
+
+    function readFurnitureProgress(options = {}) {
+        const { userKey, legacyKey } = getFurnitureProgressStorageKeys(options)
+
+        const parseProgress = (raw) => {
             if (!raw) return null
             const parsed = JSON.parse(raw)
             const stage = Number(parsed?.furnitureStage)
@@ -140,6 +156,21 @@ export const useAuthStore = defineStore('auth', () => {
                 furnitureStage: Math.min(FURNITURE_TOTAL_STAGES, safeStage),
                 experiencePoints: safeExp ?? 0
             }
+        }
+
+        try {
+            const fromUser = userKey ? parseProgress(localStorage.getItem(userKey)) : null
+            if (fromUser) return fromUser
+
+            const fromLegacy = legacyKey ? parseProgress(localStorage.getItem(legacyKey)) : null
+            if (fromLegacy && userKey) {
+                try {
+                    localStorage.setItem(userKey, JSON.stringify({ ...fromLegacy, migratedAt: new Date().toISOString() }))
+                } catch (error) {
+                    // ignore migration failures
+                }
+            }
+            return fromLegacy
         } catch (error) {
             return null
         }
@@ -158,7 +189,10 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         try {
-            localStorage.setItem(getFurnitureProgressStorageKey(), JSON.stringify(payload))
+            const { userKey, legacyKey } = getFurnitureProgressStorageKeys()
+            const rawPayload = JSON.stringify(payload)
+            if (userKey) localStorage.setItem(userKey, rawPayload)
+            if (legacyKey) localStorage.setItem(legacyKey, rawPayload)
         } catch (error) {
             // ignore storage failures
         }
@@ -166,7 +200,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     function clearFurnitureProgress() {
         try {
-            localStorage.removeItem(getFurnitureProgressStorageKey())
+            const { userKey, legacyKey } = getFurnitureProgressStorageKeys()
+            if (userKey) localStorage.removeItem(userKey)
+            if (legacyKey) localStorage.removeItem(legacyKey)
         } catch (error) {
             // ignore
         }
@@ -176,14 +212,16 @@ export const useAuthStore = defineStore('auth', () => {
      * 토큰 및 사용자 상태 초기화
      */
     function clearAuth() {
-        const furnitureProgressKey = getFurnitureProgressStorageKey()
+        const userFurnitureProgressKey = getFurnitureProgressStorageKeyByUserId(user.value?.id)
+        const legacyFurnitureProgressKey = getLegacyFurnitureProgressStorageKeyByToken(accessToken.value)
         user.value = null
         accessToken.value = null
         refreshTokenValue.value = null
         localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
-        localStorage.removeItem(furnitureProgressKey)
+        if (userFurnitureProgressKey) localStorage.removeItem(userFurnitureProgressKey)
+        if (legacyFurnitureProgressKey) localStorage.removeItem(legacyFurnitureProgressKey)
     }
 
     function toFiniteInteger(value, fallback = 0) {
@@ -513,6 +551,7 @@ export const useAuthStore = defineStore('auth', () => {
 
             // 사용자 정보 매핑 (profile -> user)
             const mappedUser = {
+                id: response.profile?.userId,
                 nickname: response.profile?.nickname,
                 name: response.profile?.nickname,  // 하위 호환성
                 email: response.profile?.email,
@@ -541,7 +580,7 @@ export const useAuthStore = defineStore('auth', () => {
             const existingTrack = user.value?.gamification?.buildTrack
             const existingFurnitureStage = Number(user.value?.gamification?.furnitureStage) || 0
             const existingExperiencePoints = Number(user.value?.gamification?.experiencePoints)
-            const storedFurnitureProgress = readFurnitureProgress()
+            const storedFurnitureProgress = readFurnitureProgress({ userId: response.profile?.userId })
 
             const rawShowroomStep = Number(response.showroom?.currentStep ?? response.profile?.level ?? 1)
             const showroomStep = Number.isFinite(rawShowroomStep) ? Math.max(1, Math.trunc(rawShowroomStep)) : 1
