@@ -51,16 +51,16 @@
 
         <!-- Main Content Split -->
         <div class="content-split">
-          <!-- Left: Detailed Info -->
+          <!-- Left: Detailed Info (Description, Features, Map) -->
           <div class="left-col">
-            <PropertyInfo :property="selectedProperty" />
+            <PropertyMainContent :property="selectedProperty" />
           </div>
 
-          <!-- Right: Actions & Agent -->
+          <!-- Right: Actions & Basic Info (Sticky) -->
           <div class="right-col">
             <div class="sticky-sidebar">
               <PropertyActions :property="selectedProperty" />
-              <AgentCard :agent="selectedProperty.agentInfo" />
+              <PropertyBasicInfo :property="selectedProperty" />
             </div>
           </div>
         </div>
@@ -85,9 +85,9 @@ import { PhMapPin, PhTag } from '@phosphor-icons/vue'
 import DetailHeader from './detail/DetailHeader.vue'
 import PropertyGallery from './detail/PropertyGallery.vue'
 import PropertySpecs from './detail/PropertySpecs.vue'
-import PropertyInfo from './detail/PropertyInfo.vue'
+import PropertyMainContent from './detail/PropertyMainContent.vue'
+import PropertyBasicInfo from './detail/PropertyBasicInfo.vue'
 import PropertyActions from './detail/PropertyActions.vue'
-import AgentCard from './detail/AgentCard.vue'
 import { useToast } from '@/composables/useToast'
 
 const propertyStore = usePropertyStore()
