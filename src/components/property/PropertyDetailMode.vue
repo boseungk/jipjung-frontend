@@ -1,41 +1,131 @@
 <template>
-  <div class="property-detail-mode">
-    <!-- Back Button -->
-    <button @click="handleBack" class="back-btn">
-      ← 목록으로
-    </button>
+  <div class="property-detail-mode" ref="containerRef" @scroll="handleScroll">
+    <template v-if="selectedProperty">
+      <!-- Sticky Header -->
+      <DetailHeader
+        :title="selectedProperty.title"
+        :is-scrolled="isScrolled"
+        :is-saved="isSaved"
+        @back="handleBack"
+        @toggle-save="handleSave"
+      />
 
-    <div v-if="selectedProperty" class="detail-content">
-      <PropertyGallery :images="selectedProperty.images" :title="selectedProperty.title" />
+      <div class="detail-content-wrapper">
+        <!-- Hero Section -->
+        <section class="hero-section">
+          <PropertyGallery
+            :images="selectedProperty.images"
+            :title="selectedProperty.title"
+          />
+        </section>
 
-      <div class="detail-header">
-        <h1 class="detail-title">{{ selectedProperty.title }}</h1>
-        <p class="detail-price">{{ selectedProperty.getFormattedPrice() }}</p>
-        <p class="detail-location">📍 {{ selectedProperty.getFullAddress() }}</p>
+        <!-- Title & Price Section -->
+        <section class="header-section">
+          <div class="badges-row">
+            <span class="status-badge">
+              <PhTag :size="14" weight="bold" />
+              {{ selectedProperty.transactionType }}
+            </span>
+            <span class="type-badge">{{ selectedProperty.propertyType }}</span>
+          </div>
+
+          <h1 class="property-title">{{ selectedProperty.title }}</h1>
+
+          <div class="price-row">
+            <span class="main-price">{{ selectedProperty.getFormattedPrice() }}</span>
+            <span class="price-sub" v-if="selectedProperty.maintenanceFee">
+              (관리비 {{ selectedProperty.maintenanceFee }}만)
+            </span>
+          </div>
+
+          <div class="address-row">
+            <PhMapPin :size="18" weight="fill" class="text-brand" />
+            <span>{{ selectedProperty.address }}</span>
+          </div>
+        </section>
+
+        <!-- Key Specs Grid -->
+        <section class="specs-section">
+          <PropertySpecs :property="selectedProperty" />
+        </section>
+
+        <!-- Main Content Split -->
+        <div class="content-split">
+          <!-- Left: Detailed Info -->
+          <div class="left-col">
+            <PropertyInfo :property="selectedProperty" />
+          </div>
+
+          <!-- Right: Actions & Tools -->
+          <div class="right-col">
+            <div class="sticky-sidebar">
+              <PropertyActions :property="selectedProperty" />
+            </div>
+          </div>
+        </div>
       </div>
-
-      <PropertyInfo :property="selectedProperty" />
-      <PropertyActions :property="selectedProperty" />
-    </div>
+    </template>
 
     <div v-else class="no-selection">
-      <p>매물을 선택해주세요</p>
+      <div class="empty-state">
+        <p>매물을 선택해주세요</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
+import { PhMapPin, PhTag } from '@phosphor-icons/vue'
+
+// Components
+import DetailHeader from './detail/DetailHeader.vue'
 import PropertyGallery from './detail/PropertyGallery.vue'
+import PropertySpecs from './detail/PropertySpecs.vue'
 import PropertyInfo from './detail/PropertyInfo.vue'
 import PropertyActions from './detail/PropertyActions.vue'
+import { useToast } from '@/composables/useToast'
 
 const propertyStore = usePropertyStore()
-const { selectedProperty } = storeToRefs(propertyStore)
+const { selectedProperty, savedPropertyIds } = storeToRefs(propertyStore)
+const { showSuccess, showInfo, showError } = useToast()
+
+const containerRef = ref(null)
+const isScrolled = ref(false)
+
+const isSaved = computed(() => {
+  if (!selectedProperty.value) return false
+  const aptSeq = selectedProperty.value.aptSeq || selectedProperty.value.id
+  return savedPropertyIds.value.includes(aptSeq)
+})
 
 function handleBack() {
   propertyStore.clearSelection()
+}
+
+function handleScroll() {
+  if (containerRef.value) {
+    isScrolled.value = containerRef.value.scrollTop > 50
+  }
+}
+
+async function handleSave() {
+  if (!selectedProperty.value) return
+  try {
+    const aptSeq = selectedProperty.value.aptSeq || selectedProperty.value.id
+    const wasSaved = isSaved.value
+    await propertyStore.toggleSaveProperty(aptSeq)
+    
+    if (wasSaved) {
+      showInfo('저장 목록에서 제거되었습니다')
+    } else {
+      showSuccess('저장 목록에 추가되었습니다')
+    }
+  } catch (error) {
+    showError('저장 처리에 실패했습니다')
+  }
 }
 </script>
 
@@ -44,86 +134,130 @@ function handleBack() {
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  padding: 1.5rem;
+  background: var(--showroom-bg-day);
+  position: relative;
 }
 
-.back-btn {
-  background: var(--nav-btn-bg-day);
-  backdrop-filter: blur(var(--nav-btn-blur-day));
-  border: 1px solid var(--nav-btn-border-day);
-  box-shadow: var(--nav-btn-shadow-day);
-  border-radius: 12px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: var(--showroom-text-day);
-  margin-bottom: 1.5rem;
+html[data-theme="night"] .property-detail-mode {
+  background: var(--showroom-bg-night);
 }
 
-html[data-theme="night"] .back-btn {
-  background: var(--nav-btn-bg-night);
-  backdrop-filter: blur(var(--nav-btn-blur-night));
-  border-color: var(--nav-btn-border-night);
-  box-shadow: var(--nav-btn-shadow-night);
-  color: var(--showroom-text-night);
-}
-
-.back-btn:hover {
-  transform: translateX(-4px);
-}
-
-.detail-content {
+.detail-content-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
-.detail-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border-radius: 24px;
-  padding: 2rem;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+/* Header Section */
+.header-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-html[data-theme="night"] .detail-header {
-  background: rgba(58, 53, 48, 0.85);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+.badges-row {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.detail-title {
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--brand-accent);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.type-badge {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--showroom-text-day);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+html[data-theme="night"] .type-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--showroom-text-night);
+}
+
+.property-title {
   font-size: 2rem;
   font-weight: 700;
   color: var(--showroom-text-day);
-  margin: 0 0 1rem 0;
+  margin: 0;
+  line-height: 1.3;
 }
 
-html[data-theme="night"] .detail-title {
+html[data-theme="night"] .property-title {
   color: var(--showroom-text-night);
 }
 
-.detail-price {
-  font-size: 2.5rem;
-  font-weight: 800;
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.main-price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
   color: var(--brand-accent);
-  margin: 0 0 0.5rem 0;
 }
 
-html[data-theme="night"] .detail-price {
-  color: var(--showroom-accent-night);
-}
-
-.detail-location {
-  font-size: 1.125rem;
+.price-sub {
+  font-size: 1rem;
   color: var(--showroom-text-day);
   opacity: 0.7;
-  margin: 0;
 }
 
-html[data-theme="night"] .detail-location {
+html[data-theme="night"] .price-sub {
   color: var(--showroom-text-night);
+}
+
+.address-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: var(--showroom-text-day);
+  opacity: 0.8;
+}
+
+html[data-theme="night"] .address-row {
+  color: var(--showroom-text-night);
+}
+
+.text-brand {
+  color: var(--brand-accent);
+}
+
+/* Split Layout */
+.content-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .content-split {
+    grid-template-columns: 1.5fr 1fr;
+    align-items: start;
+  }
+
+  .sticky-sidebar {
+    position: sticky;
+    top: 80px; /* Header height + spacing */
+  }
 }
 
 .no-selection {
@@ -131,30 +265,11 @@ html[data-theme="night"] .detail-location {
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 1.25rem;
   color: var(--showroom-text-day);
   opacity: 0.5;
 }
 
 html[data-theme="night"] .no-selection {
   color: var(--showroom-text-night);
-}
-
-@media (max-width: 767px) {
-  .property-detail-mode {
-    padding: 1rem;
-  }
-
-  .detail-header {
-    padding: 1.5rem;
-  }
-
-  .detail-title {
-    font-size: 1.5rem;
-  }
-
-  .detail-price {
-    font-size: 2rem;
-  }
 }
 </style>

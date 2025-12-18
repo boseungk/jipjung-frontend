@@ -3,15 +3,42 @@
     <!-- 헤더 -->
     <div class="list-header">
       <h2 class="list-title">매물 목록 ({{ filteredProperties.length }})</h2>
-      <button @click="$emit('openFilters')" class="filter-btn">
-        🔍 필터
+      <button @click="$emit('openFilters')" class="filter-icon-btn" aria-label="Filters">
+        <PhSliders :size="20" weight="bold" />
       </button>
     </div>
 
-    <!-- 로딩 상태 -->
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-      <p>매물을 불러오는 중...</p>
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <button 
+        class="chip-btn" 
+        :class="{ active: isBudgetFilterActive }"
+        @click="toggleBudgetFilter"
+      >
+        <span v-if="isBudgetFilterActive">✓</span>
+        내 예산 맞춤
+      </button>
+      <button 
+        class="chip-btn" 
+        :class="{ active: filters.favoritesOnly }"
+        @click="propertyStore.toggleFavoritesFilter()"
+      >
+        <span v-if="filters.favoritesOnly">✓</span>
+        관심 매물
+      </button>
+      <button 
+        class="chip-btn" 
+        :class="{ active: filters.propertyType === '아파트' }"
+        @click="toggleTypeFilter('아파트')"
+      >
+        <span v-if="filters.propertyType === '아파트'">✓</span>
+        아파트
+      </button>
+    </div>
+
+    <!-- 로딩 상태 (Skeleton) -->
+    <div v-if="loading" class="property-grid">
+      <SkeletonCard v-for="n in 6" :key="n" />
     </div>
 
     <!-- Empty State -->
@@ -36,21 +63,58 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
+import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { PhSliders } from '@phosphor-icons/vue'
 import PropertyCard from './PropertyCard.vue'
+import SkeletonCard from './SkeletonCard.vue'
 
 const emit = defineEmits(['openFilters'])
 
 const propertyStore = usePropertyStore()
-const { filteredProperties, loading } = storeToRefs(propertyStore)
+const dreamHomeStore = useDreamHomeStore()
+const { filteredProperties, loading, filters } = storeToRefs(propertyStore)
+const { targetAmount } = storeToRefs(dreamHomeStore)
+
+const isBudgetFilterActive = computed(() => {
+  if (!targetAmount.value || targetAmount.value <= 0) return false
+  // Check if priceMax is set to our calculated budget
+  const budgetLimit = Math.floor((targetAmount.value / 0.3) / 10000)
+  return filters.value.priceMax === budgetLimit
+})
+
+function toggleBudgetFilter() {
+  if (isBudgetFilterActive.value) {
+    // Clear filter
+    propertyStore.updateFilters({ priceMax: null })
+  } else {
+    // Set filter (Target / 30% downpayment)
+    if (!targetAmount.value) return
+    const budgetLimit = Math.floor((targetAmount.value / 0.3) / 10000)
+    propertyStore.updateFilters({ priceMax: budgetLimit })
+  }
+}
+
+function toggleTypeFilter(type) {
+  if (filters.value.propertyType === type) {
+    propertyStore.updateFilters({ propertyType: null })
+  } else {
+    propertyStore.updateFilters({ propertyType: type })
+  }
+}
 
 function handleSelect(id) {
   propertyStore.selectProperty(id)
 }
 
-function handleSave(id) {
-  propertyStore.toggleSaveProperty(id)
+async function handleSave(id) {
+  try {
+    await propertyStore.toggleSaveProperty(id)
+  } catch (error) {
+    console.error('Failed to toggle favorite:', error)
+  }
 }
 
 function resetFilters() {
@@ -65,6 +129,11 @@ function resetFilters() {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  background: var(--showroom-bg-day);
+}
+
+html[data-theme="night"] .property-list-mode {
+  background: var(--showroom-bg-night);
 }
 
 /* 헤더 */
@@ -72,18 +141,15 @@ function resetFilters() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   position: sticky;
   top: 0;
   z-index: 10;
+  background: var(--showroom-bg-day);
 }
 
 html[data-theme="night"] .list-header {
-  background: rgba(58, 53, 48, 0.95);
-  border-bottom-color: rgba(255, 255, 255, 0.05);
+  background: var(--showroom-bg-night);
 }
 
 .list-title {
@@ -97,31 +163,86 @@ html[data-theme="night"] .list-title {
   color: var(--showroom-text-night);
 }
 
-.filter-btn {
-  background: var(--nav-btn-bg-day);
-  backdrop-filter: blur(var(--nav-btn-blur-day));
-  border: 1px solid var(--nav-btn-border-day);
-  box-shadow: var(--nav-btn-shadow-day);
+.filter-icon-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
   border-radius: 12px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
   color: var(--showroom-text-day);
+  transition: all 0.2s ease;
 }
 
-html[data-theme="night"] .filter-btn {
-  background: var(--nav-btn-bg-night);
-  backdrop-filter: blur(var(--nav-btn-blur-night));
-  border-color: var(--nav-btn-border-night);
-  box-shadow: var(--nav-btn-shadow-night);
+html[data-theme="night"] .filter-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--showroom-text-night);
 }
 
-.filter-btn:hover {
+.filter-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Quick Filters */
+.quick-filters {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1rem 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar */
+  position: sticky;
+  top: 70px;
+  z-index: 9;
+  background: var(--showroom-bg-day);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .quick-filters {
+  background: var(--showroom-bg-night);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.quick-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-btn {
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: var(--showroom-text-day);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+html[data-theme="night"] .chip-btn {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--showroom-text-night);
+}
+
+.chip-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .chip-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chip-btn.active {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: white;
 }
 
 /* 그리드 */
@@ -160,39 +281,6 @@ html[data-theme="night"] .filter-btn {
   .list-title {
     font-size: 1.25rem;
   }
-}
-
-/* 로딩 상태 */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  gap: 1rem;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(255, 127, 80, 0.2);
-  border-top-color: var(--brand-accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  font-size: 1rem;
-  color: var(--showroom-text-day);
-  opacity: 0.7;
-}
-
-html[data-theme="night"] .loading-state p {
-  color: var(--showroom-text-night);
 }
 
 /* Empty State */

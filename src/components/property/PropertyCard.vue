@@ -1,6 +1,6 @@
 <template>
   <div
-    class="property-card bento-card"
+    class="property-card"
     :class="{
       selected: isSelected,
       affordable: isAffordable,
@@ -9,51 +9,76 @@
     @click="handleClick"
   >
     <!-- 이미지 -->
-    <div class="card-image" :class="{ 'image-error': imageError }">
-      <img
-        v-if="!imageError"
-        :src="property.images[0].url"
-        :alt="property.images[0].alt"
-        loading="lazy"
-        @error="handleImageError"
-      />
-      <div v-else class="image-fallback">
-        <span class="fallback-icon">🏠</span>
-        <span class="fallback-text">{{ property.propertyType }}</span>
+    <div class="card-image-wrapper">
+      <div class="card-image" :class="{ 'image-error': imageError }">
+        <img
+          v-if="!imageError"
+          :src="property.images[0].url"
+          :alt="property.images[0].alt"
+          loading="lazy"
+          @error="handleImageError"
+        />
+        <div v-else class="image-fallback">
+          <PhHouse :size="48" weight="thin" class="fallback-icon" />
+          <span class="fallback-text">{{ property.propertyType }}</span>
+        </div>
       </div>
+      
+      <!-- Badges overlay -->
       <div class="image-badge">{{ property.propertyType }}</div>
-      <button class="save-btn" @click.stop="handleSave" :class="{ saved: isSaved }">
-        {{ isSaved ? '❤️' : '🤍' }}
+      
+      <button
+        class="save-btn"
+        @click.stop="handleSave"
+        :class="{ active: isSaved }"
+        :aria-label="isSaved ? '관심 매물에서 제거' : '관심 매물로 저장'"
+      >
+        <PhHeart :size="20" :weight="isSaved ? 'fill' : 'regular'" />
       </button>
     </div>
 
-    <!-- 가격 -->
-    <div class="card-price">{{ property.getFormattedPrice() }}</div>
+    <!-- Content -->
+    <div class="card-content">
+      <!-- 가격 & 제목 -->
+      <div class="card-header">
+        <div class="card-price">{{ property.getFormattedPrice() }}</div>
+        <h3 class="card-title">{{ property.title }}</h3>
+      </div>
 
-    <!-- 제목 -->
-    <h3 class="card-title">{{ property.title }}</h3>
+      <!-- 위치 -->
+      <div class="card-location">
+        <PhMapPin :size="16" weight="fill" />
+        <span>{{ property.sido }} {{ property.sigungu }}</span>
+      </div>
 
-    <!-- 위치 -->
-    <p class="card-location">📍 {{ property.sido }} {{ property.sigungu }}</p>
+      <!-- 정보 (rooms/floor UI 가드) -->
+      <div class="card-specs">
+        <div class="spec-item">
+          <PhRuler :size="14" />
+          <span>{{ property.area }}평</span>
+        </div>
+        <div class="spec-divider" v-if="property.rooms">•</div>
+        <div class="spec-item" v-if="property.rooms">
+          <PhBed :size="14" />
+          <span>{{ property.rooms }}</span>
+        </div>
+        <div class="spec-divider" v-if="cleanFloor(property.floor)">•</div>
+        <div class="spec-item" v-if="cleanFloor(property.floor)">
+          <PhBuildings :size="14" />
+          <span>{{ cleanFloor(property.floor) }}층</span>
+        </div>
+      </div>
 
-    <!-- 정보 -->
-    <div class="card-info">
-      <span>{{ property.area }}평</span>
-      <span>•</span>
-      <span>방 {{ property.rooms }}개</span>
-      <span>•</span>
-      <span>{{ property.floor }}</span>
-    </div>
-
-    <!-- 특징 태그 -->
-    <div class="card-features">
-      <span
-        v-for="feature in property.features.slice(0, 3)"
-        :key="feature"
-        class="feature-tag"
-      >
-        {{ feature }}
-      </span>
+      <!-- 특징 태그 -->
+      <div class="card-features">
+        <span
+          v-for="feature in property.features.slice(0, 3)"
+          :key="feature"
+          class="feature-tag"
+        >
+          {{ feature }}
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -63,6 +88,14 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { 
+  PhHouse, 
+  PhMapPin, 
+  PhHeart, 
+  PhRuler, 
+  PhBed, 
+  PhBuildings 
+} from '@phosphor-icons/vue'
 
 const props = defineProps({
   property: {
@@ -81,190 +114,232 @@ const { targetAmount } = storeToRefs(dreamHomeStore)
 const isSelected = computed(() => selectedProperty.value?.id === props.property.id)
 const propertyAptSeq = computed(() => props.property.aptSeq || props.property.id)
 const isSaved = computed(() => savedPropertyIds.value.includes(propertyAptSeq.value))
-const isAffordable = computed(() => props.property.price * 0.3 <= targetAmount.value)
+
+// 구매 가능 여부
+const isAffordable = computed(() => {
+  const targetAmountWon = Number(targetAmount.value) || 0
+  if (targetAmountWon <= 0) return false
+
+  if (typeof props.property?.isAffordableByTargetAmount === 'function') {
+    return props.property.isAffordableByTargetAmount(targetAmountWon)
+  }
+
+  const priceManwon = Number(props.property?.price) || 0
+  const downPaymentWon = Math.ceil(priceManwon * 10000 * 0.3)
+  return downPaymentWon <= targetAmountWon
+})
+
+function cleanFloor(floor) {
+  if (!floor || floor === '-') return null
+  return String(floor).replace(/['"]/g, '').trim() || null
+}
 
 // 이미지 에러 처리
 const imageError = ref(false)
 
 function handleImageError() {
   imageError.value = true
-  console.warn(`Failed to load image for property ${props.property.id}`)
 }
 
 function handleClick() {
   emit('select', props.property.id)
-  propertyStore.selectProperty(props.property.id)
 }
 
 function handleSave() {
   const aptSeq = propertyAptSeq.value
   emit('save', aptSeq)
-  propertyStore.toggleSaveProperty(aptSeq)
 }
 </script>
 
 <style scoped>
-/* BentoGrid.vue 패턴 기반 */
 .property-card {
-  background: rgba(255, 255, 255, 0.95);
+  /* Double-layer Glassmorphism */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 24px;
-  padding: 1.5rem;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(12px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  transform: translateZ(0); /* GPU 가속 */
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.property-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.15);
-}
-
-.property-card.selected {
-  border: 3px solid var(--brand-accent);
-  box-shadow: 0 20px 60px -10px rgba(255, 127, 80, 0.3);
+  position: relative;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 html[data-theme="night"] .property-card {
-  background: rgba(58, 53, 48, 0.85);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  background: rgba(45, 45, 45, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 html[data-theme="night"] .property-card:hover {
-  box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.6);
+  background: rgba(60, 60, 60, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* 이미지 */
-.card-image {
+.property-card.selected {
+  border: 2px solid var(--brand-accent);
+  box-shadow: 0 0 0 4px rgba(255, 127, 80, 0.15);
+}
+
+/* Image Wrapper */
+.card-image-wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 16px;
   overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+}
+
+.property-card:hover .card-image img {
+  transform: scale(1.05);
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
-/* 이미지 에러 처리 */
 .card-image.image-error {
-  background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.05));
+  background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02));
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 html[data-theme="night"] .card-image.image-error {
-  background: linear-gradient(135deg, rgba(66, 133, 244, 0.2), rgba(66, 133, 244, 0.1));
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
 }
 
 .image-fallback {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   color: var(--showroom-text-day);
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 html[data-theme="night"] .image-fallback {
   color: var(--showroom-text-night);
 }
 
-.fallback-icon {
-  font-size: 3rem;
-}
-
-.fallback-text {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
 .image-badge {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--showroom-text-day);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+html[data-theme="night"] .image-badge {
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--showroom-text-night);
 }
 
 .save-btn {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border: none;
-  width: 40px;
-  height: 40px;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 1.25rem;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  color: var(--showroom-text-day);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+html[data-theme="night"] .save-btn {
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--showroom-text-night);
 }
 
 .save-btn:hover {
   transform: scale(1.1);
+  background: white;
 }
 
-.save-btn.saved {
-  background: rgba(255, 127, 80, 0.95);
+.save-btn.active {
+  color: #ef4444;
+  background: rgba(255, 255, 255, 0.95);
 }
 
-/* 가격 */
+/* Content */
+.card-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .card-price {
-  font-size: 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--brand-accent);
 }
 
-html[data-theme="night"] .card-price {
-  color: var(--showroom-accent-night);
-}
-
-/* 제목 */
 .card-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--showroom-text-day);
   margin: 0;
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 html[data-theme="night"] .card-title {
   color: var(--showroom-text-night);
 }
 
-/* 위치 */
 .card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-size: 0.875rem;
   color: var(--showroom-text-day);
   opacity: 0.7;
-  margin: 0;
 }
 
 html[data-theme="night"] .card-location {
   color: var(--showroom-text-night);
 }
 
-/* 정보 */
-.card-info {
+.card-specs {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -273,41 +348,49 @@ html[data-theme="night"] .card-location {
   opacity: 0.8;
 }
 
-html[data-theme="night"] .card-info {
+html[data-theme="night"] .card-specs {
   color: var(--showroom-text-night);
 }
 
-/* 특징 태그 */
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.spec-divider {
+  opacity: 0.3;
+}
+
 .card-features {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .feature-tag {
-  background: rgba(66, 133, 244, 0.1);
-  color: #4285f4;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  background: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.1);
+  color: var(--brand-accent);
+  padding: 0.25rem 0.625rem;
+  border-radius: 8px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 html[data-theme="night"] .feature-tag {
-  background: rgba(66, 133, 244, 0.2);
+  background: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
 }
 
-/* 구매 가능 하이라이트 */
+/* Affordable Highlight */
 .property-card.affordable::before {
   content: '';
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, #66BB6A, #4CAF50);
-  border-radius: 24px;
-  z-index: -1;
-  opacity: 0.3;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #66BB6A;
+  z-index: 5;
 }
 </style>

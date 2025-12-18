@@ -34,7 +34,7 @@
             {{ isAffordable ? '구매 가능' : '예산 초과' }}
           </p>
           <p class="badge-detail">
-            필요 계약금: {{ formatDownPayment }}원
+            필요 계약금: {{ formatDownPayment }}
             (보유: {{ currentAmount.toLocaleString() }}원)
           </p>
         </div>
@@ -77,6 +77,7 @@ import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
+import { formatWonCompact } from '@/utils/formatters'
 import ThemeSelectModal from '@/components/modals/ThemeSelectModal.vue'
 import DreamHomeSetModal from '@/components/modals/DreamHomeSetModal.vue'
 
@@ -105,17 +106,22 @@ const isSaved = computed(() => {
   return savedPropertyIds.value.includes(aptSeq)
 })
 
-// 구매 가능 여부 (보유 금액이 계약금 30%보다 많은지)
+// 구매 가능 여부 (경계 변환: price 만원 → 원)
 const isAffordable = computed(() => {
-  if (!currentAmount.value || !props.property.price) return false
-  return props.property.price * 0.3 <= currentAmount.value
+  const currentAmountWon = Number(currentAmount.value) || 0
+  if (currentAmountWon <= 0) return false
+  return downPaymentWon.value > 0 && downPaymentWon.value <= currentAmountWon
 })
 
-// 필요 계약금 포맷
+// 필요 계약금 (원 단위로 표시)
+const downPaymentWon = computed(() => {
+  if (!props.property.price) return 0
+  const priceManwon = props.property.price
+  return Math.ceil(priceManwon * 10000 * 0.3)
+})
+
 const formatDownPayment = computed(() => {
-  if (!props.property.price) return '0'
-  const downPayment = Math.ceil(props.property.price * 0.3)
-  return downPayment.toLocaleString()
+  return formatWonCompact(downPaymentWon.value)
 })
 
 /**

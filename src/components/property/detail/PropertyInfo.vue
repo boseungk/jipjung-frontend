@@ -5,23 +5,48 @@
       <div class="info-grid">
         <div class="info-item">
           <span class="info-label">매물 유형</span>
-          <span class="info-value">{{ property.propertyType }}</span>
+          <span class="info-value">
+            <InfoTooltip 
+              v-if="REAL_ESTATE_TERMS[property.propertyType]" 
+              :description="REAL_ESTATE_TERMS[property.propertyType]"
+            >
+              {{ property.propertyType }}
+            </InfoTooltip>
+            <template v-else>{{ property.propertyType }}</template>
+          </span>
         </div>
         <div class="info-item">
           <span class="info-label">거래 유형</span>
-          <span class="info-value">{{ property.transactionType }}</span>
+          <span class="info-value">
+            <InfoTooltip 
+              v-if="REAL_ESTATE_TERMS[property.transactionType]" 
+              :description="REAL_ESTATE_TERMS[property.transactionType]"
+            >
+              {{ property.transactionType }}
+            </InfoTooltip>
+            <template v-else>{{ property.transactionType }}</template>
+          </span>
         </div>
         <div class="info-item">
           <span class="info-label">면적</span>
-          <span class="info-value">{{ property.area }}평 ({{ property.sqm }}㎡)</span>
+          <span class="info-value">
+            <InfoTooltip :description="REAL_ESTATE_TERMS.평">
+              {{ property.area }}평
+            </InfoTooltip>
+            ({{ property.sqm }}㎡)
+          </span>
         </div>
-        <div class="info-item">
+        <div class="info-item" v-if="property.rooms || property.bathrooms">
           <span class="info-label">방 / 욕실</span>
-          <span class="info-value">방 {{ property.rooms }}개 / 욕실 {{ property.bathrooms }}개</span>
+          <span class="info-value">
+            <template v-if="property.rooms">방 {{ property.rooms }}개</template>
+            <template v-if="property.rooms && property.bathrooms"> / </template>
+            <template v-if="property.bathrooms">욕실 {{ property.bathrooms }}개</template>
+          </span>
         </div>
-        <div class="info-item">
+        <div class="info-item" v-if="property.floor">
           <span class="info-label">층수</span>
-          <span class="info-value">{{ property.floor }}</span>
+          <span class="info-value">{{ property.floor }}층</span>
         </div>
         <div class="info-item">
           <span class="info-label">건축년도</span>
@@ -60,10 +85,10 @@
       <p class="description-text">{{ property.description }}</p>
     </div>
 
-    <div class="info-section" v-if="property.agentInfo">
+    <div class="info-section">
       <h3 class="section-title">중개인 정보</h3>
-      <div class="agent-info">
-        <div class="info-item">
+      <div v-if="property.agentInfo" class="agent-info">
+        <div class="info-item" v-if="property.agentInfo.name">
           <span class="info-label">이름</span>
           <span class="info-value">{{ property.agentInfo.name }}</span>
         </div>
@@ -76,11 +101,17 @@
           <span class="info-value">{{ property.agentInfo.phone }}</span>
         </div>
       </div>
+      <p v-else class="agent-empty">
+        중개인 정보가 등록되지 않았습니다
+      </p>
     </div>
   </div>
 </template>
 
 <script setup>
+import InfoTooltip from '@/components/common/InfoTooltip.vue'
+import { REAL_ESTATE_TERMS } from '@/constants/realEstateTerms'
+
 const props = defineProps({
   property: {
     type: Object,
@@ -194,6 +225,12 @@ html[data-theme="night"] .description-text {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.agent-empty {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 @media (max-width: 767px) {

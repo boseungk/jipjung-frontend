@@ -253,7 +253,9 @@ function renderMarkers() {
 
     filteredProperties.value.forEach((property) => {
         const isSelected = selectedProperty.value?.id === property.id
-        const isAffordable = property.price * 0.3 <= targetAmount.value
+        const priceManwon = Number(property.price) || 0
+        const downPaymentWon = Math.ceil(priceManwon * 10000 * 0.3)
+        const isAffordable = downPaymentWon <= (Number(targetAmount.value) || 0)
 
         createPropertyMarker(property, isSelected, isAffordable)
     })
