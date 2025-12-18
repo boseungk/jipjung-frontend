@@ -305,6 +305,30 @@ export const useGamificationStore = defineStore('gamification', () => {
   }
 
   /**
+   * 인테리어 트랙 시작 (사용자가 명시적으로 "인테리어 시작하기"를 눌렀을 때 호출)
+   * 
+   * 집 완공 후 가구 배치 모드로 전환합니다.
+   * localStorage에 진행 상태를 저장하여 다음 로그인 시에도 유지됩니다.
+   */
+  async function startFurnitureTrack() {
+    const updated = {
+      ...gamification.value,
+      buildTrack: 'furniture',
+      furnitureStage: Math.max(1, furnitureStage.value || 1),
+      houseStage: HOUSE_TOTAL_STAGES,
+      experiencePoints: 0,
+      nextLevelExp: calculateNextMilestoneExp('furniture', 1)
+    }
+    await saveGamification(updated)
+
+    // localStorage에 저장하여 다음 대시보드 로드 시에도 furniture 트랙 유지
+    authStore.persistFurnitureProgress({
+      furnitureStage: updated.furnitureStage,
+      experiencePoints: 0
+    })
+  }
+
+  /**
    * 성장 결과 반영 (저축 API 응답에서 사용)
    * 
    * 백엔드 SavingsRecordResponse.GrowthResult 필드:
@@ -327,17 +351,12 @@ export const useGamificationStore = defineStore('gamification', () => {
     const currentFurnitureStage = Number(authStore.userGamification?.furnitureStage) || 0
     const currentTrackExp = Number(authStore.userGamification?.experiencePoints) || 0
 
-    let nextTrack = nextStep > HOUSE_TOTAL_STAGES ? 'furniture' : 'house'
+    // 트랙 결정 로직:
+    // - 현재 트랙이 furniture면 유지
+    // - 현재 트랙이 house면 레벨 6(완공)에 도달해도 house 유지
+    //   (사용자가 명시적으로 "인테리어 시작하기"를 눌러야 furniture로 전환됨)
+    let nextTrack = currentTrack
     const nextHouseStage = Math.min(HOUSE_TOTAL_STAGES, nextStep)
-
-    // 백엔드가 레벨을 6(완공)에서 더 올려주지 않는 경우에도,
-    // 집 완성 이후에는 인테리어 트랙으로 넘어갈 수 있어야 합니다.
-    if (nextHouseStage >= HOUSE_TOTAL_STAGES) {
-      nextTrack = 'furniture'
-    }
-    if (currentTrack === 'furniture' && nextStep <= HOUSE_TOTAL_STAGES) {
-      nextTrack = 'furniture'
-    }
 
     const baseFurnitureStage = nextTrack === 'furniture'
       ? Math.min(FURNITURE_TOTAL_STAGES, Math.max(1, currentFurnitureStage, nextStep - HOUSE_TOTAL_STAGES))
@@ -453,6 +472,7 @@ export const useGamificationStore = defineStore('gamification', () => {
     // resetStreak,
     resetFurnitureProgress,
     resetHouseProgress,
+    startFurnitureTrack,
     applyGrowthResult
   }
 })

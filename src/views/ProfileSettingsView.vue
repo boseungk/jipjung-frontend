@@ -26,14 +26,8 @@
 
           <div class="form-field">
             <label class="field-label">생년월일</label>
-            <input
-              v-model.number="editableUser.birthYear"
-              type="number"
-              class="field-input"
-              placeholder="예: 1995"
-              :min="birthYearMin"
-              :max="birthYearMax"
-            />
+            <div class="field-input readonly">{{ user.birthYear ? `${user.birthYear}년생` : '-' }}</div>
+            <div class="field-description">생년월일은 온보딩 시 설정되며 변경할 수 없습니다</div>
           </div>
         </section>
 
@@ -54,7 +48,6 @@
                 v-model.number="editableUser.annualIncome"
                 type="number"
                 class="field-input income-input"
-                placeholder="연소득을 입력하세요"
                 :min="0"
                 :max="50000"
               />
@@ -75,7 +68,6 @@
                 v-model.number="editableUser.existingLoanMonthly"
                 type="number"
                 class="field-input income-input"
-                placeholder="월 상환금을 입력하세요"
                 :min="0"
                 :max="1000"
               />
@@ -106,7 +98,6 @@
         <!-- Account Actions Section -->
         <section class="settings-section danger-zone">
           <h2 class="section-title">
-            <AppIcon name="gear" :size="20" />
             계정 관리
           </h2>
           
@@ -230,7 +221,6 @@ const hasChanges = computed(() => {
 
   return (
     currentEditable.nickname !== currentUser.nickname ||
-    currentEditable.birthYear !== currentUser.birthYear ||
     currentEditable.annualIncome !== currentUser.annualIncome ||
     currentEditable.existingLoanMonthly !== currentUser.existingLoanMonthly
   )
@@ -282,14 +272,7 @@ async function handleSave() {
       profileUpdatePayload.nickname = normalizedEditable.nickname
     }
 
-    if (normalizedEditable.birthYear !== normalizedUser.birthYear) {
-      if (!normalizedEditable.birthYear) {
-        alert('생년월일(출생년도)을 입력해주세요.')
-        return
-      }
-
-      profileUpdatePayload.birthYear = clampNumber(normalizedEditable.birthYear, birthYearMin, birthYearMax)
-    }
+    // 생년월일은 더 이상 수정 불가 (온보딩에서만 설정됨)
 
     if (normalizedEditable.annualIncome !== normalizedUser.annualIncome) {
       profileUpdatePayload.annualIncome = clampNumber(normalizedEditable.annualIncome, 0, 50000)

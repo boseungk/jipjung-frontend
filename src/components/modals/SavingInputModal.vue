@@ -2,15 +2,47 @@
   <Teleport to="body">
     <transition name="modal">
       <div v-if="isOpen" class="modal-overlay" @click="handleOverlayClick">
-        <div class="modal-container" @click.stop>
+        <div 
+          class="modal-container" 
+          @click.stop
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="saving-modal-title"
+        >
         <!-- Header -->
         <div class="modal-header">
-          <h2 class="modal-title">
+          <h2 id="saving-modal-title" class="modal-title">
             <AppIcon name="piggyBank" :size="24" weight="fill" color="currentColor" />
-            저축 기록하기
+            저축하기
           </h2>
           <button class="close-button" @click="closeModal" aria-label="닫기" :disabled="isSubmitting">
             <PhX :size="20" weight="bold" color="currentColor" />
+          </button>
+        </div>
+
+        <!-- Goal Progress Mini Display -->
+        <div v-if="hasGoal" class="goal-mini-progress">
+          <div class="progress-info">
+            <span class="goal-name">{{ propertyName }}</span>
+            <span class="progress-rate">{{ achievementRate }}%</span>
+          </div>
+          <div class="progress-bar-mini">
+            <div class="progress-fill" :style="{ width: achievementRate + '%' }"></div>
+          </div>
+        </div>
+
+        <!-- Quick Amount Buttons -->
+        <div class="quick-amounts">
+          <button
+            v-for="amount in quickAmounts"
+            :key="amount"
+            type="button"
+            class="quick-btn"
+            :class="{ active: selectedQuickAmount === amount }"
+            @click="selectQuickAmount(amount)"
+            :disabled="isSubmitting"
+          >
+            {{ formatQuickAmount(amount) }}
           </button>
         </div>
 
@@ -18,7 +50,7 @@
         <form class="modal-form" @submit.prevent="handleSubmit">
           <!-- Amount Input -->
           <div class="form-group">
-            <label for="amount" class="form-label">저축 금액</label>
+            <label for="amount" class="form-label">직접 입력</label>
             <div class="input-wrapper">
               <input
                 id="amount"
@@ -27,11 +59,17 @@
                 class="form-input"
                 placeholder="금액을 입력하세요"
                 min="1"
-                required
                 :disabled="isSubmitting"
+                @input="clearQuickSelection"
               />
               <span class="input-suffix">원</span>
             </div>
+          </div>
+
+          <!-- XP Preview -->
+          <div v-if="estimatedXp > 0" class="xp-preview">
+            <AppIcon name="star" :size="16" :active="true" />
+            <span>예상 경험치: <strong>약 +{{ estimatedXp }} XP</strong></span>
           </div>
 
           <!-- Memo Input -->
@@ -42,16 +80,16 @@
               v-model="formData.memo"
               class="form-textarea"
               placeholder="메모를 입력하세요"
-              rows="3"
+              rows="2"
               :disabled="isSubmitting"
             ></textarea>
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" class="submit-button" :disabled="isSubmitting || !formData.amount">
+          <button type="submit" class="submit-button" :disabled="isSubmitting || !finalAmount">
             <AppIcon v-if="!isSubmitting" name="floppyDisk" :size="20" :active="true" :is-major-cta="true" aria-hidden="true" />
             <span v-if="isSubmitting" class="spinner"></span>
-            {{ isSubmitting ? '저축 기록 중...' : '저축 기록하기' }}
+            {{ isSubmitting ? '저축 기록 중...' : submitButtonText }}
           </button>
         </form>
       </div>
@@ -67,14 +105,21 @@
  * 저축 기록 모달 컴포넌트.
  * 대시보드 "저축하기" 버튼 클릭 시 표시됩니다.
  * 
+ * [C-1 UX 개선] 개선 사항:
+ * - 목표 진행률 미니 표시
+ * - 빠른 저축 버튼 (1만/5만/10만/50만원)
+ * - XP 미리보기 (보수적 "약" 표현)
+ * 
  * 백엔드 API: POST /api/dream-home/savings
  */
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { PhX } from '@phosphor-icons/vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useToast } from '@/composables/useToast'
+import { formatWon } from '@/utils/formatters'
 
 const props = defineProps({
   isOpen: {
@@ -90,12 +135,74 @@ const dreamHomeStore = useDreamHomeStore()
 const gamificationStore = useGamificationStore()
 const { showSuccess, showError } = useToast()
 
+// 목표 정보 (Goal Progress Mini Display)
+const { 
+  propertyName, 
+  achievementRate,
+  dreamHomeId 
+} = storeToRefs(dreamHomeStore)
+
+// 목표 설정 여부
+const hasGoal = computed(() => dreamHomeId.value != null)
+
 // State
 const isSubmitting = ref(false)
+const selectedQuickAmount = ref(null)
 const formData = ref({
   amount: null,
   memo: ''
 })
+
+// 빠른 저축 금액 옵션
+const quickAmounts = [10000, 50000, 100000, 500000]
+
+/**
+ * 최종 금액 (빠른 선택 또는 직접 입력)
+ */
+const finalAmount = computed(() => {
+  return selectedQuickAmount.value || formData.value.amount || 0
+})
+
+/**
+ * XP 예상치 계산 (보수적 표현)
+ * 백엔드 정책: 1만원당 약 1XP (실제 정책은 백엔드에서 결정)
+ */
+const estimatedXp = computed(() => {
+  return Math.floor(finalAmount.value / 10000)
+})
+
+/**
+ * 제출 버튼 텍스트
+ */
+const submitButtonText = computed(() => {
+  if (finalAmount.value > 0) {
+    return `${formatWon(finalAmount.value)} 저축하기`
+  }
+  return '저축하기'
+})
+
+/**
+ * 빠른 금액 선택
+ */
+const selectQuickAmount = (amount) => {
+  selectedQuickAmount.value = amount
+  formData.value.amount = null // 직접 입력 초기화
+}
+
+/**
+ * 빠른 금액 포맷 (버튼용)
+ */
+const formatQuickAmount = (amount) => {
+  if (amount >= 10000) return `${amount / 10000}만원`
+  return `${amount.toLocaleString()}원`
+}
+
+/**
+ * 직접 입력 시 빠른 선택 해제
+ */
+const clearQuickSelection = () => {
+  selectedQuickAmount.value = null
+}
 
 /**
  * 모달 닫기
@@ -117,7 +224,8 @@ const handleOverlayClick = () => {
  * 폼 제출 - 백엔드 저축 API 호출
  */
 const handleSubmit = async () => {
-  if (!formData.value.amount || formData.value.amount <= 0) {
+  const amount = finalAmount.value
+  if (!amount || amount <= 0) {
     showError('금액을 입력해주세요')
     return
   }
@@ -126,9 +234,8 @@ const handleSubmit = async () => {
 
   try {
     // 백엔드 저축 API 호출 (항상 DEPOSIT)
-    // 원 단위 입력을 그대로 전송
     const result = await dreamHomeStore.recordSavings(
-      formData.value.amount,
+      amount,
       'DEPOSIT',
       formData.value.memo || ''
     )
@@ -148,7 +255,6 @@ const handleSubmit = async () => {
 
     emit('submit', result)
     
-    // isSubmitting을 먼저 false로 설정해야 closeModal이 작동함
     isSubmitting.value = false
     closeModal()
   } catch (error) {
@@ -165,7 +271,20 @@ const resetForm = () => {
     amount: null,
     memo: ''
   }
+  selectedQuickAmount.value = null
 }
+
+// ESC 키로 모달 닫기
+watch(() => props.isOpen, (isOpen, _, onCleanup) => {
+  if (!isOpen) return
+
+  const handleEsc = (e) => {
+    if (e.key === 'Escape') closeModal()
+  }
+
+  document.addEventListener('keydown', handleEsc)
+  onCleanup(() => document.removeEventListener('keydown', handleEsc))
+})
 </script>
 
 <style scoped>
@@ -226,7 +345,7 @@ html[data-theme="night"] .modal-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .modal-title {
@@ -241,6 +360,127 @@ html[data-theme="night"] .modal-container {
 
 html[data-theme="night"] .modal-title {
   color: var(--showroom-text-night, #F5EDE3);
+}
+
+/* Goal Progress Mini Display */
+.goal-mini-progress {
+  padding: 0.75rem 1rem;
+  background: var(--surface-muted, #f9fafb);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+html[data-theme="night"] .goal-mini-progress {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.goal-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-base, #1f2937);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+html[data-theme="night"] .goal-name {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.progress-rate {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--brand-accent, #ff6b3d);
+}
+
+.progress-bar-mini {
+  height: 6px;
+  background: var(--border-soft, #e5e7eb);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+html[data-theme="night"] .progress-bar-mini {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Quick Amount Buttons */
+.quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.quick-btn {
+  padding: 0.65rem 0.5rem;
+  border: 1px solid var(--border-soft, #e5e7eb);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-base, #1f2937);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+html[data-theme="night"] .quick-btn {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.quick-btn:hover:not(:disabled) {
+  border-color: var(--brand-accent, #ff6b3d);
+  color: var(--brand-accent, #ff6b3d);
+  background: rgba(255, 107, 61, 0.05);
+}
+
+.quick-btn.active {
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  border-color: var(--brand-accent, #ff6b3d);
+  color: #ffffff;
+}
+
+.quick-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* XP Preview */
+.xp-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(255, 107, 61, 0.08);
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  color: var(--brand-accent, #ff6b3d);
+  margin-bottom: 0.5rem;
+}
+
+html[data-theme="night"] .xp-preview {
+  background: rgba(212, 165, 116, 0.12);
+  color: var(--showroom-accent-night, #D4A574);
+}
+
+.xp-preview strong {
+  font-weight: 700;
 }
 
 .close-button {

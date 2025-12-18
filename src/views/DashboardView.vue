@@ -68,6 +68,13 @@ function syncGoalGuideVisibility() {
     return
   }
 
+  // userId가 없으면 범용 키로 체크하지 않고 항상 모달 표시
+  // (이전 사용자의 dismiss 기록이 영향주는 것 방지)
+  if (!authStore.userId) {
+    showGoalGuideModal.value = true
+    return
+  }
+
   const dismissed = sessionStorage.getItem(dismissalKey.value)
   showGoalGuideModal.value = !dismissed
 }

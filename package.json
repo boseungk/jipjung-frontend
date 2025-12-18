@@ -1,34 +1,41 @@
 {
-    "name": "jipjung-frontend",
-    "version": "1.0.0",
-    "description": "SSAFYHome Lifestyle Showroom - Vue 3 Application",
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
-    },
-    "dependencies": {
-        "@phosphor-icons/vue": "^2.2.1",
-        "apexcharts": "^5.3.6",
-        "axios": "^1.6.7",
-        "canvas-confetti": "^1.9.4",
-        "chart.js": "^4.4.1",
-        "gsap": "^3.14.2",
-        "pinia": "^2.1.7",
-        "vue": "^3.4.21",
-        "vue-chartjs": "^5.3.0",
-        "vue-router": "^4.2.5",
-        "vue3-apexcharts": "^1.10.0"
-    },
-    "devDependencies": {
-        "@vitejs/plugin-vue": "^5.0.0",
-        "autoprefixer": "^10.4.16",
-        "postcss": "^8.4.32",
-        "tailwindcss": "^3.4.0",
-        "vite": "^5.0.0"
-    },
-    "optionalDependencies": {
-        "@rollup/rollup-win32-x64-msvc": "^4.53.3"
-    }
+  "name": "jipjung-frontend",
+  "version": "1.0.0",
+  "description": "SSAFYHome Lifestyle Showroom - Vue 3 Application",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
+  },
+  "dependencies": {
+    "@phosphor-icons/vue": "^2.2.1",
+    "apexcharts": "^5.3.6",
+    "axios": "^1.6.7",
+    "canvas-confetti": "^1.9.4",
+    "chart.js": "^4.4.1",
+    "gsap": "^3.14.2",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-chartjs": "^5.3.0",
+    "vue-router": "^4.2.5",
+    "vue3-apexcharts": "^1.10.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.0.3",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.53.3"
+  }
 }

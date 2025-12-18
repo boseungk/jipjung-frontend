@@ -1,25 +1,62 @@
 <template>
   <div class="bento-grid">
-    <MainGoalCard />
+    <MainGoalCard @open-saving-modal="openSavingModal" />
     <ProfileCard />
-    <AssetGrowthCard />
-    <WeeklyStreakCard @open-savings="goToSavings" />
+    <AssetGrowthCard @start-saving="openSavingModal" />
+    <WeeklyStreakCard @open-saving-modal="openSavingModal" />
     <DsrGaugeCard />
+
+    <!-- Single Modal Instance: 저축 모달 -->
+    <SavingInputModal
+      :is-open="showSavingModal"
+      @close="closeSavingModal"
+      @submit="handleSavingComplete"
+    />
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+/**
+ * BentoGrid
+ * 
+ * 대시보드 Bento Grid 레이아웃 컨테이너.
+ * 
+ * [C-1 UX 개선] 저축 모달을 이 컴포넌트에서 단일 인스턴스로 관리합니다.
+ * MainGoalCard, WeeklyStreakCard, AssetGrowthCard 모두 이 모달을 공유합니다.
+ */
+import { ref } from 'vue'
 import ProfileCard from './bento/ProfileCard.vue'
 import MainGoalCard from './bento/MainGoalCard.vue'
 import WeeklyStreakCard from './bento/WeeklyStreakCard.vue'
 import DsrGaugeCard from './bento/DsrGaugeCard.vue'
 import AssetGrowthCard from './bento/AssetGrowthCard.vue'
+import SavingInputModal from '@/components/modals/SavingInputModal.vue'
 
-const router = useRouter()
+// 저축 모달 상태 (단일 인스턴스)
+const showSavingModal = ref(false)
 
-const goToSavings = () => {
-  router.push({ name: 'Savings' })
+/**
+ * 저축 모달 열기
+ * - MainGoalCard, WeeklyStreakCard, AssetGrowthCard에서 호출
+ */
+const openSavingModal = () => {
+  showSavingModal.value = true
+}
+
+/**
+ * 저축 모달 닫기
+ */
+const closeSavingModal = () => {
+  showSavingModal.value = false
+}
+
+/**
+ * 저축 완료 핸들러
+ * UI는 store reactive 데이터로 자동 갱신됨
+ */
+const handleSavingComplete = (result) => {
+  console.log('저축 완료:', result)
+  closeSavingModal()
 }
 </script>
 

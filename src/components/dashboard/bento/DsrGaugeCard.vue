@@ -1,7 +1,9 @@
 <template>
   <div class="bento-card dsr-gauge-card">
     <div class="card-heading">
-      <h3 class="card-title">DSR</h3>
+      <InfoTooltip :description="FINANCE_TERMS.DSR" id="dsr-gauge-tooltip">
+        <h3 class="card-title">DSR</h3>
+      </InfoTooltip>
       <span class="status-chip" :class="statusTone">{{ statusMessage }}</span>
     </div>
     
@@ -18,7 +20,13 @@
     
     <div class="status-info">
       <AppIcon name="checkCircle" :size="18" :active="true" class="status-icon" aria-hidden="true" />
-      <span class="status-text">기존 상환 ₩{{ formatWon(existingLoanMonthly) }} · 여력 ₩{{ formatWon(monthlyRepaymentCapacity) }}</span>
+      <span class="status-text">기존 상환 {{ formatWon(existingLoanMonthly) }} · 여력 {{ formatWon(monthlyRepaymentCapacity) }}</span>
+    </div>
+
+    <!-- H-3: DSR 판단 기준 명시 -->
+    <div class="dsr-criteria">
+      <AppIcon name="info" :size="14" class="criteria-icon" aria-hidden="true" />
+      <span>DSR {{ DSR_THRESHOLDS.SAFE }}% 이하 시 대출 승인에 유리해요</span>
     </div>
   </div>
 </template>
@@ -31,6 +39,10 @@ import VueApexCharts from 'vue3-apexcharts'
 import { useTheme } from '@/composables/useTheme'
 import { CHART_PALETTE } from '@/constants/colors'
 import { formatWon } from '@/utils/formatters'
+import AppIcon from '@/components/common/AppIcon.vue'
+import InfoTooltip from '@/components/common/InfoTooltip.vue'
+import { FINANCE_TERMS } from '@/constants/financeTerms'
+import { DSR_THRESHOLDS, getDsrGrade, getDsrGaugeColor, getDsrToneClass } from '@/constants/dsrGrade'
 
 const apexchart = VueApexCharts
 
@@ -43,29 +55,22 @@ const {
 const { theme } = useTheme()
 
 const chartLoaded = ref(false)
+
+onMounted(() => {
+  chartLoaded.value = true
+})
+
 const displayRatio = computed(() => {
   const val = Number(dsrRatio.value) || 0
   if (val <= 0) return 0
   return Math.max(5, Math.min(100, val))
 })
 
-const statusMessage = computed(() => {
-  if (dsrRatio.value <= 40) return '대출 승인 매우 안전'
-  if (dsrRatio.value <= 70) return '대출 승인 주의 필요'
-  return '대출 승인 어려움'
-})
-
-const statusTone = computed(() => {
-  if (dsrRatio.value <= 40) return 'tone-safe'
-  if (dsrRatio.value <= 70) return 'tone-warning'
-  return 'tone-danger'
-})
-
-const gaugeColor = computed(() => {
-  if (dsrRatio.value <= 40) return '#43A047'
-  if (dsrRatio.value <= 70) return '#FBC02D'
-  return '#F44336'
-})
+// 공통 헬퍼 사용으로 게이지/뱃지 일관성 보장
+const dsrGradeInfo = computed(() => getDsrGrade(dsrRatio.value))
+const statusMessage = computed(() => dsrGradeInfo.value.description)
+const statusTone = computed(() => getDsrToneClass(dsrRatio.value))
+const gaugeColor = computed(() => getDsrGaugeColor(dsrRatio.value))
 
 const chartPalette = computed(() => (theme.value === 'night' ? CHART_PALETTE.night : CHART_PALETTE.day))
 
@@ -105,9 +110,6 @@ const chartOptions = computed(() => ({
   stroke: { lineCap: 'round' }
 }))
 
-onMounted(() => {
-  chartLoaded.value = true
-})
 </script>
 
 <style scoped>
@@ -198,5 +200,23 @@ html[data-theme="night"] .tone-danger {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--ink-base, #1f2937);
+}
+
+/* H-3: DSR 기준 안내 */
+.dsr-criteria {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--ink-muted, #6b7280);
+  background: var(--surface-muted, #f3f4f6);
+  border-radius: 8px;
+}
+
+.criteria-icon {
+  color: var(--brand-accent, #ff6b3d);
+  flex-shrink: 0;
 }
 </style>

@@ -5,7 +5,14 @@
         <p class="eyebrow">내 계정</p>
         <h3 class="card-title">프로필</h3>
       </div>
-      <span class="level-chip heading-level">
+      <!-- M-1: Level chip with tooltip -->
+      <button 
+        type="button" 
+        class="level-chip heading-level" 
+        @click="showLevelInfo = !showLevelInfo"
+        :aria-expanded="showLevelInfo"
+        aria-label="레벨 설명 보기"
+      >
         <AppIcon
           :name="isFurnitureTrack ? 'confetti' : 'star'"
           :size="14"
@@ -20,7 +27,20 @@
         <template v-else>
           Lv.{{ currentLevel }} · {{ levelTitle }}
         </template>
-      </span>
+      </button>
+      <!-- M-1: Level Info Tooltip -->
+      <Transition name="fade">
+        <div v-if="showLevelInfo" class="level-info-popup">
+          <p class="level-info-title">레벨 시스템 안내</p>
+          <ul class="level-info-list">
+            <li><strong>Lv.1~3:</strong> 기초 단계 (씨앗 심기)</li>
+            <li><strong>Lv.4~6:</strong> 성장 단계 (뿌리 내리기)</li>
+            <li><strong>Lv.7~9:</strong> 발전 단계 (꽃 피우기)</li>
+            <li><strong>Lv.10+:</strong> 마스터 단계 (열매 맺기)</li>
+          </ul>
+          <p class="level-info-desc">저축을 통해 XP를 쌓고 레벨업하세요!</p>
+        </div>
+      </Transition>
     </div>
     <div class="card-layout">
       <!-- Avatar -->
@@ -51,18 +71,35 @@
         </div>
       </div>
       <div class="exp-row">
-        <div class="exp-info">{{ currentExpInLevel }} / {{ nextLevelExp }} XP</div>
+        <div class="exp-info">
+          {{ currentExpInLevel }} / {{ nextLevelExp }} XP
+          <!-- M-6: XP 획득 방법 툴팁 -->
+          <button type="button" class="xp-help-trigger" @click="showXpHelp = !showXpHelp" aria-label="XP 획득 방법">
+            <AppIcon name="question" :size="12" />
+          </button>
+        </div>
         <div class="exp-remaining">
           {{ isFurnitureTrack ? '다음 단계까지' : '다음 레벨까지' }} {{ remainingExp }} XP
         </div>
       </div>
+      <!-- M-6: XP 획득 방법 팝업 -->
+      <Transition name="fade">
+        <div v-if="showXpHelp" class="xp-help-popup">
+          <ul class="xp-help-list">
+            <li><strong>매일 접속</strong> +5 XP</li>
+            <li><strong>저축 1만원당</strong> +1 XP</li>
+            <li><strong>목표 달성</strong> +100 XP</li>
+            <li><strong>7일 연속 스트릭</strong> +50 XP</li>
+          </ul>
+        </div>
+      </Transition>
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
 import { useAuthStore } from '../../../stores/authStore'
@@ -81,6 +118,12 @@ const userInitial = computed(() => {
   const name = (userName.value || '').trim()
   return name ? name[0] : ''
 })
+
+// M-6: XP 획득 방법 팝업 상태
+const showXpHelp = ref(false)
+
+// M-1: 레벨 설명 팝업 상태
+const showLevelInfo = ref(false)
 </script>
 
 <style scoped>
@@ -100,6 +143,7 @@ const userInitial = computed(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+  position: relative;
 }
 
 .title-stack {
@@ -350,5 +394,133 @@ html[data-theme="night"] .progress-value {
 
 html[data-theme="night"] .user-note {
   color: var(--bento-text-muted, #9CA3AF);
+}
+
+/* M-6: XP 획득 방법 */
+.xp-help-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 0.35rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-muted, #f3f4f6);
+  color: var(--ink-muted, #6b7280);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.xp-help-trigger:hover {
+  background: var(--brand-accent-soft, #ffe4d9);
+  color: var(--brand-accent, #ff6b3d);
+  transform: scale(1.1);
+}
+
+.xp-help-popup {
+  margin-top: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--surface-card-bg, #fff);
+  border: 1px solid var(--border-soft, #e5e7eb);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="night"] .xp-help-popup {
+  background: var(--surface-card-bg, #1f2937);
+  border-color: var(--border-soft, #374151);
+}
+
+.xp-help-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ink-base, #1f2937);
+}
+
+html[data-theme="night"] .xp-help-list {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+.xp-help-list li {
+  display: flex;
+  justify-content: space-between;
+}
+
+.xp-help-list strong {
+  color: var(--ink-muted, #6b7280);
+}
+
+/* M-1: Level Info Popup */
+.level-info-popup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  z-index: 100;
+  width: 260px;
+  padding: 1rem;
+  background: var(--surface-elevated, #ffffff);
+  border: 1px solid var(--border-soft, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="night"] .level-info-popup {
+  background: var(--surface-elevated, #2d3139);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.level-info-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink-base, #1f2937);
+}
+
+html[data-theme="night"] .level-info-title {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.level-info-list {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--ink-base, #1f2937);
+}
+
+html[data-theme="night"] .level-info-list {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.level-info-list strong {
+  color: var(--brand-accent, #ff6b3d);
+  margin-right: 0.35rem;
+}
+
+.level-info-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--bento-text-muted, #9ca3af);
+}
+
+/* Fade 애니메이션 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

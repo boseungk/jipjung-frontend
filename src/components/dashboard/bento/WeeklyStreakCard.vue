@@ -39,6 +39,8 @@
           />
           <div v-else class="future-dot"></div>
           <span class="day-label">{{ day.label }}</span>
+          <!-- M-4: 탭 힌트 (오늘 + 미완료) -->
+          <span v-if="day.isToday && !day.completed" class="tap-hint">탭해서 저축!</span>
         </div>
       </button>
     </div>
@@ -68,7 +70,7 @@ import { useGamificationStore } from '../../../stores/gamificationStore'
 import { useAuthStore } from '../../../stores/authStore'
 import AppIcon from '../../common/AppIcon.vue'
 
-const emit = defineEmits(['open-savings'])
+const emit = defineEmits(['open-saving-modal'])
 
 const gamificationStore = useGamificationStore()
 const authStore = useAuthStore()
@@ -124,14 +126,14 @@ const weekDays = computed(() => {
 
 /**
  * 오늘 불꽃 클릭 핸들러
- * - 저축 화면 열기 CTA (수동 스트릭 증가 제거)
- * - 스트릭은 백엔드에서 활동 시 자동 처리
+ * [C-1 UX 개선] 저축 모달 열기 이벤트 emit
+ * 스트릭은 백엔드에서 활동 시 자동 처리
  */
 const handleDayClick = (day) => {
   if (!day.isToday) return
   
-  // 저축 화면 열기 이벤트 발생
-  emit('open-savings')
+  // 저축 모달 열기 이벤트 발생
+  emit('open-saving-modal')
 }
 
 const dayAriaLabel = (day) => {
@@ -403,5 +405,34 @@ html[data-theme="night"] .streak-count {
 
 .hint-icon {
   color: var(--brand-accent, #ff6b3d);
+}
+
+/* M-4: 탭 힌트 스타일 */
+.tap-hint {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--brand-accent, #ff6b3d);
+  white-space: nowrap;
+  animation: tap-bounce 2s ease-in-out infinite;
+}
+
+@keyframes tap-bounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) translateY(-3px);
+    opacity: 0.8;
+  }
+}
+
+.day-item.today {
+  position: relative;
+  padding-bottom: 1.5rem;
 }
 </style>

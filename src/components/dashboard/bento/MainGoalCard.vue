@@ -1,48 +1,72 @@
 <template>
   <div class="bento-card main-goal-card">
-    <!-- TRUE 1:1 Grid: Donut Chart | Text + Button -->
-    <div class="equal-grid">
-      <!-- LEFT: CSS Donut Chart -->
-      <div class="chart-column">
-        <div class="card-heading">
-          <h3 class="card-title">목표 달성률</h3>
-        </div>
-        <div class="css-donut-chart">
-          <div class="donut-ring" :style="{ '--progress': achievementRate + '%' }">
-            <div class="donut-hole">
-              <div class="donut-label">진행도</div>
-              <div class="donut-text">{{ achievementRate }}%</div>
+    <!-- 목표가 있을 때: 정상 UI -->
+    <template v-if="hasGoal">
+      <!-- TRUE 1:1 Grid: Donut Chart | Text + Button -->
+      <div class="equal-grid">
+        <!-- LEFT: CSS Donut Chart -->
+        <div class="chart-column">
+          <div class="card-heading">
+            <h3 class="card-title">목표 달성률</h3>
+          </div>
+          <div class="css-donut-chart">
+            <div 
+              class="donut-ring" 
+              :class="{ 'is-zero': isZeroProgress }"
+              :style="{ '--progress': achievementRateNumber + '%' }"
+            >
+              <div class="donut-hole">
+                <template v-if="isZeroProgress">
+                  <!-- L-2: 0% 상태 피드백 -->
+                  <AppIcon name="sparkles" :size="20" class="zero-icon" />
+                  <div class="donut-text zero-text">첫 저축을<br>시작해보세요!</div>
+                </template>
+                <template v-else>
+                  <div class="donut-label">진행도</div>
+                  <div class="donut-text">{{ achievementRate }}%</div>
+                </template>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- RIGHT: Text + Button (Vertical Stack) -->
-      <div class="content-column">
-        <div class="text-stack">
-          <div class="context-small">입주까지</div>
-          <div class="amount-row">
-            <div class="amount-huge">{{ formatWon(remainingAmount) }}</div>
-            <span class="pill ghost">남은 금액</span>
-          </div>
-          <div class="subtitle-info">
-            목표: {{ propertyName }} <span class="muted">(총 {{ formatWon(targetAmount) }})</span>
-          </div>
-        </div>
         
-        <!-- Full-Width Button -->
-        <button class="savings-button" @click="openSavingModal">
-          <span class="btn-text">저축하기</span>
+        <!-- RIGHT: Text + Button (Vertical Stack) -->
+        <div class="content-column">
+          <div class="text-stack">
+            <div class="context-small">입주까지</div>
+            <div class="amount-row">
+              <div class="amount-huge">{{ formatWon(remainingAmount) }}</div>
+              <span class="pill ghost">남은 금액</span>
+            </div>
+            <div class="subtitle-info">
+              목표: {{ propertyName }} <span class="muted">(총 {{ formatWon(targetAmount) }})</span>
+            </div>
+          </div>
+          
+          <!-- Full-Width Button -->
+          <button class="savings-button" @click="handleSavingClick">
+            <span class="btn-text">저축하기</span>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- H-2: 목표가 없을 때: Empty State UI -->
+    <template v-else>
+      <div class="empty-state-content">
+        <div class="empty-icon-wrapper">
+          <AppIcon name="sparkles" :size="24" :active="true" />
+        </div>
+        <h4 class="empty-title">아직 목표가 없어요</h4>
+        <p class="empty-desc">
+          꿈의 집을 선택하고<br>저축 목표를 시작해보세요!
+        </p>
+        <button class="explore-button" @click="goToProperties">
+          <AppIcon name="search" :size="18" />
+          <span>매물 둘러보기</span>
         </button>
       </div>
-    </div>
-
-    <!-- Saving Modal -->
-    <SavingInputModal
-      :is-open="showSavingModal"
-      @close="closeSavingModal"
-      @submit="handleSavingComplete"
-    />
+    </template>
   </div>
 </template>
 
@@ -53,46 +77,62 @@
  * 대시보드 메인 목표 카드.
  * 드림홈 저축 진행률과 저축하기 버튼을 표시합니다.
  * 
- * "저축하기" 버튼 클릭 시 SavingInputModal을 표시하고,
- * 모달에서 백엔드 API를 호출하여 저축을 기록합니다.
+ * [C-1 UX 개선] 모달 관리를 부모(BentoGrid)로 위임.
+ * "저축하기" 버튼 클릭 시 'open-saving-modal' 이벤트를 emit합니다.
+ * 
+ * [H-2 UX 개선] 목표 미설정 시 Empty State UI 표시
  */
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { formatWon } from '@/utils/formatters'
-import SavingInputModal from '@/components/modals/SavingInputModal.vue'
+import AppIcon from '@/components/common/AppIcon.vue'
+
+const emit = defineEmits(['open-saving-modal'])
+const router = useRouter()
 
 const dreamHomeStore = useDreamHomeStore()
 const {
+  dreamHomeId,
   targetAmount,
   propertyName,
   achievementRate,
   remainingAmount
 } = storeToRefs(dreamHomeStore)
 
-// 모달 상태
-const showSavingModal = ref(false)
+/**
+ * 목표 설정 여부 판단
+ * dreamHomeId가 설정되어 있으면 목표가 있는 것으로 간주
+ */
+const hasGoal = computed(() => dreamHomeId.value != null)
 
 /**
- * 저축 모달 열기
+ * 달성률(%) 숫자 값
+ * - store는 문자열(예: "28.5")을 반환하므로 UI 계산/비교용 숫자 값을 별도로 둠
  */
-const openSavingModal = () => {
-  showSavingModal.value = true
+const achievementRateNumber = computed(() => {
+  const value = Number(achievementRate.value)
+  if (!Number.isFinite(value)) return 0
+  return Math.min(100, Math.max(0, value))
+})
+
+const isZeroProgress = computed(() => achievementRateNumber.value <= 0)
+
+/**
+ * 저축하기 버튼 클릭 핸들러
+ * 부모 컴포넌트(BentoGrid)에 모달 열기 요청
+ */
+const handleSavingClick = () => {
+  emit('open-saving-modal')
 }
 
 /**
- * 저축 모달 닫기
+ * 매물 둘러보기 버튼 클릭 핸들러
+ * 매물 검색 페이지로 이동
  */
-const closeSavingModal = () => {
-  showSavingModal.value = false
-}
-
-/**
- * 저축 완료 핸들러
- * UI는 store reactive 데이터로 자동 갱신됨
- */
-const handleSavingComplete = (result) => {
-  console.log('저축 완료:', result)
+const goToProperties = () => {
+  router.push('/properties')
 }
 </script>
 
@@ -206,6 +246,34 @@ html[data-theme="night"] .donut-hole {
 
 html[data-theme="night"] .donut-text {
   color: var(--showroom-text-night, #f5f6f7);
+}
+
+/* L-2: Zero progress state */
+.donut-ring.is-zero {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  animation: gentle-pulse 2.5s ease-in-out infinite;
+}
+
+html[data-theme="night"] .donut-ring.is-zero {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.zero-icon {
+  color: var(--brand-accent, #ff6b3d);
+  margin-bottom: 0.25rem;
+}
+
+.zero-text {
+  font-size: 0.8125rem !important;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 /* RIGHT: Content Column - Vertical Stack */
@@ -408,5 +476,71 @@ html[data-theme="night"] .subtitle-info {
   .css-donut-chart {
     max-width: 130px;
   }
+}
+
+/* H-2: Empty State UI */
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  height: 100%;
+  min-height: 280px;
+}
+
+.empty-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 107, 61, 0.1), rgba(255, 154, 117, 0.06));
+  margin-bottom: 1rem;
+}
+
+.empty-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink-base, #1f2937);
+  margin: 0 0 0.5rem;
+}
+
+html[data-theme="night"] .empty-title {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+.empty-desc {
+  font-size: 0.875rem;
+  color: var(--ink-muted, #6b7280);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.explore-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: white;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px -10px rgba(255, 107, 61, 0.4);
+}
+
+.explore-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -10px rgba(255, 107, 61, 0.5);
+}
+
+.explore-button:active {
+  transform: translateY(1px);
 }
 </style>

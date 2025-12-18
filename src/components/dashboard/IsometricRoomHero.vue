@@ -70,13 +70,16 @@
           </p>
         </div>
 
-        <!-- Progress Dots -->
+        <!-- Progress Dots with M-2 Tooltips -->
         <div class="progress-dots">
-          <span
+          <button
             v-for="dot in totalStages"
             :key="dot"
+            type="button"
             :class="['dot', { completed: dot < activeStage, active: dot === activeStage }]"
-          ></span>
+            :aria-label="getStepLabel(dot)"
+            :title="getStepLabel(dot)"
+          ></button>
         </div>
 
         <!-- Particle Container for Level-Up Celebrations -->
@@ -109,6 +112,16 @@ import {
 const DEFAULT_TOTAL_STEPS = SHOWROOM_TOTAL_STAGES.house
 const DEFAULT_FURNITURE_STEPS = SHOWROOM_TOTAL_STAGES.furniture
 
+/** Phase 1 (집 건설) 단계 정의 - M-2 툴팁용 */
+const HOUSE_STEPS = [
+  { id: 1, label: '터 다지기' },
+  { id: 2, label: '기초 공사' },
+  { id: 3, label: '뼈대 세우기' },
+  { id: 4, label: '벽체 완성' },
+  { id: 5, label: '지붕 올리기' },
+  { id: 6, label: '입주 준비' }
+]
+
 /** Phase 2 (가구 배치) 단계 정의 - 향후 확장용 */
 const FURNITURE_STEPS = [
   { id: 1, label: '바닥·벽 정돈', message: '배경과 바닥을 깔끔하게 준비했어요.' },
@@ -117,6 +130,18 @@ const FURNITURE_STEPS = [
   { id: 4, label: '분위기 완성', message: '램프로 공간이 따뜻해졌어요.' },
   { id: 5, label: '디테일', message: '소품까지 채워 완성했어요!' }
 ]
+
+/**
+ * M-2: 단계별 라벨을 반환 (진행도 도트 툴팁용)
+ */
+function getStepLabel(step) {
+  if (isHouseTrack.value) {
+    const info = HOUSE_STEPS.find(s => s.id === step)
+    return info ? `${step}단계: ${info.label}` : `${step}단계`
+  }
+  const info = FURNITURE_STEPS.find(s => s.id === step)
+  return info ? `${step}단계: ${info.label}` : `${step}단계`
+}
 
 // ============================================================================
 // Refs
@@ -392,6 +417,16 @@ watch(activeStage, (newStage, oldStage) => {
   }
 })
 
+// 집 완공(레벨 6 도달) 시 인테리어 시작 모달 표시
+watch(houseStage, (newStage, oldStage) => {
+  // 이미 furniture 트랙이면 무시
+  if (buildTrack.value === 'furniture') return
+  // house 트랙이고 레벨 6에 도달한 경우에만 모달 표시
+  if (newStage >= DEFAULT_TOTAL_STEPS && oldStage && oldStage < DEFAULT_TOTAL_STEPS) {
+    isUnlockModalOpen.value = true
+  }
+})
+
 watch(buildTrack, (track, prevTrack) => {
   if (track === prevTrack) return
 
@@ -469,9 +504,14 @@ onUnmounted(() => {
   if (furnitureStageRef.value) gsap.killTweensOf(furnitureStageRef.value)
 })
 
-function handleUnlockConfirm() {
+async function handleUnlockConfirm() {
   isUnlockModalOpen.value = false
-  displayTrack.value = buildTrack.value || 'furniture'
+  
+  // gamificationStore에 furniture 트랙 시작을 저장
+  // 이렇게 해야 다음에 대시보드를 로드해도 furniture 트랙이 유지됨
+  await gamificationStore.startFurnitureTrack()
+  
+  displayTrack.value = 'furniture'
 }
 </script>
 

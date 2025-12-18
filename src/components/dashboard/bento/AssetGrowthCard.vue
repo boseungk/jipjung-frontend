@@ -19,8 +19,16 @@
         :series="chartSeries"
         height="170"
       />
+      <!-- M-5: 빈 상태 CTA -->
       <div v-else-if="chartLoaded" class="no-data-placeholder">
+        <div class="empty-chart-icon">
+          <AppIcon name="chartLine" :size="32" :active="true" />
+        </div>
         <p class="no-data-text">저축을 시작하면 성장 그래프가 표시됩니다</p>
+        <button class="start-saving-btn" @click="handleStartSaving">
+          <AppIcon name="plus" :size="16" />
+          <span>첫 저축 시작하기</span>
+        </button>
       </div>
     </div>
   </div>
@@ -34,6 +42,9 @@ import { useAuthStore } from '@/stores/authStore'
 import { BRAND_ACCENT, CHART_PALETTE } from '@/constants/colors'
 import { useTheme } from '@/composables/useTheme'
 import { formatNumber } from '@/utils/formatters'
+import AppIcon from '@/components/common/AppIcon.vue'
+
+const emit = defineEmits(['start-saving'])
 
 const apexchart = VueApexCharts
 const brandAccent = BRAND_ACCENT
@@ -43,6 +54,14 @@ const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 
 const chartLoaded = ref(false)
+
+/**
+ * M-5: 저축 시작하기 버튼 클릭 핸들러
+ * 부모(BentoGrid)에서 저축 모달 열기
+ */
+function handleStartSaving() {
+  emit('start-saving')
+}
 
 // =========================================================================
 // 백엔드 데이터 연동
@@ -281,19 +300,54 @@ onMounted(() => {
 /* 데이터 없음 플레이스홀더 */
 .no-data-placeholder {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.75rem;
   min-height: 170px;
+  padding: 1.5rem;
   background: var(--surface-muted, #f9fafb);
   border-radius: 12px;
   border: 1px dashed var(--border-muted, #e5e7eb);
+}
+
+.empty-state-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.empty-chart-icon {
+  color: var(--bento-text-muted, #9ca3af);
 }
 
 .no-data-text {
   color: var(--bento-text-muted, #6b7280);
   font-size: 0.875rem;
   text-align: center;
-  padding: 1rem;
+  margin: 0;
+}
+
+.start-saving-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 1rem;
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
+  color: white;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-saving-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 61, 0.3);
 }
 
 /* 다크모드 대응 */

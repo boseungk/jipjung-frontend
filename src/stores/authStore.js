@@ -515,6 +515,11 @@ export const useAuthStore = defineStore('auth', () => {
             const mappedUser = {
                 nickname: response.profile?.nickname,
                 name: response.profile?.nickname,  // 하위 호환성
+                email: response.profile?.email,
+                birthYear: response.profile?.birthYear,
+                createdAt: response.profile?.createdAt,
+                annualIncome: response.profile?.annualIncome ?? 0,
+                existingLoanMonthly: response.profile?.existingLoanMonthly ?? 0,
                 onboardingCompleted: true,
                 preferredAreas: response.profile?.preferredAreas || []
             }
@@ -541,8 +546,16 @@ export const useAuthStore = defineStore('auth', () => {
             const rawShowroomStep = Number(response.showroom?.currentStep ?? response.profile?.level ?? 1)
             const showroomStep = Number.isFinite(rawShowroomStep) ? Math.max(1, Math.trunc(rawShowroomStep)) : 1
 
-            let derivedTrack = showroomStep >= HOUSE_TOTAL_STAGES ? 'furniture' : 'house'
-            if (existingTrack === 'furniture') derivedTrack = 'furniture'
+            // 트랙 결정 로직:
+            // 1. 기존에 furniture 트랙이었으면 유지
+            // 2. localStorage에 furniture 진행 상태가 있으면 furniture
+            // 3. 그 외에는 house 트랙 (집 완공 단계여도 사용자가 명시적으로 인테리어 시작 전까지 house 유지)
+            let derivedTrack = 'house'
+            if (existingTrack === 'furniture') {
+                derivedTrack = 'furniture'
+            } else if (storedFurnitureProgress?.furnitureStage >= 1) {
+                derivedTrack = 'furniture'
+            }
 
             const derivedHouseStage = Math.min(HOUSE_TOTAL_STAGES, showroomStep)
             const derivedFurnitureStage = derivedTrack === 'furniture'

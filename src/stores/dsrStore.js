@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { useAuthStore } from './authStore'
 import { useDreamHomeStore } from './dreamHomeStore'
 import { dsrSimulationService } from '@/api/services/dsrSimulationService'
+import { getDsrGrade } from '@/constants/dsrGrade'
+import { toWonMaybe } from '@/utils/krwUnits'
 
 /**
  * DSR (Debt Service Ratio) 관련 상태 및 계산을 관리하는 Store
@@ -11,6 +13,11 @@ import { dsrSimulationService } from '@/api/services/dsrSimulationService'
 export const useDsrStore = defineStore('dsr', () => {
     const authStore = useAuthStore()
     const dreamHomeStore = useDreamHomeStore()
+
+    const PROFILE_LIMITS_MANWON = {
+        annualIncome: 50000,
+        existingLoanMonthly: 1000
+    }
 
     // State
     const loanInterestRate = ref(0.04) // 연이율 4%
@@ -32,14 +39,16 @@ export const useDsrStore = defineStore('dsr', () => {
         }
         const annualIncome = authStore.userAnnualIncome
         if (!annualIncome) return 0
-        return Math.floor(annualIncome / 12)
+        const annualIncomeWon = toWonMaybe(annualIncome, PROFILE_LIMITS_MANWON.annualIncome)
+        return Math.floor(annualIncomeWon / 12)
     })
 
     const existingLoanMonthly = computed(() => {
         if (backendFinancialInfo.value?.existingLoanRepayment) {
             return backendFinancialInfo.value.existingLoanRepayment
         }
-        return authStore.userExistingLoanMonthly || 0
+        const existingLoan = authStore.userExistingLoanMonthly || 0
+        return toWonMaybe(existingLoan, PROFILE_LIMITS_MANWON.existingLoanMonthly)
     })
 
     const monthlyRepaymentCapacity = computed(() => {
@@ -60,30 +69,9 @@ export const useDsrStore = defineStore('dsr', () => {
         return Math.round(ratio * 10) / 10
     })
 
-    // DSR Status - Use backend grade when available
-    const dsrStatus = computed(() => {
-        if (backendDsr.value) {
-            const colorMap = {
-                'GREEN': '#66BB6A',
-                'YELLOW': '#FFA726',
-                'RED': '#EF5350',
-                'GRAY': '#9E9E9E'
-            }
-            return {
-                label: backendDsr.value.gradeLabel || '알 수 없음',
-                class: backendDsr.value.gradeColor?.toLowerCase() === 'green' ? 'safe'
-                    : backendDsr.value.gradeColor?.toLowerCase() === 'yellow' ? 'warning'
-                        : backendDsr.value.gradeColor?.toLowerCase() === 'red' ? 'danger'
-                            : 'unknown',
-                color: colorMap[backendDsr.value.gradeColor] || '#9E9E9E'
-            }
-        }
-        // Fallback: local calculation
-        const ratio = dsrRatio.value
-        if (ratio < 40) return { label: '안전', class: 'safe', color: '#66BB6A' }
-        if (ratio < 50) return { label: '주의', class: 'warning', color: '#FFA726' }
-        return { label: '위험', class: 'danger', color: '#EF5350' }
-    })
+    // DSR Status - 프론트엔드 통일 기준 사용 (게이지 색상과 동일한 기준)
+    // @see src/constants/dsrGrade.js
+    const dsrStatus = computed(() => getDsrGrade(dsrRatio.value))
 
     // Max Loan Amount - Use backend Gap Analysis when available
     const maxLoanAmount = computed(() => {

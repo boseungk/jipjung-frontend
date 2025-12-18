@@ -6,14 +6,14 @@
         class="action-btn save-btn"
         :class="{ saved: isSaved }"
       >
-        {{ isSaved ? '❤️ 저장됨' : '🤍 저장하기' }}
+        {{ isSaved ? '저장됨' : '저장하기' }}
       </button>
 
       <button
         @click="handleSetAsDreamHome"
         class="action-btn dream-home-btn"
       >
-        🏠 내 집으로 설정
+        내 집으로 설정
       </button>
 
       <button
@@ -21,7 +21,7 @@
         class="action-btn contact-btn"
         v-if="property.agentInfo?.phone"
       >
-        📞 문의하기
+        문의하기
       </button>
     </div>
 
