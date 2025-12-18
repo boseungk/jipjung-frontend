@@ -56,10 +56,11 @@
             <PropertyInfo :property="selectedProperty" />
           </div>
 
-          <!-- Right: Actions & Tools -->
+          <!-- Right: Actions & Agent -->
           <div class="right-col">
             <div class="sticky-sidebar">
               <PropertyActions :property="selectedProperty" />
+              <AgentCard :agent="selectedProperty.agentInfo" />
             </div>
           </div>
         </div>
@@ -86,6 +87,7 @@ import PropertyGallery from './detail/PropertyGallery.vue'
 import PropertySpecs from './detail/PropertySpecs.vue'
 import PropertyInfo from './detail/PropertyInfo.vue'
 import PropertyActions from './detail/PropertyActions.vue'
+import AgentCard from './detail/AgentCard.vue'
 import { useToast } from '@/composables/useToast'
 
 const propertyStore = usePropertyStore()
@@ -143,7 +145,7 @@ html[data-theme="night"] .property-detail-mode {
 }
 
 .detail-content-wrapper {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0 1.5rem 4rem;
   display: flex;
@@ -250,13 +252,16 @@ html[data-theme="night"] .address-row {
 
 @media (min-width: 1024px) {
   .content-split {
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1fr 380px; /* Fixed width sidebar */
     align-items: start;
   }
 
   .sticky-sidebar {
     position: sticky;
-    top: 80px; /* Header height + spacing */
+    top: 90px; /* Header height + spacing */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 }
 

@@ -84,27 +84,6 @@
       <h3 class="section-title">설명</h3>
       <p class="description-text">{{ property.description }}</p>
     </div>
-
-    <div class="info-section">
-      <h3 class="section-title">중개인 정보</h3>
-      <div v-if="property.agentInfo" class="agent-info">
-        <div class="info-item" v-if="property.agentInfo.name">
-          <span class="info-label">이름</span>
-          <span class="info-value">{{ property.agentInfo.name }}</span>
-        </div>
-        <div class="info-item" v-if="property.agentInfo.company">
-          <span class="info-label">회사</span>
-          <span class="info-value">{{ property.agentInfo.company }}</span>
-        </div>
-        <div class="info-item" v-if="property.agentInfo.phone">
-          <span class="info-label">연락처</span>
-          <span class="info-value">{{ property.agentInfo.phone }}</span>
-        </div>
-      </div>
-      <p v-else class="agent-empty">
-        중개인 정보가 등록되지 않았습니다
-      </p>
-    </div>
   </div>
 </template>
 
@@ -219,18 +198,6 @@ html[data-theme="night"] .feature-badge {
 
 html[data-theme="night"] .description-text {
   color: var(--showroom-text-night);
-}
-
-.agent-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.agent-empty {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--bento-text-muted, #6b7280);
 }
 
 @media (max-width: 767px) {
