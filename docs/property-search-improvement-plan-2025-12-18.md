@@ -4,7 +4,7 @@
 
 ## 1. Executive Summary
 
-Current analysis of the Property Search (`PropertyListView`) and Detail (`PropertyDetailMode`) modules reveals a functional but basic implementation. While the "Bento Grid" style for the list view is modern, the Detail view lacks the information density and visual hierarchy expected in high-quality real estate applications. This plan outlines specific design and code improvements to elevate the user experience.
+Current analysis of the Property Search (`PropertyListView`) and Detail (`PropertyDetailMode`) modules reveals a functional but basic implementation. While the "Bento Grid" style for the list view is modern, the Detail view lacks the information density and visual hierarchy expected in high-quality real estate applications. Furthermore, the visual execution relies on generic styles and emojis, undermining the premium "architectural" feel defined in the design system. This plan outlines specific UX structural changes and a comprehensive **Visual Design Upgrade** to elevate the user experience.
 
 ## 2. Current State Analysis
 
@@ -15,9 +15,9 @@ Current analysis of the Property Search (`PropertyListView`) and Detail (`Proper
 
 ### 2.2. Weaknesses
 - **Detail View Layout:** `PropertyDetailMode.vue` is a simple vertical stack. It fails to utilize the available width effectively and forces excessive scrolling.
+- **Visual Polish:** Usage of emojis (e.g., 🏠, 📍) instead of professional SVG icons looks amateurish.
 - **Navigation:** The "Back" button in the detail view is intrusive and disconnects the user from the content.
 - **Information Density:** Key data points (maintenance fees, move-in dates, detailed specs) are likely buried or missing visual emphasis.
-- **Lack of Context:** The detail view feels isolated from the map when active.
 
 ## 3. Improvement Roadmap
 
@@ -28,7 +28,7 @@ Current analysis of the Property Search (`PropertyListView`) and Detail (`Proper
 
 1.  **Sticky Header & Navigation:**
     -   Replace the standalone "Back" button with a sticky header containing:
-        -   Back Icon (←)
+        -   Back Icon (Chevron Left)
         -   Property Title (fades in on scroll)
         -   Action Buttons (Share, Like)
     -   *Why:* Maximizes screen real estate and keeps key actions accessible.
@@ -83,7 +83,8 @@ Current analysis of the Property Search (`PropertyListView`) and Detail (`Proper
     <!-- Sticky Header -->
     <header class="detail-navbar" :class="{ scrolled: isScrolled }">
       <button class="icon-btn" @click="goBack">
-        <i class="icon-arrow-left"></i>
+        <!-- SVG Icon: Arrow Left -->
+        <svg viewBox="0 0 24 24" class="w-6 h-6"><path d="..."/></svg>
       </button>
       <div class="nav-title" v-show="isScrolled">{{ property.title }}</div>
       <div class="nav-actions">
@@ -112,10 +113,10 @@ Current analysis of the Property Search (`PropertyListView`) and Detail (`Proper
         </div>
         
         <div class="specs-grid">
-            <SpecItem icon="📐" label="Area" :value="property.area" />
-            <SpecItem icon="🛏️" label="Rooms" :value="property.rooms" />
-            <SpecItem icon="🛁" label="Bath" :value="property.bath" />
-            <SpecItem icon="🏢" label="Floor" :value="property.floor" />
+            <SpecItem icon="ruler" label="Area" :value="property.area" />
+            <SpecItem icon="bed" label="Rooms" :value="property.rooms" />
+            <SpecItem icon="bath" label="Bath" :value="property.bath" />
+            <SpecItem icon="building" label="Floor" :value="property.floor" />
         </div>
       </section>
 
@@ -139,6 +140,42 @@ Current analysis of the Property Search (`PropertyListView`) and Detail (`Proper
 3.  [ ] **Update `PropertyDetailMode.vue`**: Apply the new structure.
 4.  [ ] **Update `PropertyListMode.vue`**: Add Quick Filter Chips.
 
-## 5. Conclusion
+## 5. Visual Design Specifications
+
+To achieve a "Premium Architectural" look consistent with `concept-2-showroom.css`:
+
+### 5.1. Iconography
+- **Rule:** **NO EMOJIS**. Replace all emojis (🏠, 📍, 🔍) with high-quality SVG icons.
+- **Style:** Thin stroke (1.5px or 2px), rounded corners.
+- **Source:** Use Heroicons (Outline) or Phosphor Icons.
+
+### 5.2. Typography
+- **Headings:** `Noto Sans KR` (Bold/700) for Korean, `Space Grotesk` (Medium/500) for numeric/English headers.
+- **Numbers (Price, Area):** `Space Grotesk` allows for monospaced tabular figures, making data comparison easier.
+- **Body:** `Noto Sans KR` (Regular/400) with `line-height: 1.6` for readability.
+
+### 5.3. Color Palette & Gradients
+- **Primary Background:** `var(--showroom-bg-day)` (#F9F8F6) - Warm Paper.
+- **Accent:** `var(--brand-accent)` (#FF7F50) - Living Coral.
+- **Glassmorphism:**
+  - *Base:* `backdrop-filter: blur(12px) saturate(180%)`
+  - *Border:* `1px solid rgba(255, 255, 255, 0.2)` (Day) / `rgba(255, 255, 255, 0.08)` (Night)
+  - *Shadow:* `0 8px 32px rgba(0, 0, 0, 0.05)` (Soft, diffused)
+
+### 5.4. Component Styling
+- **Cards (`PropertyCard`):**
+  - **Corner Radius:** `24px` (Super-ellipse feel).
+  - **Hover:** Translate Y -4px, shadow intensity x1.5, subtle white glow.
+  - **Image:** `aspect-ratio: 4/3` with a subtle inner shadow `inset 0 0 20px rgba(0,0,0,0.1)` to add depth.
+- **Badges (Tags):**
+  - **Style:** Soft Pill.
+  - **Background:** `rgba(var(--brand-accent-rgb), 0.1)`.
+  - **Text:** `var(--brand-accent)`.
+  - **Border:** None.
+- **Buttons:**
+  - **Primary:** Gradient `linear-gradient(135deg, #FF7F50, #FF6B3D)`.
+  - **Secondary:** Glass button with `border: 1px solid rgba(0,0,0,0.1)`.
+
+## 6. Conclusion
 
 By shifting from a linear list of data to a structured, hierarchical dashboard for each property, we can significantly increase user engagement and perceived value. The focus should be on "Visual Comfort" — letting the images breathe while keeping hard data (price, specs) instantly readable.
