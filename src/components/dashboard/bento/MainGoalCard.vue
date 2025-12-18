@@ -86,6 +86,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { formatWon } from '@/utils/formatters'
 import AppIcon from '@/components/common/AppIcon.vue'
 
@@ -93,6 +94,7 @@ const emit = defineEmits(['open-saving-modal'])
 const router = useRouter()
 
 const dreamHomeStore = useDreamHomeStore()
+const authStore = useAuthStore()
 const {
   dreamHomeId,
   targetAmount,
@@ -100,12 +102,16 @@ const {
   achievementRate,
   remainingAmount
 } = storeToRefs(dreamHomeStore)
+const { hasDreamHomeGoal } = storeToRefs(authStore)
 
 /**
  * 목표 설정 여부 판단
  * dreamHomeId가 설정되어 있으면 목표가 있는 것으로 간주
  */
-const hasGoal = computed(() => dreamHomeId.value != null)
+const hasGoal = computed(() => {
+  if (typeof hasDreamHomeGoal.value === 'boolean') return hasDreamHomeGoal.value
+  return dreamHomeId.value != null
+})
 
 /**
  * 달성률(%) 숫자 값
@@ -362,37 +368,7 @@ html[data-theme="night"] .subtitle-info {
   border: 1px solid var(--border-soft, #e5e7eb);
 }
 
-/* Full-Width Savings Button */
-.savings-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.95rem 1.6rem;
-  min-height: 52px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.05rem;
-  line-height: 1.2;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-.savings-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.savings-button:active {
-  transform: translateY(1px) scale(0.99);
-  opacity: 0.9;
-  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
-}
+/* Button visuals (.savings-button / .explore-button) live in src/assets/css/components/buttons.css */
 
 .btn-text {
   letter-spacing: 0.03em;
@@ -422,7 +398,7 @@ html[data-theme="night"] .subtitle-info {
   }
 }
 
-@media (max-width: 767px) {
+  @media (max-width: 767px) {
   .main-goal-card {
     padding: 1.25rem;
   }
@@ -459,13 +435,8 @@ html[data-theme="night"] .subtitle-info {
     font-size: 0.875rem;
   }
 
-  .savings-button {
-    padding: 0.85rem 1.35rem;
-    min-height: 48px;
-    font-size: 1rem;
-    gap: 0.5rem;
+  /* Keep global button sizing for consistency */
   }
-}
 
 /* Extra small devices */
 @media (max-width: 374px) {
@@ -519,28 +490,4 @@ html[data-theme="night"] .empty-title {
   line-height: 1.5;
 }
 
-.explore-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: white;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 20px -10px rgba(255, 107, 61, 0.4);
-}
-
-.explore-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px -10px rgba(255, 107, 61, 0.5);
-}
-
-.explore-button:active {
-  transform: translateY(1px);
-}
 </style>

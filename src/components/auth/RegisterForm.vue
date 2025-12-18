@@ -302,64 +302,7 @@ html[data-theme="night"] .glass-input:-webkit-autofill:focus {
   font-weight: 500;
 }
 
-.glass-button {
-  width: 100%;
-  padding: 0.85rem 2rem;
-  font-size: 1rem;
-  font-weight: 700;
-  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
-  border-radius: 16px;
-  cursor: pointer;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.16) 0%,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.08) 100%
-  );
-  color: var(--showroom-text-day, #5D4037);
-  box-shadow:
-    var(--nav-btn-shadow-day),
-    0 10px 28px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.18);
-  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
-  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
-  transition: var(--nav-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
-}
-
-.glass-button.primary {
-  background: linear-gradient(to right, #fb923c, #f97316);
-  color: white;
-}
-
-.glass-button:hover:not(:disabled) {
-  box-shadow:
-    var(--nav-btn-shadow-day-hover),
-    0 14px 32px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.24);
-  transform: translateY(-2px) scale(1.02);
-}
-
-.glass-button:active:not(:disabled) {
-  box-shadow: var(--nav-btn-press-shadow-day);
-  transform: translateY(1px) scale(0.97);
-  opacity: 0.8;
-}
-
-.glass-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-html[data-theme="night"] .glass-button.primary {
-  background: linear-gradient(
-    135deg,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26) 0%,
-    rgba(var(--brand-accent-rgb, 255, 127, 80), 0.16) 100%
-  );
-  border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
-  box-shadow:
-    var(--nav-btn-shadow-night),
-    0 14px 36px rgba(0, 0, 0, 0.45),
-    0 0 36px var(--glass-glow-night, rgba(212, 165, 116, 0.5));
-  color: #ffffff;
-}
+/* Buttons (.glass-button) styles live in src/assets/css/components/buttons.css */
 
 .loading {
   display: flex;

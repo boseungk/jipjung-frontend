@@ -746,36 +746,9 @@ html[data-theme="night"] .back-button:hover:not(:disabled) {
 /* Submit Button */
 .submit-button {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 16px;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
 }
 
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 28px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.submit-button:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
+/* Submit Button visuals live in src/assets/css/components/buttons.css */
 
 /* Spinner */
 .spinner {

@@ -1,6 +1,5 @@
 <template>
   <div class="dsr-simulation-view">
-    <AuroraBackground />
     <DsrSimulationHeader @back="goBack" />
 
     <div class="view-container">
@@ -20,7 +19,6 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import AuroraBackground from '@/components/dsr/AuroraBackground.vue'
 import DsrSection from '@/components/dsr/DsrSection.vue'
 import DsrSimulationHeader from '@/components/dsr/DsrSimulationHeader.vue'
 import DsrCurrentStatusSection from '@/components/dsr/DsrCurrentStatusSection.vue'
@@ -93,4 +91,3 @@ html[data-theme='night'] .dsr-simulation-view {
   padding: 1rem;
 }
 </style>
-

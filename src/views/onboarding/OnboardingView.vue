@@ -256,69 +256,13 @@ async function handleComplete() {
   justify-content: center;
 }
 
-/* Navigation Buttons - Tactile Design */
+/* Onboarding nav-buttons share the global button system (src/assets/css/components/buttons.css) */
 .nav-button {
   min-width: 120px;
-  padding: 0.875rem 2.5rem;
-  font-size: 1rem;
-  font-weight: 700;
-  border-radius: var(--onboarding-radius-md);
-  cursor: pointer;
-  border: none;
-  transition: var(--onboarding-transition-bounce);
 }
 
-/* Secondary Button (이전) - Tactile Visible Button */
-.nav-button.secondary {
-  background: rgba(88, 60, 50, 0.06); /* Subtle beige/gray */
-  color: var(--onboarding-text-primary);
-  border: 1px solid rgba(88, 60, 50, 0.12);
-  box-shadow: var(--onboarding-shadow-soft);
-}
-
-.nav-button.secondary:hover {
-  background: rgba(88, 60, 50, 0.08);
-  border-color: rgba(88, 60, 50, 0.18);
-  transform: translateY(-1px);
-}
-
-.nav-button.secondary:active {
-  /* Inset press effect - feels like pushing into surface */
-  background: rgba(88, 60, 50, 0.04);
-  box-shadow: var(--onboarding-shadow-pressed);
-  transform: scale(0.97);
-  border-color: rgba(88, 60, 50, 0.15);
-}
-
-/* Primary Button (다음/시작하기) - Unified Gradient Style */
 .nav-button.primary {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  min-height: 52px;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-.nav-button.primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.nav-button.primary:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
-  opacity: 0.9;
-  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
-}
-
-.nav-button.primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
 }
 
 /* Slide Fade Transition */
@@ -341,7 +285,7 @@ async function handleComplete() {
 }
 
 /* Mobile Responsive */
-@media (max-width: 640px) {
+  @media (max-width: 640px) {
   .onboarding-view {
     padding: 1.5rem 1rem;
   }
@@ -362,11 +306,6 @@ async function handleComplete() {
     min-height: 300px;
   }
 
-  .nav-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.9375rem;
-  }
-
   .onboarding-actions {
     flex-direction: column;
   }
@@ -383,8 +322,7 @@ async function handleComplete() {
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .slide-fade-enter-active,
-  .slide-fade-leave-active,
-  .nav-button {
+  .slide-fade-leave-active {
     transition: none;
   }
 }

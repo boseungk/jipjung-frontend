@@ -182,44 +182,7 @@ html[data-theme="night"] .modal-message {
   color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
-/* Confirm Button */
-.confirm-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.95rem 1.6rem;
-  min-height: 52px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.05rem;
-  line-height: 1.2;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-.confirm-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.confirm-button:active {
-  transform: translateY(1px) scale(0.99);
-  opacity: 0.9;
-  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
-}
-
-.confirm-button:focus-visible {
-  box-shadow:
-    0 0 0 4px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.3),
-    0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
+/* Confirm Button styles live in src/assets/css/components/buttons.css */
 
 /* Modal Transition */
 .modal-enter-active,

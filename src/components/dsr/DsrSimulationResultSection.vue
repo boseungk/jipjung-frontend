@@ -94,18 +94,17 @@
       </div>
 
       <div class="result-actions">
-        <button v-if="simulationResult.maxLoanAmount > 0" class="action-button primary" @click="goToProperties">
-          <AppIcon name="house" :size="20" />
+        <button v-if="simulationResult.maxLoanAmount > 0" type="button" class="action-button primary" @click="goToProperties">
           이 예산으로 매물 찾아보기
         </button>
 
         <div class="secondary-actions">
-          <button class="action-button ghost" @click="goToProfile">
+          <button type="button" class="action-button secondary" @click="goToProfile">
             <AppIcon name="pencil" :size="18" />
             소득 수정
           </button>
 
-          <button class="action-button ghost" @click="resetSimulation">
+          <button type="button" class="action-button secondary" @click="resetSimulation">
             <AppIcon name="arrowCounterClockwise" :size="18" />
             다시 계산
           </button>
@@ -250,40 +249,56 @@ function resetSimulation() {
   overflow: hidden;
   text-align: center;
   isolation: isolate;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
 }
 
-.result-hero.tone-positive,
-.result-hero.tone-neutral,
+.result-hero.tone-positive {
+  --hero-accent: #10b981;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(236, 253, 245, 0.8));
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.result-hero.tone-neutral {
+  --hero-accent: #3b82f6;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(240, 245, 255, 0.8));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
 .result-hero.tone-warning {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
+  --hero-accent: #ef4444;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(254, 242, 242, 0.8));
+  border-color: rgba(244, 67, 54, 0.2);
 }
 
 .result-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 50% at 20% 80%, rgba(255, 107, 61, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(255, 107, 61, 0.1) 0%, transparent 50%);
   pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8), transparent 70%);
+  opacity: 0.6;
 }
 
-.hero-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 40% at 30% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
-    radial-gradient(ellipse 50% 30% at 70% 80%, rgba(255, 255, 255, 0.15), transparent 50%);
-  pointer-events: none;
-  animation: glow-pulse 4s ease-in-out infinite;
+/* Dark mode overrides for Result Hero */
+html[data-theme='night'] .result-hero {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-@keyframes glow-pulse {
-  0%,
-  100% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-  }
+html[data-theme='night'] .result-hero.tone-positive {
+  background: linear-gradient(145deg, rgba(6, 78, 59, 0.4), rgba(30, 41, 59, 0.6));
+}
+
+html[data-theme='night'] .result-hero.tone-neutral {
+  background: linear-gradient(145deg, rgba(30, 58, 138, 0.4), rgba(30, 41, 59, 0.6));
+}
+
+html[data-theme='night'] .result-hero.tone-warning {
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.4), rgba(30, 41, 59, 0.6));
 }
 
 .hero-content {
@@ -296,21 +311,25 @@ function resetSimulation() {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 999px;
-  color: white;
+  color: var(--hero-accent);
   font-size: 0.875rem;
   font-weight: 700;
   margin-bottom: 1rem;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.hero-badge .app-icon {
+  color: var(--hero-accent);
 }
 
 .hero-label {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--dsr-ink-muted);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -323,18 +342,18 @@ function resetSimulation() {
 .amount-value {
   font-size: 3rem;
   font-weight: 800;
-  color: white;
+  color: var(--hero-accent);
   letter-spacing: -0.03em;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  text-shadow: none;
   line-height: 1.1;
 }
 
 .hero-sub {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--dsr-ink-muted);
   padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.04);
   border-radius: 8px;
   display: inline-block;
 }
@@ -607,42 +626,42 @@ function resetSimulation() {
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
-  background: var(--dsr-warning-bg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
   border-radius: 12px;
-  border: 1px solid rgba(251, 192, 45, 0.22);
+  border: 1px solid var(--glass-border);
+  border-left-width: 4px;
   color: var(--dsr-ink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .tip-card.tip-positive {
-  background: var(--dsr-safe-bg);
-  border-color: rgba(67, 160, 71, 0.2);
+  border-left-color: #10b981;
 }
 
 .tip-card.tip-positive .tip-icon {
-  color: var(--dsr-safe-fg);
+  color: #10b981;
 }
 
 .tip-card.tip-neutral {
-  background: var(--dsr-warning-bg);
-  border-color: rgba(251, 192, 45, 0.2);
+  border-left-color: #3b82f6;
 }
 
 .tip-card.tip-neutral .tip-icon {
-  color: var(--dsr-warning-fg);
+  color: #3b82f6;
 }
 
 .tip-card.tip-warning {
-  background: var(--dsr-danger-bg);
-  border-color: rgba(244, 67, 54, 0.2);
+  border-left-color: #ef4444;
 }
 
 .tip-card.tip-warning .tip-icon {
-  color: var(--dsr-danger-fg);
+  color: #ef4444;
 }
 
 .tip-icon {
   flex-shrink: 0;
-  color: var(--dsr-warning-fg);
+  margin-top: 2px;
 }
 
 .tip-content {
@@ -672,58 +691,31 @@ function resetSimulation() {
   border-top: 1px solid var(--dsr-subcard-border);
 }
 
-.action-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.25rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-}
-
-.action-button.primary {
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: white;
-  box-shadow: 0 8px 20px -12px rgba(255, 107, 61, 0.5);
-}
-
-.action-button.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px -12px rgba(255, 107, 61, 0.6);
-}
-
 .secondary-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+/* Action button visuals live in src/assets/css/components/buttons.css */
+
+/* Dark mode overrides for text elements */
+html[data-theme='night'] .hero-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--hero-accent);
 }
 
-.action-button.ghost {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.75rem 1rem;
-  background: var(--surface-muted);
-  color: var(--dsr-ink-muted);
-  border: 1px solid var(--dsr-subcard-border);
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+html[data-theme='night'] .amount-value {
+  color: var(--hero-accent);
 }
 
-.action-button.ghost:hover {
-  background: var(--dsr-subcard-bg);
-  color: var(--dsr-ink);
-  border-color: var(--brand-accent);
+html[data-theme='night'] .hero-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme='night'] .hero-sub {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 480px) {
@@ -774,14 +766,6 @@ function resetSimulation() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-glow {
-    animation: none;
-  }
-
-  .pulse-ring {
-    animation: none;
-  }
-
   .dsr-marker {
     transition: none;
   }
@@ -792,4 +776,3 @@ function resetSimulation() {
   }
 }
 </style>
-

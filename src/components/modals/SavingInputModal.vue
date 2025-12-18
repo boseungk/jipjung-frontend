@@ -634,78 +634,7 @@ html[data-theme="night"] .form-textarea::placeholder {
   min-height: 80px;
 }
 
-/* Submit Button - Glass CTA */
-.submit-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
-  border-radius: 16px;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-html[data-theme="day"] .submit-button {
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
-  -webkit-backdrop-filter: blur(var(--nav-btn-blur-day, 12px));
-  box-shadow:
-    0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-html[data-theme="day"] .submit-button:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow:
-    var(--nav-btn-shadow-day-hover),
-    0 14px 36px rgba(var(--brand-accent-rgb, 255, 127, 80), 0.26);
-}
-
-html[data-theme="day"] .submit-button:active:not(:disabled) {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: var(--nav-btn-press-shadow-day);
-}
-
-html[data-theme="night"] .submit-button {
-  background: rgba(212, 165, 116, 0.2);
-  color: var(--showroom-text-night, #F5EDE3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.3);
-  border-left-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.35), 
-    0 0 25px rgba(212, 165, 116, 0.4);
-}
-
-html[data-theme="night"] .submit-button:hover:not(:disabled) {
-  background: rgba(212, 165, 116, 0.25);
-  transform: translateY(-4px);
-  border-top-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 12px 28px rgba(0, 0, 0, 0.4), 
-    0 0 35px rgba(212, 165, 116, 0.5);
-}
-
-html[data-theme="night"] .submit-button:active:not(:disabled) {
-  background: rgba(0, 0, 0, 0.25);
-  transform: translateY(2px) scale(0.98);
-  box-shadow:
-    inset 4px 4px 12px rgba(0, 0, 0, 0.6),
-    inset -2px -2px 8px rgba(255, 255, 255, 0.03);
-}
+/* Submit Button styles live in src/assets/css/components/buttons.css */
 
 /* Spinner */
 .spinner {

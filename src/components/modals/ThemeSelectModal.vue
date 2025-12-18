@@ -435,38 +435,7 @@ html[data-theme="night"] .theme-description {
   font-size: 0.9375rem;
 }
 
-/* Next Button */
-.next-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 16px;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-.next-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 28px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.next-button:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
-}
-
-.next-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
+/* .next-button visuals live in src/assets/css/components/buttons.css */
 
 /* Spinner */
 .spinner {

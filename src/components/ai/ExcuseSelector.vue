@@ -256,43 +256,7 @@ watch(() => props.excuses, () => {
   color: #9ca3af;
 }
 
-/* Submit Button - CTA Style */
-.submit-button {
-  width: 100%;
-  padding: 0.85rem 2rem;
-  font-size: 1rem;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(to right, #fb923c, #f97316);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  cursor: pointer;
-  box-shadow:
-    0 4px 12px rgba(251, 146, 60, 0.2),
-    0 10px 28px rgba(249, 115, 22, 0.18);
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 6px 16px rgba(251, 146, 60, 0.3),
-    0 14px 32px rgba(249, 115, 22, 0.24);
-}
-
-.submit-button:active:not(:disabled) {
-  transform: translateY(1px) scale(0.97);
-  opacity: 0.8;
-}
-
-.submit-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
+/* Submit Button styles live in src/assets/css/components/buttons.css */
 
 /* Loading Spinner */
 .loading-spinner {

@@ -184,6 +184,18 @@
    /* Mobile Hamburger */
    --nav-hamburger-day: var(--showroom-text-day, #2C2420);
    --nav-hamburger-night: var(--showroom-text-night, #F9F8F6);
+
+   /* Buttons (App-wide, excluding nav-btn-base) */
+   --app-btn-radius: 12px;
+   --app-btn-min-height: 52px;
+   --app-btn-padding-y: 0.95rem;
+   --app-btn-padding-x: 1.6rem;
+   --app-btn-font-size: 1.05rem;
+   --app-btn-font-weight: 700;
+   --app-btn-line-height: 1.2;
+   --app-btn-gap: 0.55rem;
+   --app-btn-transition: var(--nav-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
+   --app-btn-focus-ring-size: 4px;
 }
 
 /* ================================================

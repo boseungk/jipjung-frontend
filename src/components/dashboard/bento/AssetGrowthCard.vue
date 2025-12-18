@@ -330,25 +330,7 @@ onMounted(() => {
   margin: 0;
 }
 
-.start-saving-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.6rem 1rem;
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: white;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.start-saving-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 61, 0.3);
-}
+/* .start-saving-btn visuals live in src/assets/css/components/buttons.css */
 
 /* 다크모드 대응 */
 html[data-theme="night"] .no-data-placeholder {

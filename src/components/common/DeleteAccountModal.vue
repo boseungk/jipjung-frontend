@@ -217,44 +217,7 @@ html[data-theme="night"] .error-message {
 
 .btn {
   flex: 1;
-  padding: 0.875rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--showroom-text-day, #2C2420);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-}
-
-html[data-theme="night"] .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--showroom-text-night, #F9F8F6);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
-
-.btn-danger {
-  background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
-  color: white;
-  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
-}
-
-.btn-danger:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-}
+/* Button visuals live in src/assets/css/components/buttons.css */
 </style>

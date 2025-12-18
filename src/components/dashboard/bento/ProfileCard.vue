@@ -74,8 +74,21 @@
         <div class="exp-info">
           {{ currentExpInLevel }} / {{ nextLevelExp }} XP
           <!-- M-6: XP 획득 방법 툴팁 -->
-          <button type="button" class="xp-help-trigger" @click="showXpHelp = !showXpHelp" aria-label="XP 획득 방법">
-            <AppIcon name="question" :size="12" />
+          <button
+            type="button"
+            :class="['xp-help-trigger', { 'is-open': showXpHelp }]"
+            @click="showXpHelp = !showXpHelp"
+            :aria-label="showXpHelp ? 'XP 획득 방법 닫기' : 'XP 획득 방법'"
+          >
+            <AppIcon
+              name="question"
+              :size="10"
+              weight="bold"
+              color="currentColor"
+              customClass="xp-help-trigger__icon"
+              aria-hidden="true"
+              focusable="false"
+            />
           </button>
         </div>
         <div class="exp-remaining">
@@ -412,10 +425,24 @@ html[data-theme="night"] .user-note {
   transition: background 0.2s, transform 0.2s;
 }
 
+.xp-help-trigger :deep(.xp-help-trigger__icon) {
+  transition: opacity 0.15s ease;
+}
+
 .xp-help-trigger:hover {
   background: var(--brand-accent-soft, #ffe4d9);
   color: var(--brand-accent, #ff6b3d);
   transform: scale(1.1);
+}
+
+.xp-help-trigger.is-open {
+  background: var(--brand-accent, #ff6b3d);
+  color: #fff;
+  transform: none;
+}
+
+.xp-help-trigger.is-open :deep(.xp-help-trigger__icon) {
+  opacity: 0;
 }
 
 .xp-help-popup {

@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
 @import '../css/core/variables.css';
 @import './components/navigation.css';
+@import './components/buttons.css';
 @import './components/onboarding.css';
 @tailwind base;
 @tailwind components;

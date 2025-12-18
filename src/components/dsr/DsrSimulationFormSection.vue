@@ -80,7 +80,6 @@
 
     <div class="form-group optional-section">
       <label class="form-label">
-        <AppIcon name="house" :size="18" aria-hidden="true" />
         전세대출 (선택)
       </label>
       <div class="inline-inputs">
@@ -378,46 +377,7 @@ html[data-theme='night'] .form-input:focus {
   border: 1px solid var(--dsr-subcard-border);
 }
 
-.submit-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.95rem 1.6rem;
-  min-height: 52px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.05rem;
-  line-height: 1.2;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.submit-button:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
-  opacity: 0.9;
-  box-shadow: inset 0 2px 6px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.submit-button:focus-visible {
-  outline: none;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45), 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.2);
-}
+/* Submit Button styles live in src/assets/css/components/buttons.css */
 
 .spin {
   animation: spin 1s linear infinite;
@@ -445,4 +405,3 @@ html[data-theme='night'] .form-input:focus {
   }
 }
 </style>
-

@@ -340,45 +340,9 @@ const displayMaxExp = computed(() => levelProgress.value.requiredForLevel)
 
 .action-button {
   flex: 1;
-  padding: 0.85rem 1rem;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.action-button.primary {
-  background: linear-gradient(to right, #fb923c, #f97316);
-  color: white;
-  box-shadow:
-    0 4px 12px rgba(251, 146, 60, 0.2),
-    0 10px 28px rgba(249, 115, 22, 0.18);
-}
-
-.action-button.primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 6px 16px rgba(251, 146, 60, 0.3),
-    0 14px 32px rgba(249, 115, 22, 0.24);
-}
-
-.action-button.primary:active {
-  transform: translateY(1px) scale(0.97);
-  opacity: 0.8;
-}
-
-.action-button.secondary {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-}
-
-.action-button.secondary:hover {
-  background: #e5e7eb;
-  transform: translateY(-1px);
-}
+/* Action button visuals live in src/assets/css/components/buttons.css */
 
 /* Responsive */
 @media (max-width: 480px) {

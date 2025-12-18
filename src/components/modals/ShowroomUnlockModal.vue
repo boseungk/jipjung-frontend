@@ -224,39 +224,7 @@ html[data-theme="night"] .modal-message {
   color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
-.confirm-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0.95rem 1.6rem;
-  min-height: 52px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1.05rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d), var(--brand-accent-soft, #ff9a75));
-  color: #ffffff;
-  box-shadow: 0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
-
-.confirm-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 26px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.55);
-}
-
-.confirm-button:active {
-  transform: translateY(1px) scale(0.99);
-  opacity: 0.9;
-}
-
-.confirm-button:focus-visible {
-  box-shadow:
-    0 0 0 4px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.3),
-    0 14px 24px -14px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
-}
+/* Confirm Button styles live in src/assets/css/components/buttons.css */
 
 .effect-particle {
   position: absolute;
@@ -301,4 +269,3 @@ html[data-theme="night"] .modal-message {
   .modal-container { padding: 2.1rem 1.5rem; }
 }
 </style>
-
