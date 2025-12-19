@@ -20,3 +20,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Google Cloud SDK
+/google-cloud-sdk/
+google-cloud-cli-*.tar.gz

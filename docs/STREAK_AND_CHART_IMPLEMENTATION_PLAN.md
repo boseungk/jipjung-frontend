@@ -759,6 +759,7 @@ cd jipjung-backend
 
 4. 저축 기록 후 대시보드 새로고침
 5. 예상: 차트에 데이터 포인트 표시
+6. 그래도 0으로 보이면 DB/JDBC 타임존이 KST인지 확인 (필요하면 JDBC URL에 `serverTimezone=Asia/Seoul` 추가)
 
 ---
 

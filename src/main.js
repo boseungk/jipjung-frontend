@@ -9,7 +9,7 @@ import VueApexCharts from 'vue3-apexcharts'
 import {
   PhHouse, PhChartBar, PhBuildings, PhMagicWand,
   PhPalette, PhUser, PhDoorOpen, PhGear,
-  PhCheck, PhX, PhCaretDown,
+  PhCheck, PhX, PhCaretDown, PhCaretUp,
   PhPencilLine, PhPencilSimple,
   PhPiggyBank, PhFloppyDisk, PhStar, PhFire,
   PhBank, PhCalculator, PhChartLine, PhLightbulb,
@@ -29,7 +29,7 @@ const pinia = createPinia()
 const icons = {
   PhHouse, PhChartBar, PhBuildings, PhMagicWand,
   PhPalette, PhUser, PhDoorOpen, PhGear,
-  PhCheck, PhX, PhCaretDown,
+  PhCheck, PhX, PhCaretDown, PhCaretUp,
   PhPencilLine, PhPencilSimple,
   PhPiggyBank, PhFloppyDisk, PhStar, PhFire,
   PhBank, PhCalculator, PhChartLine, PhLightbulb,
