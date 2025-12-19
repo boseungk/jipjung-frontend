@@ -430,18 +430,13 @@ watch(houseStage, (newStage, oldStage) => {
 watch(buildTrack, (track, prevTrack) => {
   if (track === prevTrack) return
 
-  if (track === 'furniture' && prevTrack === 'house') {
-    isUnlockModalOpen.value = true
-    displayTrack.value = 'house'
-    return
-  }
-
   if (track === 'house') {
     isUnlockModalOpen.value = false
     displayTrack.value = 'house'
     return
   }
 
+  isUnlockModalOpen.value = false
   displayTrack.value = track
 })
 

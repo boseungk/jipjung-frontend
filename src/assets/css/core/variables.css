@@ -1,4 +1,4 @@
-/* ================================================
+﻿/* ================================================
    SSAFYHome - CSS Variables (통합 변수 시스템)
    ================================================ */
 
@@ -205,6 +205,31 @@
    --glass-surface: rgba(255, 255, 255, 0.08);
    --glass-border: rgba(255, 255, 255, 0.15);
    --glass-blur: 10px;
+}
+
+/* ================================================
+   2.5 Bento Card 변수 (대시보드 / Journey 공통)
+   ================================================ */
+:root {
+   /* Day Mode - Bento Card */
+   --bento-card-bg: #ffffff;
+   --bento-card-border: #e5e7eb;
+   --bento-card-title: var(--ink-base, #1f2937);
+   --bento-text: var(--ink-base, #1f2937);
+   --bento-text-muted: var(--ink-muted, #6b7280);
+   
+   /* Ink Colors (fallback) */
+   --ink-base: #1f2937;
+   --ink-muted: #6b7280;
+}
+
+html[data-theme="night"] {
+   /* Night Mode - Bento Card */
+   --bento-card-bg: var(--showroom-card-bg-night, #20242a);
+   --bento-card-border: rgba(255, 255, 255, 0.08);
+   --bento-card-title: var(--showroom-text-night, #f5f6f7);
+   --bento-text: var(--showroom-text-night, #f5f6f7);
+   --bento-text-muted: rgba(245, 246, 247, 0.75);
 }
 
 /* ================================================

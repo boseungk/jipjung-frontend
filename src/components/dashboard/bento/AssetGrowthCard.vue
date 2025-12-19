@@ -75,8 +75,22 @@ function handleStartSaving() {
  */
 const chartSeries = computed(() => {
   const rawChartData = user.value?._raw?.assets?.chartData || []
-  
+  const totalAsset = Number(user.value?._raw?.assets?.totalAsset) || 0
+
   if (!rawChartData.length) {
+    if (totalAsset > 0) {
+      const today = new Date()
+      const yesterday = new Date(today)
+      yesterday.setDate(today.getDate() - 1)
+      const fallbackValue = Math.round(totalAsset / 10000)
+      return [{
+        name: '저축액',
+        data: [
+          { x: yesterday.getTime(), y: fallbackValue },
+          { x: today.getTime(), y: fallbackValue }
+        ]
+      }]
+    }
     return [{ name: '저축액', data: [] }]
   }
   

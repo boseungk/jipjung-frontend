@@ -21,12 +21,7 @@
     <div class="status-info">
       <AppIcon name="checkCircle" :size="18" :active="true" class="status-icon" aria-hidden="true" />
       <span class="status-text">기존 상환 {{ formatWon(existingLoanMonthly) }} · 여력 {{ formatWon(monthlyRepaymentCapacity) }}</span>
-    </div>
-
-    <!-- H-3: DSR 판단 기준 명시 -->
-    <div class="dsr-criteria">
-      <AppIcon name="info" :size="14" class="criteria-icon" aria-hidden="true" />
-      <span>DSR {{ DSR_THRESHOLDS.SAFE }}% 이하 시 대출 승인에 유리해요</span>
+      <InfoTooltip :description="`DSR ${DSR_THRESHOLDS.SAFE}% 이하 시 대출 승인에 유리해요`" id="dsr-criteria-tooltip" />
     </div>
   </div>
 </template>
@@ -202,21 +197,5 @@ html[data-theme="night"] .tone-danger {
   color: var(--ink-base, #1f2937);
 }
 
-/* H-3: DSR 기준 안내 */
-.dsr-criteria {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
-  color: var(--ink-muted, #6b7280);
-  background: var(--surface-muted, #f3f4f6);
-  border-radius: 8px;
-}
 
-.criteria-icon {
-  color: var(--brand-accent, #ff6b3d);
-  flex-shrink: 0;
-}
 </style>
