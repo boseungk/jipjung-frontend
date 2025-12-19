@@ -3,23 +3,57 @@
     <!-- Snow Effect (Global for Collection) -->
     <SnowCanvas />
 
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">컬렉션을 불러오는 중...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-container">
+      <p class="error-text">{{ error }}</p>
+      <button class="retry-btn" @click="fetchCollections">다시 시도</button>
+    </div>
+
+    <!-- Empty State: Goal Setup CTA -->
+    <div v-else-if="!hasAnyData" class="empty-cta-fullpage">
+      <SnowCanvas />
+      <div class="cta-card">
+        <div class="cta-icon-wrapper">
+          <AppIcon name="house" :size="64" weight="duotone" :color="brandAccent" />
+        </div>
+        <h3 class="cta-title">아직 드림홈 목표가 없어요</h3>
+        <p class="cta-description">
+          목표를 설정하고 저축을 시작하면<br>
+          여기서 집짓기 여정을 확인할 수 있어요!
+        </p>
+        <button class="cta-button" @click="goToPropertySearch">
+          <AppIcon name="magnifyingGlass" :size="20" weight="bold" />
+          <span>매물 둘러보기</span>
+        </button>
+        <p class="cta-hint">매물을 선택하고 저축 목표를 설정해보세요</p>
+      </div>
+    </div>
+
     <!-- Main Collection Gallery -->
-    <main class="collection-container">
+    <main v-else class="collection-container">
       <!-- Hero CrystalBall: Currently Selected -->
       <section class="hero-crystal-section">
         <h1 class="collection-title">
-          <AppIcon name="magicWand" :size="32" weight="fill" :color="brandAccent" />
           나의 드림홈 컬렉션
-          <AppIcon name="magicWand" :size="32" weight="fill" :color="brandAccent" />
         </h1>
         
-        <div class="main-crystal-container">
+        <div class="main-crystal-container" @click="goToJourney">
           <transition name="crystal-swap" mode="out-in">
-            <CrystalBall :key="selectedIndex" />
+            <CrystalBall 
+              :key="selectedKey" 
+              :themeCode="selectedThemeCode"
+              class="clickable-crystal"
+            />
           </transition>
         </div>
         
-        <p class="selected-name">{{ collections[selectedIndex].name }}</p>
+        <p class="selected-name">{{ selectedDisplayName }}</p>
       </section>
       
       <!-- Grid of Mini CrystalBalls -->
@@ -27,32 +61,39 @@
         <h2 class="section-subtitle">저장된 컬렉션</h2>
         
         <div class="mini-crystals-grid">
+          <!-- In Progress Item (shown first if exists) -->
+          <div
+            v-if="inProgress"
+            class="mini-crystal-item in-progress-item"
+            :class="{ active: selectedIndex === -1 }"
+            @click="selectInProgress"
+            role="button"
+            tabindex="0"
+          >
+            <div class="mini-crystal-wrapper">
+              <CrystalBall class="mini-crystal" :themeCode="inProgress.themeCode" />
+              <div class="progress-badge">
+                🏗️ 진행 중
+              </div>
+            </div>
+            <span class="mini-crystal-label">{{ inProgress.propertyName }}</span>
+          </div>
+
+          <!-- Completed Collections -->
           <div
             v-for="(item, index) in collections"
-            :key="index"
+            :key="item.collectionId"
             class="mini-crystal-item"
             :class="{ active: index === selectedIndex }"
             @click="selectCrystal(index)"
             role="button"
             tabindex="0"
-            :aria-label="`${item.name} 선택`"
-            @keydown.enter="selectCrystal(index)"
-            @keydown.space.prevent="selectCrystal(index)"
           >
             <div class="mini-crystal-wrapper">
-              <CrystalBall class="mini-crystal" />
+              <CrystalBall class="mini-crystal" :themeCode="item.themeCode" />
             </div>
-            <span class="mini-crystal-label">{{ item.name }}</span>
+            <span class="mini-crystal-label">{{ item.propertyName }}</span>
           </div>
-        </div>
-        
-        <!-- Empty State -->
-        <div v-if="collections.length === 0" class="empty-state">
-          <div class="empty-icon">
-            <AppIcon name="house" :size="48" />
-          </div>
-          <p class="empty-text">아직 저장된 집이 없습니다</p>
-          <p class="empty-subtext">마음에 드는 집을 저장해보세요</p>
         </div>
       </section>
     </main>
@@ -60,30 +101,120 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+/**
+ * CollectionView
+ * 
+ * 사용자의 드림홈 컬렉션을 표시하는 갤러리 화면.
+ * 완성된 컬렉션과 진행 중인 드림홈을 모두 표시합니다.
+ * 
+ * @호출부 router (path: /collection)
+ */
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import SnowCanvas from '../components/SnowCanvas.vue'
 import CrystalBall from '../components/CrystalBall.vue'
 import { BRAND_ACCENT } from '@/constants/colors'
+import { useCollectionStore } from '@/stores/collectionStore'
 
-// Selected crystal index
-const selectedIndex = ref(0)
+const router = useRouter()
+const collectionStore = useCollectionStore()
+const { collections, inProgress, isLoading, error } = storeToRefs(collectionStore)
 
-// Sample collection data (placeholder)
-const collections = ref([
-  { id: 1, name: '서울 강남 오피스텔' },
-  { id: 2, name: '부산 해운대 아파트' },
-  { id: 3, name: '제주 애월 타운하우스' },
-  { id: 4, name: '경기 분당 단독주택' },
-  { id: 5, name: '인천 송도 신축빌라' },
-  { id: 6, name: '대전 유성 전원주택' }
-])
+// ============================================
+// State
+// ============================================
 
+const selectedIndex = ref(-1)
 const brandAccent = BRAND_ACCENT
 
-// Select crystal from grid
-const selectCrystal = (index) => {
+// ============================================
+// Computed
+// ============================================
+
+/** 데이터가 하나라도 있는지 */
+const hasAnyData = computed(() => {
+  return (collections.value && collections.value.length > 0) || inProgress.value
+})
+
+/** 선택된 아이템의 고유 키 */
+const selectedKey = computed(() => {
+  if (selectedIndex.value === -1 && inProgress.value) {
+    return `in-progress-${inProgress.value.dreamHomeId}`
+  }
+  return collections.value[selectedIndex.value]?.collectionId ?? 'empty'
+})
+
+/** 선택된 아이템의 테마 코드 */
+const selectedThemeCode = computed(() => {
+  if (selectedIndex.value === -1 && inProgress.value) {
+    return inProgress.value.themeCode
+  }
+  return collections.value[selectedIndex.value]?.themeCode ?? 'CLASSIC'
+})
+
+/** 선택된 아이템의 표시 이름 */
+const selectedDisplayName = computed(() => {
+  if (selectedIndex.value === -1 && inProgress.value) {
+    return `${inProgress.value.propertyName} (진행 중)`
+  }
+  return collections.value[selectedIndex.value]?.propertyName ?? '컬렉션을 선택하세요'
+})
+
+// ============================================
+// Methods
+// ============================================
+
+async function fetchCollections() {
+  await collectionStore.fetchCollections()
+
+  if (error.value) {
+    return
+  }
+
+  if (inProgress.value) {
+    selectedIndex.value = -1
+  } else if (collections.value.length > 0) {
+    selectedIndex.value = 0
+  } else {
+    selectedIndex.value = -1
+  }
+}
+
+function selectInProgress() {
+  selectedIndex.value = -1
+}
+
+function selectCrystal(index) {
   selectedIndex.value = index
 }
+
+function goToPropertySearch() {
+  router.push('/properties')
+}
+
+function goToJourney() {
+  if (selectedIndex.value === -1 && inProgress.value) {
+    router.push({
+      path: `/collection/${inProgress.value.dreamHomeId}/journey`,
+      query: { mode: 'active' }
+    })
+    return
+  }
+  
+  const item = collections.value[selectedIndex.value]
+  if (item?.collectionId) {
+    router.push(`/collection/${item.collectionId}/journey`)
+  }
+}
+
+// ============================================
+// Lifecycle
+// ============================================
+
+onMounted(() => {
+  fetchCollections()
+})
 </script>
 
 <style scoped>
@@ -91,6 +222,171 @@ const selectCrystal = (index) => {
   width: 100%;
   min-height: 100vh;
   position: relative;
+  background: var(--showroom-bg-day);
+  transition: background var(--theme-switch-duration, 0.45s) ease;
+}
+
+html[data-theme="night"] .collection-view {
+  background: var(--showroom-bg-night);
+}
+
+/* Loading & Error States */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--showroom-accent-day, #D4A574);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text,
+.error-text {
+  color: var(--showroom-text-day, #5D4037);
+  font-size: 1rem;
+  text-align: center;
+}
+
+html[data-theme="night"] .loading-text,
+html[data-theme="night"] .error-text {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.retry-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--showroom-accent-day, #D4A574);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Empty CTA Full Page */
+.empty-cta-fullpage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  padding: 2rem;
+}
+
+.cta-card {
+  background: var(--bento-card-bg, #ffffff);
+  border: 1px solid var(--bento-card-border, #e5e7eb);
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 12px 36px -22px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 10;
+}
+
+html[data-theme="night"] .cta-card {
+  background: var(--showroom-card-bg-night, #20242a);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 42px -20px rgba(0, 0, 0, 0.5);
+}
+
+.cta-icon-wrapper {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--showroom-bg-day, #F9F8F6);
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  animation: float 3s ease-in-out infinite;
+}
+
+html[data-theme="night"] .cta-icon-wrapper {
+  background: var(--showroom-bg-night, #3a3530);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.cta-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--bento-card-title, #1f2937);
+  margin-bottom: 1rem;
+}
+
+html[data-theme="night"] .cta-title {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.cta-description {
+  font-size: 1rem;
+  color: var(--bento-text-muted, #6b7280);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+html[data-theme="night"] .cta-description {
+  color: rgba(245, 237, 227, 0.7);
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-btn-gap, 0.55rem);
+  padding: var(--app-btn-padding-y, 0.95rem) var(--app-btn-padding-x, 1.6rem);
+  min-height: var(--app-btn-min-height, 52px);
+  background: var(--brand-accent, #FF7F50);
+  color: white;
+  border: none;
+  border-radius: var(--app-btn-radius, 12px);
+  font-size: var(--app-btn-font-size, 1.05rem);
+  font-weight: var(--app-btn-font-weight, 700);
+  line-height: var(--app-btn-line-height, 1.2);
+  cursor: pointer;
+  transition: var(--app-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
+  box-shadow: 0 4px 14px rgba(255, 127, 80, 0.35);
+}
+
+.cta-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(255, 127, 80, 0.45);
+}
+
+.cta-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.cta-hint {
+  font-size: 0.875rem;
+  color: var(--bento-text-muted, #6b7280);
+  margin-top: 1.5rem;
+}
+
+html[data-theme="night"] .cta-hint {
+  color: rgba(245, 237, 227, 0.6);
 }
 
 /* Main Collection Container */
@@ -113,7 +409,7 @@ const selectCrystal = (index) => {
   font-weight: 600;
   margin-bottom: 3rem;
   color: var(--showroom-text-day, #5D4037);
-  transition: color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
+  transition: color var(--theme-switch-duration, 0.45s) ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -128,8 +424,16 @@ html[data-theme="night"] .collection-title {
   width: 100%;
   max-width: var(--crystal-ball-size, 350px);
   height: var(--crystal-ball-size, 350px);
-  aspect-ratio: 1 / 1;
   margin: 0 auto 2rem;
+  cursor: pointer;
+}
+
+.clickable-crystal {
+  transition: transform 0.3s ease;
+}
+
+.main-crystal-container:hover .clickable-crystal {
+  transform: scale(1.02);
 }
 
 .selected-name {
@@ -137,7 +441,6 @@ html[data-theme="night"] .collection-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--showroom-accent-day, #D4A574);
-  transition: color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 html[data-theme="night"] .selected-name {
@@ -171,7 +474,6 @@ html[data-theme="night"] .selected-name {
   font-weight: 600;
   margin-bottom: 4rem;
   color: var(--showroom-text-day, #5D4037);
-  transition: color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 html[data-theme="night"] .section-subtitle {
@@ -190,35 +492,50 @@ html[data-theme="night"] .section-subtitle {
 .mini-crystal-item {
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  outline: none;
 }
 
 .mini-crystal-item:hover {
   transform: translateY(-12px) scale(1.05);
 }
 
-.mini-crystal-item:focus {
-  outline: none;
-}
-
-/* Mini Crystal Wrapper */
 .mini-crystal-wrapper {
   width: 120px;
   height: 120px;
   margin: 0 auto 1rem;
   position: relative;
   border-radius: 50%;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* Apply mini size to CrystalBall via CSS variable override */
 .mini-crystal-wrapper :deep(.room-container) {
   --crystal-ball-size: 120px;
   width: var(--crystal-ball-size);
   height: var(--crystal-ball-size);
 }
 
-/* Active state - circular golden border */
+.progress-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: var(--bento-card-bg, #ffffff);
+  color: var(--bento-text, #1f2937);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.in-progress-item .mini-crystal-wrapper {
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 127, 80, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 127, 80, 0); }
+}
+
 .mini-crystal-item.active .mini-crystal-wrapper {
   box-shadow: 0 0 0 2px var(--showroom-accent-day, #D4A574),
               0 0 30px var(--showroom-accent-day, #D4A574);
@@ -233,63 +550,15 @@ html[data-theme="night"] .mini-crystal-item.active .mini-crystal-wrapper {
   filter: brightness(1.1);
 }
 
-html[data-theme="night"] .mini-crystal-item:hover .mini-crystal-wrapper {
-  filter: brightness(1.2);
-}
-
-/* Mini Crystal Label */
 .mini-crystal-label {
   display: block;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--showroom-text-day, #5D4037);
-  transition: color 0.3s ease;
 }
 
 html[data-theme="night"] .mini-crystal-label {
   color: var(--showroom-text-night, #F5EDE3);
-}
-
-.mini-crystal-item:hover .mini-crystal-label {
-  color: var(--showroom-accent-day, #D4A574);
-}
-
-html[data-theme="night"] .mini-crystal-item:hover .mini-crystal-label {
-  color: var(--showroom-accent-night, #D4A574);
-}
-
-/* Empty State */
-.empty-state {
-  padding: 4rem 2rem;
-  text-align: center;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-  opacity: 0.5;
-  display: flex;
-  justify-content: center;
-}
-
-.empty-text {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--showroom-text-day, #5D4037);
-  margin-bottom: 0.5rem;
-}
-
-html[data-theme="night"] .empty-text {
-  color: var(--showroom-text-night, #F5EDE3);
-}
-
-.empty-subtext {
-  font-size: 0.9375rem;
-  color: var(--showroom-text-secondary-day, #8D6E63);
-}
-
-html[data-theme="night"] .empty-subtext {
-  color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
 /* Responsive */
