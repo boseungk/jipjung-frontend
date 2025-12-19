@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="journey-replay-view" ref="containerRef">
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-container">
@@ -13,25 +13,99 @@
     </div>
 
     <!-- Journey Content -->
-    <template v-else-if="journeyData">
+    <template v-else-if="normalizedJourney">
       <!-- Fixed Header -->
       <header class="journey-header">
         <button class="back-btn" @click="goBack" aria-label="뒤로 가기">
           ← 
         </button>
-        <h1 class="journey-title">{{ journeyData.collection.propertyName }}</h1>
-        <span class="journey-subtitle">{{ journeyData.collection.location }}</span>
+        <h1 class="journey-title">{{ journeyCollection.propertyName }}</h1>
+        <span class="journey-subtitle">{{ journeyCollection.location }}</span>
       </header>
 
       <!-- Main Content: House Image (80% of viewport) -->
       <main class="journey-main">
         <!-- House Image Container -->
         <div class="house-image-container">
-          <img 
-            :src="currentPhaseImage" 
-            :alt="`Phase ${currentPhase} - ${currentPhaseName}`"
-            class="house-image"
-          />
+          <div
+            v-if="isInteriorPhase"
+            ref="interiorStackRef"
+            class="interior-image-stack"
+            aria-label="인테리어 단계 이미지"
+          >
+            <img
+              v-if="interiorTransitionOverlayUrl"
+              ref="interiorOverlayRef"
+              :src="interiorTransitionOverlayUrl"
+              class="interior-transition-overlay"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+            <img
+              v-if="interiorBackgroundLayer"
+              :src="interiorBackgroundLayer.url"
+              class="interior-layer interior-layer--base"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+            <img
+              v-for="layer in interiorOverlayLayers"
+              :key="layer.id"
+              :src="layer.url"
+              class="interior-layer"
+              :class="interiorVisibleLayerIds.has(layer.id) ? 'layer-visible' : 'layer-hidden'"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+          </div>
+          <div v-else class="exterior-image-stack" aria-label="집 단계 이미지">
+            <img
+              v-if="houseIncomingUrl"
+              ref="houseIncomingImgRef"
+              :src="houseIncomingUrl"
+              :alt="`Phase ${currentPhase} - ${currentPhaseName}`"
+              class="house-image house-image--base"
+              draggable="false"
+              @error="handleImageError"
+            />
+            <img
+              v-if="houseOutgoingUrl"
+              ref="houseOutgoingImgRef"
+              :src="houseOutgoingUrl"
+              class="house-image house-image--overlay"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+              @error="handleImageError"
+            />
+          </div>
+          <div
+            v-if="interiorExitOverlayActive"
+            ref="interiorExitOverlayRef"
+            class="interior-exit-overlay"
+            aria-hidden="true"
+          >
+            <img
+              v-if="interiorExitBackgroundLayer"
+              :src="interiorExitBackgroundLayer.url"
+              class="interior-layer interior-layer--base"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+            <img
+              v-for="layer in interiorExitOverlayLayers"
+              :key="layer.id"
+              :src="layer.url"
+              class="interior-layer layer-visible"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+          </div>
           <!-- Phase Badge -->
           <div class="phase-badge">
             <span class="phase-number">{{ currentPhase }}/{{ totalPhases }}</span>
@@ -53,7 +127,7 @@
               :key="phase"
               class="dot"
               :class="{
-                active: phase <= currentPhase,
+                active: phase <= currentPhase && (!isInProgress || phase <= maxUnlockedPhase),
                 current: phase === currentPhase,
                 locked: isInProgress && phase > maxUnlockedPhase
               }"
@@ -74,7 +148,17 @@
       <!-- Bottom Sheet -->
       <aside class="bottom-sheet" :class="{ expanded: isSheetExpanded }">
         <div class="sheet-handle" @click="toggleSheet">
-          <div class="handle-bar"></div>
+          <div class="sheet-hint">
+            <AppIcon 
+              name="caretUp" 
+              :size="24" 
+              weight="bold" 
+              :color="brandAccent"
+              class="sheet-chevron"
+              :class="{ flipped: isSheetExpanded }"
+            />
+            <span class="hint-text">{{ isSheetExpanded ? '닫기' : '저축 여정 상세보기' }}</span>
+          </div>
         </div>
 
         <div class="sheet-content">
@@ -82,19 +166,19 @@
           <div class="summary-section">
             <div class="summary-card">
               <span class="summary-label">시작일</span>
-              <span class="summary-value">{{ formatDate(journeyData.summary.startDate) }}</span>
+              <span class="summary-value">{{ formatDate(journeySummary.startDate) }}</span>
             </div>
             <div class="summary-card">
               <span class="summary-label">완료일</span>
-              <span class="summary-value">{{ formatDate(journeyData.summary.completedDate) }}</span>
+              <span class="summary-value">{{ formatDate(journeySummary.completedDate) }}</span>
             </div>
             <div class="summary-card">
               <span class="summary-label">소요 기간</span>
-              <span class="summary-value">{{ journeyData.summary.totalDays }}일</span>
+              <span class="summary-value">{{ journeySummary.totalDays }}일</span>
             </div>
             <div class="summary-card highlight">
               <span class="summary-label">총 저축</span>
-              <span class="summary-value">{{ formatMoney(journeyData.summary.targetAmount) }}</span>
+              <span class="summary-value">{{ formatMoney(journeySummary.targetAmount) }}</span>
             </div>
           </div>
 
@@ -125,14 +209,14 @@
 
       <!-- Completion Celebration (when at 100%) -->
       <div v-if="isJourneyCompleted && currentPhase === totalPhases" class="completion-overlay">
-        <div class="confetti-container" ref="confettiRef"></div>
+        <div class="confetti-container"></div>
         <div class="completion-card">
           <h2 class="completion-title">🎉 축하해요!</h2>
           <p class="completion-message">
-            {{ journeyData.summary.totalDays }}일간의 여정을 완주했어요!
+            {{ journeySummary.totalDays }}일간의 여정을 완주했어요!
           </p>
           <p class="completion-amount">
-            총 {{ formatMoney(journeyData.summary.targetAmount) }} 저축 완료
+            총 {{ formatMoney(journeySummary.targetAmount) }} 저축 완료
           </p>
           <button class="share-btn" @click="shareJourney">📤 공유하기</button>
         </div>
@@ -142,14 +226,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { collectionService } from '@/api/services/collectionService'
+import { useCollectionStore } from '@/stores/collectionStore'
+import { BRAND_ACCENT } from '@/constants/colors'
+import {
+  getExteriorStageUrl,
+  getInteriorLayerUrls,
+  getInteriorVisibleLayerIds,
+  SHOWROOM_TOTAL_STAGES
+} from '@/constants/showroomWebp'
+import gsap from 'gsap'
+import AppIcon from '@/components/common/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
+const collectionStore = useCollectionStore()
 const containerRef = ref(null)
-const confettiRef = ref(null)
 
 // State
 const isLoading = ref(true)
@@ -157,35 +250,212 @@ const error = ref(null)
 const journeyData = ref(null)
 const currentPhase = ref(1)
 const isSheetExpanded = ref(false)
+const houseIncomingUrl = ref('')
+const houseOutgoingUrl = ref('')
+const houseIncomingImgRef = ref(null)
+const houseOutgoingImgRef = ref(null)
+const interiorStackRef = ref(null)
+const interiorOverlayRef = ref(null)
+const interiorTransitionOverlayUrl = ref('')
+const interiorExitOverlayRef = ref(null)
+const interiorExitOverlayActive = ref(false)
+const interiorExitVisibleLayerIds = ref([])
+const lastInteriorStage = ref(1)
 
 // Constants
-const totalPhases = 11
+const HOUSE_STAGE_COUNT = SHOWROOM_TOTAL_STAGES.house
+const FURNITURE_STAGE_COUNT = SHOWROOM_TOTAL_STAGES.furniture
+const totalPhases = HOUSE_STAGE_COUNT + FURNITURE_STAGE_COUNT
+const brandAccent = BRAND_ACCENT
 
 // Computed
-const isInProgress = computed(() => route.meta.isInProgress === true)
-
-const maxUnlockedPhase = computed(() => {
-  const phases = journeyData.value?.phases
-  if (!Array.isArray(phases) || phases.length === 0) return 1
-
-  const reached = phases
-    .filter(p => p?.reachedAt != null)
-    .map(p => p.phaseNumber)
-    .filter(n => Number.isInteger(n) && n >= 1 && n <= totalPhases)
-
-  if (reached.length === 0) return 1
-  return Math.max(1, Math.min(totalPhases, Math.max(...reached)))
+// mode=active 쿼리 파라미터로 진행 중 여부 판단 (라우팅 단일화)
+const isInProgress = computed(() => {
+  return route.query.mode === 'active' || route.meta?.isInProgress === true
 })
 
-const scrollPhases = computed(() => (isInProgress.value ? maxUnlockedPhase.value : totalPhases))
+const toPhaseNumber = (value) => {
+  if (value === null || value === undefined) return null
+  const numeric = Number(value)
+  if (Number.isFinite(numeric)) {
+    const normalized = Math.trunc(numeric)
+    if (normalized < 1) return 1
+    return Math.min(totalPhases, normalized)
+  }
+  if (typeof value === 'string') {
+    const match = value.match(/\d+/)
+    if (match) {
+      const parsed = Number(match[0])
+      if (Number.isFinite(parsed)) {
+        const normalized = Math.trunc(parsed)
+        if (normalized < 1) return 1
+        return Math.min(totalPhases, normalized)
+      }
+    }
+  }
+  return null
+}
+
+const toNumber = (value, fallback = 0) => {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return fallback
+  return numeric
+}
+
+const normalizedJourney = computed(() => {
+  const data = journeyData.value
+  if (!data) return null
+
+  const collection = data.collection ?? {}
+  const summary = data.summary ?? {}
+
+  const themeCode = String(
+    collection.themeCode ?? data.themeCode ?? collection.theme ?? data.theme ?? 'CLASSIC'
+  ).toUpperCase()
+
+  const propertyName = collection.propertyName
+    ?? collection.houseName
+    ?? collection.name
+    ?? data.propertyName
+    ?? data.houseName
+    ?? '드림홈'
+
+  const location = collection.location ?? data.location ?? ''
+
+  const phases = Array.isArray(data.phases) ? data.phases : []
+  const normalizedPhases = phases.map((phase, index) => {
+    const phaseNumber = toPhaseNumber(
+      phase.phaseNumber ?? phase.phase ?? phase.stageNumber ?? phase.stage ?? index + 1
+    ) ?? Math.min(totalPhases, index + 1)
+
+    const rawEvents = Array.isArray(phase.events) ? phase.events : []
+    const normalizedEvents = rawEvents.map((event) => {
+      const eventType = String(event.eventType ?? event.type ?? 'DEPOSIT').toUpperCase()
+      return {
+        ...event,
+        eventType,
+        amount: toNumber(event.amount ?? event.value ?? 0),
+        date: event.date ?? event.createdAt ?? event.recordedAt ?? null,
+        memo: event.memo ?? event.note ?? ''
+      }
+    })
+
+    return {
+      ...phase,
+      phaseNumber,
+      phaseName: phase.phaseName ?? phase.name ?? `Phase ${phaseNumber}`,
+      reachedAt: phase.reachedAt ?? phase.reachedDate ?? phase.completedAt ?? phase.date ?? null,
+      cumulativeAmount: toNumber(phase.cumulativeAmount ?? phase.savedAmount ?? phase.amount ?? 0),
+      events: normalizedEvents
+    }
+  })
+
+  const summaryData = {
+    startDate: summary.startDate ?? summary.startedAt ?? summary.start ?? null,
+    completedDate: summary.completedDate ?? summary.completedAt ?? summary.completed ?? null,
+    totalDays: toNumber(summary.totalDays ?? summary.durationDays ?? summary.days ?? 0),
+    targetAmount: toNumber(summary.targetAmount ?? summary.totalSaved ?? summary.totalAmount ?? summary.savedAmount ?? 0)
+  }
+
+  const maxUnlockedPhase = toPhaseNumber(
+    data.maxUnlockedPhase
+    ?? summary.maxUnlockedPhase
+    ?? data.currentPhase
+    ?? summary.currentPhase
+    ?? data.currentStep
+    ?? summary.currentStep
+    ?? collection.currentPhase
+    ?? collection.currentStage
+    ?? collection.currentStep
+    ?? data.currentStage
+    ?? summary.currentStage
+    ?? collection.stage
+    ?? data.stage
+    ?? summary.stage
+    ?? null
+  )
+
+  return {
+    collection: {
+      propertyName,
+      location,
+      themeCode: themeCode || 'CLASSIC'
+    },
+    summary: summaryData,
+    phases: normalizedPhases,
+    maxUnlockedPhase
+  }
+})
+
+const journeyCollection = computed(() => {
+  return normalizedJourney.value?.collection ?? {
+    propertyName: '드림홈',
+    location: '',
+    themeCode: 'CLASSIC'
+  }
+})
+
+const journeySummary = computed(() => {
+  return normalizedJourney.value?.summary ?? {
+    startDate: null,
+    completedDate: null,
+    totalDays: 0,
+    targetAmount: 0
+  }
+})
+
+const journeyPhases = computed(() => normalizedJourney.value?.phases ?? [])
+
+const isPhaseUnlocked = (phase) => {
+  if (!phase) return false
+  if (phase.reachedAt) return true
+  if (Array.isArray(phase.events) && phase.events.length > 0) return true
+  if (Number.isFinite(phase.cumulativeAmount) && phase.cumulativeAmount > 0) return true
+  if (phase.isUnlocked || phase.unlocked || phase.isReached || phase.isCompleted) return true
+  if (phase.status) {
+    const status = String(phase.status).toUpperCase()
+    if (['UNLOCKED', 'REACHED', 'COMPLETED', 'DONE', 'ACTIVE', 'CURRENT'].includes(status)) {
+      return true
+    }
+  }
+  return false
+}
+
+const maxUnlockedPhase = computed(() => {
+  const explicit = normalizedJourney.value?.maxUnlockedPhase
+  if (Number.isInteger(explicit)) {
+    return Math.min(totalPhases, Math.max(1, explicit))
+  }
+
+  const reached = journeyPhases.value
+    .filter(isPhaseUnlocked)
+    .map(phase => phase.phaseNumber)
+    .filter(number => Number.isInteger(number))
+
+  if (reached.length > 0) {
+    return Math.min(totalPhases, Math.max(...reached))
+  }
+
+  const phaseNumbers = journeyPhases.value
+    .map(phase => phase?.phaseNumber)
+    .filter(number => Number.isInteger(number))
+
+  if (phaseNumbers.length > 0) {
+    return Math.min(totalPhases, Math.max(...phaseNumbers))
+  }
+
+  return 1
+})
+
+const scrollPhases = computed(() => totalPhases)
 
 const isJourneyCompleted = computed(() => {
-  return Boolean(journeyData.value?.summary?.completedDate)
+  return Boolean(journeySummary.value?.completedDate)
 })
 
 const currentPhaseData = computed(() => {
-  if (!journeyData.value?.phases) return null
-  return journeyData.value.phases.find(p => p.phaseNumber === currentPhase.value)
+  if (!journeyPhases.value.length) return null
+  return journeyPhases.value.find(phase => phase.phaseNumber === currentPhase.value) || null
 })
 
 const currentPhaseName = computed(() => {
@@ -193,34 +463,225 @@ const currentPhaseName = computed(() => {
 })
 
 const currentPhaseImage = computed(() => {
-  if (!journeyData.value?.collection?.themeCode) return ''
-  const theme = journeyData.value.collection.themeCode.toLowerCase()
-  
-  // Phase 1-6: house stages, Phase 7-11: furniture stages
-  if (currentPhase.value <= 6) {
-    return `/webp/${theme}/stage${currentPhase.value}.webp`
-  } else {
-    const furnitureStage = currentPhase.value - 6
-    return `/webp/${theme}/furniture${furnitureStage}.webp`
-  }
+  const themeCode = journeyCollection.value.themeCode || 'CLASSIC'
+  // Exterior images only (interior stages handled separately)
+  const stageNum = Math.min(currentPhase.value, HOUSE_STAGE_COUNT)
+  return getExteriorStageUrl(themeCode, stageNum)
 })
+
+const isInteriorPhase = computed(() => currentPhase.value > HOUSE_STAGE_COUNT)
+const interiorStage = computed(() => {
+  if (!isInteriorPhase.value) return 1
+  return Math.min(
+    FURNITURE_STAGE_COUNT,
+    Math.max(1, currentPhase.value - HOUSE_STAGE_COUNT)
+  )
+})
+
+const interiorLayers = computed(() => getInteriorLayerUrls(journeyCollection.value.themeCode || 'CLASSIC'))
+const interiorLayerIds = computed(() => interiorLayers.value.map(layer => layer.id))
+const interiorVisibleLayerIds = computed(() => {
+  if (!isInteriorPhase.value) return new Set()
+  return getInteriorVisibleLayerIds(interiorLayerIds.value, interiorStage.value)
+})
+const interiorBackgroundLayer = computed(() => (
+  interiorLayers.value.find(layer => layer.id === 'background') || null
+))
+const interiorOverlayLayers = computed(() => (
+  interiorLayers.value.filter(layer => layer.id !== 'background')
+))
+const interiorExitBackgroundLayer = computed(() => {
+  if (!interiorExitOverlayActive.value) return null
+  return interiorLayers.value.find(layer => layer.id === 'background') || null
+})
+const interiorExitOverlayLayers = computed(() => {
+  if (!interiorExitOverlayActive.value) return []
+  const visible = new Set(interiorExitVisibleLayerIds.value)
+  return interiorLayers.value.filter(layer => layer.id !== 'background' && visible.has(layer.id))
+})
+
+const HOUSE_STAGE_TRANSITION = {
+  outgoingDuration: 0.32,
+  incomingDuration: 0.45,
+  incomingDelay: 0,
+  settleDelay: 0
+}
+
+const prefersReducedMotion = () => {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+const preloadImage = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(url)
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
+    img.src = url
+  })
+}
+
+const transitionExteriorImage = async (nextUrl, { isInitial = false } = {}) => {
+  if (!nextUrl) return
+
+  try {
+    await preloadImage(nextUrl)
+  } catch (error) {
+    console.error(error)
+    return
+  }
+
+  if (isInitial || !houseIncomingUrl.value) {
+    houseOutgoingUrl.value = ''
+    houseIncomingUrl.value = nextUrl
+    await nextTick()
+    return
+  }
+
+  if (houseIncomingUrl.value === nextUrl) return
+
+  if (prefersReducedMotion()) {
+    houseOutgoingUrl.value = ''
+    houseIncomingUrl.value = nextUrl
+    await nextTick()
+    return
+  }
+
+  const prevUrl = houseIncomingUrl.value
+  houseOutgoingUrl.value = prevUrl
+  houseIncomingUrl.value = nextUrl
+
+  await nextTick()
+  const outgoingEl = houseOutgoingImgRef.value
+  const incomingEl = houseIncomingImgRef.value
+
+  gsap.killTweensOf([outgoingEl, incomingEl])
+  if (incomingEl) gsap.set(incomingEl, { opacity: 0, scale: 0.985 })
+
+  const tl = gsap.timeline({
+    onComplete: () => {
+      houseOutgoingUrl.value = ''
+    }
+  })
+
+  if (outgoingEl) {
+    tl.to(outgoingEl, {
+      duration: HOUSE_STAGE_TRANSITION.outgoingDuration,
+      opacity: 0,
+      scale: 1,
+      ease: 'power2.inOut',
+      clearProps: 'transform'
+    }, 0)
+  }
+
+  if (incomingEl) {
+    tl.to(incomingEl, {
+      duration: HOUSE_STAGE_TRANSITION.incomingDuration,
+      opacity: 1,
+      scale: 1,
+      ease: 'power2.out',
+      clearProps: 'transform'
+    }, HOUSE_STAGE_TRANSITION.incomingDelay)
+  }
+
+  tl.to({}, { duration: HOUSE_STAGE_TRANSITION.settleDelay })
+}
+
+const transitionInteriorHandoff = async () => {
+  if (prefersReducedMotion()) {
+    interiorTransitionOverlayUrl.value = ''
+    return
+  }
+
+  const overlayUrl = currentPhaseImage.value
+  if (!overlayUrl) return
+
+  interiorTransitionOverlayUrl.value = overlayUrl
+  await nextTick()
+
+  const stackEl = interiorStackRef.value
+  const overlayEl = interiorOverlayRef.value
+
+  if (!stackEl || !overlayEl) return
+
+  gsap.killTweensOf([stackEl, overlayEl])
+  gsap.set(stackEl, { opacity: 0 })
+  gsap.set(overlayEl, { opacity: 1 })
+
+  gsap.to(stackEl, {
+    duration: 0.45,
+    opacity: 1,
+    ease: 'power2.out',
+    clearProps: 'opacity'
+  })
+
+  gsap.to(overlayEl, {
+    duration: 0.45,
+    opacity: 0,
+    ease: 'power2.out',
+    onComplete: () => {
+      interiorTransitionOverlayUrl.value = ''
+    }
+  })
+}
+
+const transitionInteriorExit = async () => {
+  if (prefersReducedMotion()) {
+    interiorExitOverlayActive.value = false
+    return
+  }
+
+  const visibleIds = Array.from(
+    getInteriorVisibleLayerIds(interiorLayerIds.value, lastInteriorStage.value)
+  )
+  if (!visibleIds.length) return
+
+  interiorExitVisibleLayerIds.value = visibleIds
+  interiorExitOverlayActive.value = true
+  await nextTick()
+
+  const overlayEl = interiorExitOverlayRef.value
+  if (!overlayEl) return
+
+  gsap.killTweensOf(overlayEl)
+  gsap.set(overlayEl, { opacity: 1 })
+
+  gsap.to(overlayEl, {
+    duration: 0.45,
+    opacity: 0,
+    ease: 'power2.out',
+    onComplete: () => {
+      interiorExitOverlayActive.value = false
+    }
+  })
+}
+
+/**
+ * 이미지 로드 실패 시 fallback
+ */
+function handleImageError(event) {
+  event.target.src = getExteriorStageUrl('CLASSIC', 1)
+}
 
 const progressPercent = computed(() => {
   return ((currentPhase.value - 1) / (totalPhases - 1)) * 100
 })
 
+const isLockedPhase = computed(() => {
+  if (!isInProgress.value) return false
+  if (maxUnlockedPhase.value >= totalPhases) return false
+  return currentPhase.value > maxUnlockedPhase.value
+})
+
 const showScrollHint = computed(() => {
   if (scrollPhases.value <= 1) return false
-  if (isInProgress.value) {
-    return currentPhase.value < maxUnlockedPhase.value
-  }
-  return currentPhase.value < totalPhases
+  if (currentPhase.value >= totalPhases) return false
+  return !isLockedPhase.value
 })
 
 const showLockedHint = computed(() => {
-  if (!isInProgress.value) return false
   if (scrollPhases.value <= 1) return false
-  return currentPhase.value >= maxUnlockedPhase.value && maxUnlockedPhase.value < totalPhases
+  return isLockedPhase.value
 })
 
 // Methods
@@ -240,11 +701,17 @@ const fetchJourney = async () => {
     error.value = null
     if (inProgressMode) {
       // 진행 중인 드림홈 여정 조회
-      journeyData.value = await collectionService.getInProgressJourney()
+      journeyData.value = await collectionStore.fetchInProgressJourney()
     } else {
       // 완성된 컬렉션 여정 조회
-      journeyData.value = await collectionService.getJourney(collectionId)
+      journeyData.value = await collectionStore.fetchJourney(collectionId)
     }
+    
+    // 🔍 디버그 로깅
+    console.log('[JourneyReplay] API Response:', journeyData.value)
+    console.log('[JourneyReplay] phases:', journeyData.value?.phases)
+    console.log('[JourneyReplay] maxUnlockedPhase from API:', journeyData.value?.maxUnlockedPhase)
+    
     currentPhase.value = 1
   } catch (err) {
     console.error('여정 조회 실패:', err)
@@ -265,36 +732,41 @@ const toggleSheet = () => {
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return '-'
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
 }
 
 const formatShortDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return ''
   return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
 const formatMoney = (amount) => {
-  if (!amount) return '0원'
-  if (amount >= 100000000) {
-    return `${(amount / 100000000).toFixed(1)}억`
+  const numeric = toNumber(amount, 0)
+  if (numeric <= 0) return '0원'
+  if (numeric >= 100000000) {
+    return `${(numeric / 100000000).toFixed(1)}억`
   }
-  if (amount >= 10000) {
-    return `${Math.round(amount / 10000).toLocaleString()}만원`
+  if (numeric >= 10000) {
+    return `${Math.round(numeric / 10000).toLocaleString()}만원`
   }
-  return `${amount.toLocaleString()}원`
+  return `${numeric.toLocaleString()}원`
 }
 
 const shareJourney = async () => {
   try {
+    const totalDays = journeySummary.value?.totalDays ?? 0
+    const targetAmount = journeySummary.value?.targetAmount ?? 0
     if (navigator.share) {
       await navigator.share({
         title: isJourneyCompleted.value
-          ? `${journeyData.value.collection.propertyName} 저축 완료!`
-          : `${journeyData.value.collection.propertyName} 저축 여정`,
+          ? `${journeyCollection.value.propertyName} 저축 완료!`
+          : `${journeyCollection.value.propertyName} 저축 여정`,
         text: isJourneyCompleted.value
-          ? `${journeyData.value.summary.totalDays}일간 ${formatMoney(journeyData.value.summary.targetAmount)} 저축 완료!`
-          : `${journeyData.value.summary.totalDays}일째 저축 여정 진행 중`,
+          ? `${totalDays}일간 ${formatMoney(targetAmount)} 저축 완료!`
+          : `${totalDays}일째 저축 여정 진행 중`,
         url: window.location.href
       })
     } else {
@@ -315,6 +787,7 @@ const teardownScrollEffect = () => {
     scrollHandler = null
   }
   document.body.style.height = ''
+  document.documentElement.style.height = ''
 }
 
 const setupScrollListener = () => {
@@ -323,7 +796,7 @@ const setupScrollListener = () => {
   scrollHandler = () => {
     const scrollTop = window.scrollY
     const windowHeight = window.innerHeight
-    const docHeight = document.documentElement.scrollHeight
+    const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
 
     // Calculate progress (0 to 1)
     const maxScroll = docHeight - windowHeight
@@ -354,17 +827,56 @@ onMounted(() => {
     { immediate: true }
   )
 
-  watch([journeyData, scrollPhases], ([newJourney]) => {
+  watch(
+    () => [currentPhaseImage.value, isInteriorPhase.value, normalizedJourney.value],
+    async ([newUrl, interior, journey]) => {
+      if (!journey || interior) return
+      await transitionExteriorImage(newUrl, { isInitial: !houseIncomingUrl.value })
+    },
+    { immediate: true }
+  )
+
+  watch(
+    () => interiorStage.value,
+    (stage) => {
+      if (isInteriorPhase.value) {
+        lastInteriorStage.value = stage
+      }
+    }
+  )
+
+  watch(
+    () => isInteriorPhase.value,
+    async (interior, wasInterior) => {
+      if (interior && !wasInterior) {
+        await transitionInteriorHandoff()
+      } else if (!interior && wasInterior) {
+        interiorTransitionOverlayUrl.value = ''
+        gsap.killTweensOf([interiorStackRef.value, interiorOverlayRef.value])
+        await transitionInteriorExit()
+      }
+    }
+  )
+
+  watch([normalizedJourney, scrollPhases], ([newJourney]) => {
     if (!newJourney) return
 
     teardownScrollEffect()
     document.body.style.height = `${Math.max(1, scrollPhases.value) * 100}vh`
+    document.documentElement.style.height = document.body.style.height
     setupScrollListener()
   })
 })
 
 onUnmounted(() => {
   teardownScrollEffect()
+  gsap.killTweensOf([
+    houseIncomingImgRef.value,
+    houseOutgoingImgRef.value,
+    interiorStackRef.value,
+    interiorOverlayRef.value,
+    interiorExitOverlayRef.value
+  ])
 })
 </script>
 
@@ -372,12 +884,13 @@ onUnmounted(() => {
 .journey-replay-view {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(180deg, #F5EDE3 0%, #E8DFD5 100%);
+  background: var(--showroom-bg-day);
+  transition: background var(--theme-switch-duration, 0.45s) ease;
   position: relative;
 }
 
 html[data-theme="night"] .journey-replay-view {
-  background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
+  background: var(--showroom-bg-night);
 }
 
 /* Loading & Error States */
@@ -395,7 +908,7 @@ html[data-theme="night"] .journey-replay-view {
 .loading-spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #D4A574;
+  border: 4px solid var(--showroom-accent-day, #D4A574);
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -407,14 +920,9 @@ html[data-theme="night"] .journey-replay-view {
 
 .loading-text,
 .error-text {
-  color: #5D4037;
+  color: var(--bento-text, #1f2937);
   font-size: 1rem;
   text-align: center;
-}
-
-html[data-theme="night"] .loading-text,
-html[data-theme="night"] .error-text {
-  color: #F5EDE3;
 }
 
 /* Header */
@@ -425,7 +933,8 @@ html[data-theme="night"] .error-text {
   right: 0;
   z-index: 100;
   padding: 1rem 1.5rem;
-  background: rgba(245, 237, 227, 0.9);
+  background: var(--bento-card-bg, #ffffff);
+  border-bottom: 1px solid var(--bento-card-border);
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
@@ -433,7 +942,8 @@ html[data-theme="night"] .error-text {
 }
 
 html[data-theme="night"] .journey-header {
-  background: rgba(26, 26, 46, 0.9);
+  background: var(--showroom-card-bg-night, #20242a);
+  border-bottom: 1px solid var(--bento-card-border);
 }
 
 .back-btn {
@@ -441,33 +951,21 @@ html[data-theme="night"] .journey-header {
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: #5D4037;
+  color: var(--bento-text, #1f2937);
   padding: 0.5rem;
-}
-
-html[data-theme="night"] .back-btn {
-  color: #F5EDE3;
 }
 
 .journey-title {
   font-family: 'Fredoka', sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #5D4037;
+  color: var(--bento-card-title, #1f2937);
   flex: 1;
-}
-
-html[data-theme="night"] .journey-title {
-  color: #F5EDE3;
 }
 
 .journey-subtitle {
   font-size: 0.875rem;
-  color: #8D6E63;
-}
-
-html[data-theme="night"] .journey-subtitle {
-  color: #D7CCC8;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 /* Main Content */
@@ -495,22 +993,99 @@ html[data-theme="night"] .journey-subtitle {
   justify-content: center;
 }
 
+.exterior-image-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .house-image {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  will-change: opacity, transform;
   filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15));
+}
+
+.house-image--base {
+  position: absolute;
+  inset: 0;
+}
+
+.house-image--overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.interior-image-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15));
+}
+
+.interior-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.interior-transition-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 3;
+  will-change: opacity;
+}
+
+.interior-exit-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.interior-layer--base {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.layer-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.layer-hidden {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 .phase-badge {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: rgba(212, 165, 116, 0.9);
-  color: white;
+  background: var(--bento-card-bg, #ffffff);
+  color: var(--bento-text, #1f2937);
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--bento-card-border);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -520,10 +1095,11 @@ html[data-theme="night"] .journey-subtitle {
 .phase-number {
   font-weight: 700;
   font-size: 1rem;
+  color: var(--brand-accent, #ff6b3d);
 }
 
 .phase-name {
-  opacity: 0.9;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 /* Progress Bar */
@@ -536,14 +1112,14 @@ html[data-theme="night"] .journey-subtitle {
 .progress-bar {
   width: 100%;
   height: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bento-card-border, #e5e7eb);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #D4A574 0%, #B8956F 100%);
+  background: linear-gradient(90deg, var(--brand-accent, #ff6b3d) 0%, var(--brand-accent-soft, #ff9a75) 100%);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
@@ -559,7 +1135,7 @@ html[data-theme="night"] .journey-subtitle {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bento-card-border, #e5e7eb);
   transition: all 0.3s ease;
 }
 
@@ -572,25 +1148,25 @@ html[data-theme="night"] .dot.locked {
 }
 
 .dot.active {
-  background: #D4A574;
+  background: var(--brand-accent, #ff6b3d);
 }
 
 .dot.current {
   transform: scale(1.5);
-  box-shadow: 0 0 10px #D4A574;
+  box-shadow: 0 0 10px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.65);
 }
 
 /* Scroll Indicator */
 .scroll-indicator {
   position: absolute;
-  bottom: 8rem;
+  bottom: 12rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  color: #8D6E63;
+  color: var(--bento-text-muted, #6b7280);
   font-size: 0.875rem;
   animation: bounce 2s ease infinite;
 }
@@ -600,31 +1176,30 @@ html[data-theme="night"] .dot.locked {
   50% { transform: translateX(-50%) translateY(10px); }
 }
 
-html[data-theme="night"] .scroll-indicator {
-  color: #D7CCC8;
-}
-
 .locked-indicator {
   animation: none;
+  bottom: 14rem;
 }
 
 .scroll-arrow {
   font-size: 1.5rem;
 }
 
-/* Bottom Sheet */
+/* Bottom Sheet - Hidden by default */
 .bottom-sheet {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--bento-card-bg, #ffffff);
   border-radius: 24px 24px 0 0;
-  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1);
-  transform: translateY(calc(100% - 180px));
-  transition: transform 0.3s ease;
+  box-shadow: 0 -8px 32px rgba(17, 24, 39, 0.12);
+  border-top: 1px solid var(--bento-card-border);
+  transform: translateY(calc(100% - 110px)); /* Show handle + padding */
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
-  max-height: 70vh;
+  max-height: 75vh;
+  padding-bottom: env(safe-area-inset-bottom, 16px); /* iOS safe area */
 }
 
 .bottom-sheet.expanded {
@@ -632,21 +1207,55 @@ html[data-theme="night"] .scroll-indicator {
 }
 
 html[data-theme="night"] .bottom-sheet {
-  background: #252538;
+  background: var(--showroom-card-bg-night, #20242a);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+  border-top: 1px solid var(--bento-card-border);
 }
 
 .sheet-handle {
   display: flex;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.5rem 1rem 2rem;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.handle-bar {
-  width: 40px;
-  height: 4px;
-  background: #D7CCC8;
-  border-radius: 2px;
+.sheet-handle:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+html[data-theme="night"] .sheet-handle:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sheet-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Sheet Chevron (AppIcon) */
+.sheet-chevron {
+  animation: chevronBounce 2s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.sheet-chevron.flipped {
+  transform: rotate(180deg);
+  animation: none;
+}
+
+@keyframes chevronBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.hint-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-accent, #FF7F50);
+  letter-spacing: 0.02em;
 }
 
 .sheet-content {
@@ -664,30 +1273,28 @@ html[data-theme="night"] .bottom-sheet {
 }
 
 .summary-card {
-  background: #F5F0EB;
+  background: var(--showroom-card-bg-day, #ffffff);
   padding: 1rem;
   border-radius: 12px;
   text-align: center;
+  border: 1px solid var(--bento-card-border);
 }
 
 html[data-theme="night"] .summary-card {
-  background: #1A1A2E;
+  background: var(--showroom-card-bg-night, #20242a);
+  border: 1px solid var(--bento-card-border);
 }
 
 .summary-card.highlight {
-  background: linear-gradient(135deg, #D4A574 0%, #B8956F 100%);
+  background: linear-gradient(135deg, var(--brand-accent, #ff6b3d) 0%, var(--brand-accent-soft, #ff9a75) 100%);
   color: white;
 }
 
 .summary-label {
   display: block;
   font-size: 0.75rem;
-  color: #8D6E63;
+  color: var(--bento-text-muted, #6b7280);
   margin-bottom: 0.25rem;
-}
-
-html[data-theme="night"] .summary-label {
-  color: #D7CCC8;
 }
 
 .summary-card.highlight .summary-label {
@@ -697,11 +1304,7 @@ html[data-theme="night"] .summary-label {
 .summary-value {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #5D4037;
-}
-
-html[data-theme="night"] .summary-value {
-  color: #F5EDE3;
+  color: var(--bento-text, #1f2937);
 }
 
 .summary-card.highlight .summary-value {
@@ -716,22 +1319,14 @@ html[data-theme="night"] .summary-value {
 .phase-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #5D4037;
+  color: var(--bento-text, #1f2937);
   margin-bottom: 0.5rem;
-}
-
-html[data-theme="night"] .phase-title {
-  color: #F5EDE3;
 }
 
 .phase-cumulative {
   font-size: 0.875rem;
-  color: #8D6E63;
+  color: var(--bento-text-muted, #6b7280);
   margin-bottom: 1rem;
-}
-
-html[data-theme="night"] .phase-cumulative {
-  color: #D7CCC8;
 }
 
 .events-list {
@@ -763,36 +1358,24 @@ html[data-theme="night"] .event-item {
 .event-amount {
   display: block;
   font-weight: 600;
-  color: #5D4037;
-}
-
-html[data-theme="night"] .event-amount {
-  color: #F5EDE3;
+  color: var(--bento-text, #1f2937);
 }
 
 .event-memo {
   display: block;
   font-size: 0.75rem;
-  color: #8D6E63;
+  color: var(--bento-text-muted, #6b7280);
   margin-top: 0.125rem;
-}
-
-html[data-theme="night"] .event-memo {
-  color: #D7CCC8;
 }
 
 .event-date {
   font-size: 0.75rem;
-  color: #8D6E63;
-}
-
-html[data-theme="night"] .event-date {
-  color: #D7CCC8;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 .no-events {
   font-size: 0.875rem;
-  color: #8D6E63;
+  color: var(--bento-text-muted, #6b7280);
   text-align: center;
   padding: 1rem;
 }
@@ -830,7 +1413,9 @@ html[data-theme="night"] .event-date {
 }
 
 html[data-theme="night"] .completion-card {
-  background: #252538;
+  background: var(--showroom-card-bg-night, #20242a);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+  border-top: 1px solid var(--bento-card-border);
 }
 
 .completion-title {
@@ -840,18 +1425,14 @@ html[data-theme="night"] .completion-card {
 
 .completion-message {
   font-size: 1rem;
-  color: #5D4037;
+  color: var(--bento-text, #1f2937);
   margin-bottom: 0.5rem;
-}
-
-html[data-theme="night"] .completion-message {
-  color: #F5EDE3;
 }
 
 .completion-amount {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #D4A574;
+  color: var(--brand-accent, #ff6b3d);
   margin-bottom: 1.5rem;
 }
 
@@ -860,7 +1441,7 @@ html[data-theme="night"] .completion-message {
   font-size: 1rem;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, #D4A574 0%, #B8956F 100%);
+  background: linear-gradient(135deg, var(--brand-accent, #ff6b3d) 0%, var(--brand-accent-soft, #ff9a75) 100%);
   border: none;
   border-radius: 50px;
   cursor: pointer;
