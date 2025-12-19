@@ -311,13 +311,14 @@ export const useGamificationStore = defineStore('gamification', () => {
    * localStorage에 진행 상태를 저장하여 다음 로그인 시에도 유지됩니다.
    */
   async function startFurnitureTrack() {
+    const nextFurnitureStage = Math.max(1, furnitureStage.value || 1)
     const updated = {
       ...gamification.value,
       buildTrack: 'furniture',
-      furnitureStage: Math.max(1, furnitureStage.value || 1),
+      furnitureStage: nextFurnitureStage,
       houseStage: HOUSE_TOTAL_STAGES,
       experiencePoints: 0,
-      nextLevelExp: calculateNextMilestoneExp('furniture', 1)
+      nextLevelExp: calculateNextMilestoneExp('furniture', nextFurnitureStage)
     }
     await saveGamification(updated)
 

@@ -198,9 +198,9 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    function clearFurnitureProgress() {
+    function clearFurnitureProgress(options = {}) {
         try {
-            const { userKey, legacyKey } = getFurnitureProgressStorageKeys()
+            const { userKey, legacyKey } = getFurnitureProgressStorageKeys(options)
             if (userKey) localStorage.removeItem(userKey)
             if (legacyKey) localStorage.removeItem(legacyKey)
         } catch (error) {
@@ -580,20 +580,31 @@ export const useAuthStore = defineStore('auth', () => {
             const existingTrack = user.value?.gamification?.buildTrack
             const existingFurnitureStage = Number(user.value?.gamification?.furnitureStage) || 0
             const existingExperiencePoints = Number(user.value?.gamification?.experiencePoints)
-            const storedFurnitureProgress = readFurnitureProgress({ userId: response.profile?.userId })
 
             const rawShowroomStep = Number(response.showroom?.currentStep ?? response.profile?.level ?? 1)
             const showroomStep = Number.isFinite(rawShowroomStep) ? Math.max(1, Math.trunc(rawShowroomStep)) : 1
+            const isHouseCompleted = showroomStep >= HOUSE_TOTAL_STAGES
+
+            if (!isHouseCompleted) {
+                clearFurnitureProgress({ userId: response.profile?.userId })
+            }
+
+            const storedFurnitureProgress = isHouseCompleted
+                ? readFurnitureProgress({ userId: response.profile?.userId })
+                : null
 
             // 트랙 결정 로직:
-            // 1. 기존에 furniture 트랙이었으면 유지
-            // 2. localStorage에 furniture 진행 상태가 있으면 furniture
-            // 3. 그 외에는 house 트랙 (집 완공 단계여도 사용자가 명시적으로 인테리어 시작 전까지 house 유지)
+            // 1. house 완공 이후에만 furniture 진행 상태를 인정
+            // 2. 기존에 furniture 트랙이면 유지
+            // 3. localStorage에 furniture 진행 상태가 있으면 furniture
+            // 4. 그 외에는 house 트랙 (집 완공 단계여도 사용자가 명시적으로 인테리어 시작 전까지 house 유지)
             let derivedTrack = 'house'
-            if (existingTrack === 'furniture') {
-                derivedTrack = 'furniture'
-            } else if (storedFurnitureProgress?.furnitureStage >= 1) {
-                derivedTrack = 'furniture'
+            if (isHouseCompleted) {
+                if (existingTrack === 'furniture') {
+                    derivedTrack = 'furniture'
+                } else if (storedFurnitureProgress?.furnitureStage >= 1) {
+                    derivedTrack = 'furniture'
+                }
             }
 
             const derivedHouseStage = Math.min(HOUSE_TOTAL_STAGES, showroomStep)
