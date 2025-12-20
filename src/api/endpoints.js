@@ -26,6 +26,7 @@ export const USER_ENDPOINTS = {
     DELETE_ACCOUNT: '/users/account',
     DREAM_HOME: '/users/dream-home',
     DREAM_HOME_PROGRESS: '/users/dream-home/progress',
+    FURNITURE_PROGRESS: '/users/furniture-progress',
     SAVED_PROPERTIES: '/users/saved-properties',
     SAVED_PROPERTY_IDS: '/users/saved-properties/ids',
     COLLECTIONS: '/users/collections'
