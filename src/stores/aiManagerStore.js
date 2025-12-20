@@ -18,6 +18,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { aiManagerService } from '@/api/services/aiManagerService'
+import { useGamificationStore } from './gamificationStore'
 
 /**
  * 상태 상수
@@ -311,6 +312,12 @@ export const useAiManagerStore = defineStore('aiManager', () => {
             // 상태 업데이트
             status.value = AI_MANAGER_STATUS.JUDGED
             judgmentResult.value = result
+
+            // 경험치/레벨 반영 (백엔드 응답에서)
+            if (result.growth) {
+                const gamificationStore = useGamificationStore()
+                gamificationStore.applyJudgmentGrowth(result.growth)
+            }
 
             // 판결 후 character 정보를 persona로 변환
             if (result.character) {

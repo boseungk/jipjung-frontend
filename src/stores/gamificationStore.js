@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { useAuthStore } from './authStore'
 import { DEFAULT_GAMIFICATION, LEVEL_TITLES, calculateLevelProgress } from '@/constants/user'
+import { updateFurnitureProgress as syncFurnitureProgressToServer } from '@/api/services/userService'
 
 const HOUSE_TOTAL_STAGES = 6
 const FURNITURE_TOTAL_STAGES = 5
@@ -161,6 +162,32 @@ export const useGamificationStore = defineStore('gamification', () => {
       console.error('Failed to update gamification data:', error)
       throw error
     }
+  }
+
+  function applyFurnitureProgressSync(progress) {
+    if (!progress || typeof progress !== 'object') return
+    if (progress.buildTrack !== 'furniture') return
+
+    const rawStage = Number(progress.furnitureStage)
+    const rawExp = Number(progress.furnitureExp)
+    if (!Number.isFinite(rawStage) || !Number.isFinite(rawExp)) return
+
+    const nextStage = Math.min(FURNITURE_TOTAL_STAGES, Math.max(1, Math.trunc(rawStage)))
+    const nextExp = Math.max(0, rawExp)
+
+    authStore.updateUserData({
+      gamification: {
+        ...authStore.userGamification,
+        buildTrack: 'furniture',
+        furnitureStage: nextStage,
+        experiencePoints: nextExp
+      }
+    })
+
+    authStore.persistFurnitureProgress({
+      furnitureStage: nextStage,
+      experiencePoints: nextExp
+    })
   }
 
   // Actions
@@ -327,6 +354,15 @@ export const useGamificationStore = defineStore('gamification', () => {
       furnitureStage: updated.furnitureStage,
       experiencePoints: 0
     })
+
+    // 서버에도 동기화 (비동기, 실패해도 로컬 상태는 유지)
+    syncFurnitureProgressToServer({
+      buildTrack: 'furniture',
+      furnitureStage: updated.furnitureStage,
+      furnitureExp: 0
+    })
+      .then(applyFurnitureProgressSync)
+      .catch(err => console.warn('Furniture progress sync failed:', err))
   }
 
   /**
@@ -344,13 +380,16 @@ export const useGamificationStore = defineStore('gamification', () => {
    * @param {Object} growth - SavingsRecordResponse.growth
    */
   function applyGrowthResult(growth) {
-    if (!growth) return
+    if (!growth) return null
 
     const rawStep = Number(growth.level || 1)
     const nextStep = Number.isFinite(rawStep) ? Math.max(1, Math.trunc(rawStep)) : 1
     const currentTrack = authStore.userGamification?.buildTrack || 'house'
     const currentFurnitureStage = Number(authStore.userGamification?.furnitureStage) || 0
     const currentTrackExp = Number(authStore.userGamification?.experiencePoints) || 0
+
+    // 이전 단계 저장 (모달 표시용)
+    const previousHouseStage = Number(authStore.userGamification?.houseStage) || 1
 
     // 트랙 결정 로직:
     // - 현재 트랙이 furniture면 유지
@@ -437,8 +476,141 @@ export const useGamificationStore = defineStore('gamification', () => {
         furnitureStage: nextFurnitureStage,
         experiencePoints: nextTrackExp
       })
+
+      // 서버에도 동기화
+      syncFurnitureProgressToServer({
+        buildTrack: 'furniture',
+        furnitureStage: nextFurnitureStage,
+        furnitureExp: nextTrackExp
+      })
+        .then(applyFurnitureProgressSync)
+        .catch(err => console.warn('Furniture progress sync failed:', err))
     } else {
       authStore.clearFurnitureProgress()
+    }
+
+    // 단계 상승 정보 반환 (StageUpgradeModal용)
+    const isHouseStageUp = currentTrack === 'house' && nextHouseStage > previousHouseStage
+    const isFurnitureStageUp = nextTrack === 'furniture' && nextFurnitureStage > currentFurnitureStage
+
+    return {
+      isStageUp: growth.isLevelUp || isHouseStageUp || isFurnitureStageUp,
+      previousStage: currentTrack === 'furniture' ? currentFurnitureStage : previousHouseStage,
+      currentStage: nextTrack === 'furniture' ? nextFurnitureStage : nextHouseStage,
+      track: nextTrack,
+      levelLabel: growth.levelLabel || ''
+    }
+  }
+
+  /**
+   * AI 판결 결과 반영 (음수 EXP 지원)
+   * 
+   * 백엔드에서 반환한 growth 데이터를 기반으로 EXP와 레벨을 업데이트합니다.
+   * house/furniture 트랙 모두에서 AI 판결이 적용됩니다.
+   * 
+   * @param {Object} growth - JudgmentResponse.growth
+   * @param {number} growth.expChange - EXP 변화량 (음수 가능)
+   * @param {number} growth.currentExp - 현재 누적 EXP
+   * @param {number} growth.level - 현재 레벨
+   * @param {number} growth.maxExp - 다음 레벨 EXP
+   * @param {string} growth.levelLabel - 레벨 라벨
+   * @param {boolean} growth.isLevelUp - 레벨업 여부
+   */
+  function applyJudgmentGrowth(growth) {
+    if (!growth) return
+
+    const currentGamification = authStore.userGamification || DEFAULT_GAMIFICATION
+    const currentTrack = currentGamification.buildTrack || 'house'
+    const fallbackLevel = currentGamification.currentLevel ?? DEFAULT_GAMIFICATION.currentLevel
+    const fallbackMaxExp = currentGamification.nextLevelExp
+    const fallbackExp = Number(currentGamification.experiencePoints) || 0
+
+    const rawLevel = Number(growth.level)
+    const nextLevel = Number.isFinite(rawLevel) ? Math.max(1, Math.trunc(rawLevel)) : fallbackLevel
+    const fallbackLevelTitle = currentGamification.levelTitle || LEVEL_TITLES[nextLevel] || DEFAULT_GAMIFICATION.levelTitle
+    const nextLevelTitle = growth.levelLabel || fallbackLevelTitle
+    const rawMaxExp = Number(growth.maxExp)
+    const nextMaxExp = Number.isFinite(rawMaxExp) ? rawMaxExp : fallbackMaxExp
+    const expChange = Number(growth.expChange) || 0
+    const rawCurrentExp = Number(growth.currentExp)
+    const nextExp = Number.isFinite(rawCurrentExp)
+      ? Math.max(0, rawCurrentExp)
+      : Math.max(0, fallbackExp + expChange)
+
+    if (currentTrack === 'house') {
+      // House 트랙: 백엔드 응답값 그대로 반영
+      const nextHouseStage = Math.min(HOUSE_TOTAL_STAGES, Math.max(1, nextLevel))
+
+      authStore.updateUserData({
+        gamification: {
+          ...currentGamification,
+          experiencePoints: nextExp,
+          currentLevel: nextLevel,
+          nextLevelExp: nextMaxExp,
+          levelTitle: nextLevelTitle,
+          houseStage: nextHouseStage
+        },
+        showroom: authStore.userShowroom
+          ? {
+            ...authStore.userShowroom,
+            currentStep: nextHouseStage,
+            stepTitle: nextLevelTitle || authStore.userShowroom.stepTitle
+          }
+          : {
+            currentStep: nextHouseStage,
+            totalSteps: HOUSE_TOTAL_STAGES,
+            stepTitle: nextLevelTitle || '',
+            stepDescription: '',
+            imageUrl: null
+          }
+      })
+
+      authStore.clearFurnitureProgress()
+    } else {
+      // Furniture 트랙: EXP 변화량을 현재 경험치에 반영
+      const newExp = Math.max(0, fallbackExp + expChange)
+
+      let nextFurnitureStage = furnitureStage.value
+      let accumulatedExp = newExp
+
+      // 단계 상승 체크 (양수 EXP인 경우만)
+      if (expChange > 0) {
+        while (nextFurnitureStage < FURNITURE_TOTAL_STAGES) {
+          const milestone = calculateNextMilestoneExp('furniture', Math.max(1, nextFurnitureStage))
+          if (accumulatedExp >= milestone) {
+            accumulatedExp -= milestone
+            nextFurnitureStage++
+          } else {
+            break
+          }
+        }
+      }
+
+      authStore.updateUserData({
+        gamification: {
+          ...currentGamification,
+          experiencePoints: accumulatedExp,
+          furnitureStage: nextFurnitureStage,
+          currentLevel: nextLevel,
+          nextLevelExp: nextMaxExp,
+          levelTitle: nextLevelTitle
+        }
+      })
+
+      // localStorage에 저장
+      authStore.persistFurnitureProgress({
+        furnitureStage: nextFurnitureStage,
+        experiencePoints: accumulatedExp
+      })
+
+      // 서버에도 동기화
+      syncFurnitureProgressToServer({
+        buildTrack: 'furniture',
+        furnitureStage: nextFurnitureStage,
+        furnitureExp: accumulatedExp
+      })
+        .then(applyFurnitureProgressSync)
+        .catch(err => console.warn('Furniture progress sync failed:', err))
     }
   }
 
@@ -474,6 +646,7 @@ export const useGamificationStore = defineStore('gamification', () => {
     resetFurnitureProgress,
     resetHouseProgress,
     startFurnitureTrack,
-    applyGrowthResult
+    applyGrowthResult,
+    applyJudgmentGrowth
   }
 })

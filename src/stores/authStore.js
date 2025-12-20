@@ -594,13 +594,30 @@ export const useAuthStore = defineStore('auth', () => {
                 : null
 
             // 트랙 결정 로직:
-            // 1. house 완공 이후에만 furniture 진행 상태를 인정
-            // 2. 기존에 furniture 트랙이면 유지
-            // 3. localStorage에 furniture 진행 상태가 있으면 furniture
-            // 4. 그 외에는 house 트랙 (집 완공 단계여도 사용자가 명시적으로 인테리어 시작 전까지 house 유지)
+            // 1. 백엔드 showroom 응답 우선 (서버 상태가 source of truth)
+            // 2. 기존 로컬 상태가 있으면 참고
+            // 3. 그 외에는 house 트랙
+            const backendBuildTrack = response.showroom?.buildTrack
+            const rawBackendFurnitureStage = Number(response.showroom?.furnitureStage)
+            const rawBackendFurnitureExp = Number(response.showroom?.furnitureExp)
+            const backendFurnitureStage = Number.isFinite(rawBackendFurnitureStage)
+                ? Math.max(0, Math.trunc(rawBackendFurnitureStage))
+                : 0
+            const backendFurnitureExp = Number.isFinite(rawBackendFurnitureExp)
+                ? Math.max(0, rawBackendFurnitureExp)
+                : null
+            const storedFurnitureExp = Number.isFinite(storedFurnitureProgress?.experiencePoints)
+                ? Math.max(0, storedFurnitureProgress.experiencePoints)
+                : null
+            const existingFurnitureExp = existingTrack === 'furniture' && Number.isFinite(existingExperiencePoints)
+                ? Math.max(0, existingExperiencePoints)
+                : null
+
             let derivedTrack = 'house'
             if (isHouseCompleted) {
-                if (existingTrack === 'furniture') {
+                if (backendBuildTrack === 'furniture') {
+                    derivedTrack = 'furniture'
+                } else if (existingTrack === 'furniture') {
                     derivedTrack = 'furniture'
                 } else if (storedFurnitureProgress?.furnitureStage >= 1) {
                     derivedTrack = 'furniture'
@@ -608,11 +625,14 @@ export const useAuthStore = defineStore('auth', () => {
             }
 
             const derivedHouseStage = Math.min(HOUSE_TOTAL_STAGES, showroomStep)
+
+            // 인테리어 단계: 백엔드 값 > 기존 로컬 값 > localStorage 순으로 우선순위
             const derivedFurnitureStage = derivedTrack === 'furniture'
                 ? Math.min(
                     FURNITURE_TOTAL_STAGES,
                     Math.max(
                         1,
+                        backendFurnitureStage,
                         existingFurnitureStage,
                         storedFurnitureProgress?.furnitureStage || 0,
                         showroomStep - HOUSE_TOTAL_STAGES
@@ -620,13 +640,16 @@ export const useAuthStore = defineStore('auth', () => {
                 )
                 : 0
 
+            // 인테리어 EXP: 백엔드 값 우선
+            const derivedFurnitureExp = derivedTrack === 'furniture'
+                ? (backendFurnitureExp ?? existingFurnitureExp ?? storedFurnitureExp ?? 0)
+                : 0
+
             const mappedGamification = {
                 currentLevel: response.profile?.level || 1,
                 levelTitle: response.profile?.title || '신입 건축가',
                 experiencePoints: derivedTrack === 'furniture'
-                    ? (Number.isFinite(existingExperiencePoints)
-                        ? existingExperiencePoints
-                        : (storedFurnitureProgress?.experiencePoints || 0))
+                    ? derivedFurnitureExp
                     : (response.profile?.levelProgress?.currentExp || 0),
                 nextLevelExp: response.profile?.levelProgress?.targetExp || 100,
                 expProgress: response.profile?.levelProgress?.percent || 0,
@@ -658,6 +681,13 @@ export const useAuthStore = defineStore('auth', () => {
                     assets: response.assets,
                     gapAnalysis: response.gapAnalysis
                 }
+            }
+
+            if (derivedTrack === 'furniture') {
+                persistFurnitureProgress({
+                    furnitureStage: derivedFurnitureStage,
+                    experiencePoints: derivedFurnitureExp
+                })
             }
 
             return response
