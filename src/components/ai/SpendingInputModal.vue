@@ -587,7 +587,7 @@ watch(() => props.isOpen, (isOpen) => {
 
 /* Modal Content */
 .modal-content {
-  background: white;
+  background: var(--bento-card-bg, #ffffff);
   border-radius: 16px;
   max-width: 480px;
   width: 100%;
@@ -602,10 +602,10 @@ watch(() => props.isOpen, (isOpen) => {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--bento-card-border, #e5e7eb);
   position: sticky;
   top: 0;
-  background: white;
+  background: var(--bento-card-bg, #ffffff);
   z-index: 10;
 }
 
@@ -615,6 +615,7 @@ watch(() => props.isOpen, (isOpen) => {
   margin: 0;
   flex: 1;
   text-align: center;
+  color: var(--bento-card-title, #1f2937);
 }
 
 .back-button,
@@ -624,14 +625,14 @@ watch(() => props.isOpen, (isOpen) => {
   padding: 0.5rem;
   cursor: pointer;
   border-radius: 8px;
-  color: #666;
+  color: var(--bento-text-muted, #666666);
   transition: all 0.2s;
 }
 
 .back-button:hover,
 .close-button:hover {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--surface-muted, #f3f4f6);
+  color: var(--bento-text, #333333);
 }
 
 /* Step Content */
@@ -641,7 +642,7 @@ watch(() => props.isOpen, (isOpen) => {
 
 .step-description {
   text-align: center;
-  color: #666;
+  color: var(--bento-text-muted, #666666);
   margin: 0 0 1.5rem;
   font-size: 1rem;
 }
@@ -658,7 +659,7 @@ watch(() => props.isOpen, (isOpen) => {
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
-  background: #f8f9fa;
+  background: var(--surface-muted, #f3f4f6);
   border: 2px solid transparent;
   border-radius: 12px;
   cursor: pointer;
@@ -667,10 +668,10 @@ watch(() => props.isOpen, (isOpen) => {
 }
 
 .mode-option:hover {
-  background: #fff;
-  border-color: #6366f1;
+  background: var(--bento-card-bg, #ffffff);
+  border-color: var(--brand-accent, #ff6b3d);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.2);
 }
 
 .mode-icon {
@@ -685,12 +686,12 @@ watch(() => props.isOpen, (isOpen) => {
 
 .mode-text strong {
   font-size: 1rem;
-  color: #333;
+  color: var(--bento-text, #333333);
 }
 
 .mode-text small {
   font-size: 0.875rem;
-  color: #888;
+  color: var(--bento-text-muted, #888888);
 }
 
 /* Form Styles */
@@ -718,7 +719,7 @@ watch(() => props.isOpen, (isOpen) => {
 .form-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #333;
+  color: var(--bento-text, #333333);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -743,21 +744,23 @@ watch(() => props.isOpen, (isOpen) => {
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--bento-card-border, #dddddd);
   border-radius: 8px;
   outline: none;
+  background: var(--bento-card-bg, #ffffff);
+  color: var(--bento-text, #1f2937);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--brand-accent, #ff6b3d);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
 }
 
 .input-suffix {
   position: absolute;
   right: 1rem;
-  color: #888;
+  color: var(--bento-text-muted, #888888);
   font-size: 0.875rem;
 }
 
@@ -771,21 +774,22 @@ watch(() => props.isOpen, (isOpen) => {
 .category-chip {
   padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
-  background: #f5f5f5;
+  background: var(--surface-muted, #f5f5f5);
   border: 1px solid transparent;
   border-radius: 20px;
   cursor: pointer;
+  color: var(--bento-text, #374151);
   transition: all 0.2s;
 }
 
 .category-chip:hover {
-  background: #eee;
+  background: var(--bento-card-border, #eeeeee);
 }
 
 .category-chip.active {
-  background: #6366f1;
+  background: var(--brand-accent, #ff6b3d);
   color: white;
-  border-color: #6366f1;
+  border-color: var(--brand-accent, #ff6b3d);
 }
 
 /* Submit Button styles live in src/assets/css/components/buttons.css */
@@ -806,17 +810,17 @@ watch(() => props.isOpen, (isOpen) => {
   justify-content: center;
   gap: 0.75rem;
   padding: 3rem 2rem;
-  background: #f8f9fa;
-  border: 2px dashed #ddd;
+  background: var(--surface-muted, #f3f4f6);
+  border: 2px dashed var(--bento-card-border, #dddddd);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  color: #888;
+  color: var(--bento-text-muted, #888888);
 }
 
 .upload-placeholder:hover {
-  border-color: #6366f1;
-  background: #f0f0ff;
+  border-color: var(--brand-accent, #ff6b3d);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
 }
 
 .image-preview-container {
@@ -858,7 +862,8 @@ watch(() => props.isOpen, (isOpen) => {
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
-  background: #f0f9ff;
+  background: var(--surface-muted, #f3f4f6);
+  border-left: 3px solid var(--brand-accent, #ff6b3d);
   border-radius: 12px;
   margin-bottom: 1.5rem;
 }
@@ -869,7 +874,7 @@ watch(() => props.isOpen, (isOpen) => {
 
 .ai-message-box p {
   margin: 0;
-  color: #333;
+  color: var(--bento-text, #333333);
   line-height: 1.5;
 }
 
@@ -877,7 +882,7 @@ watch(() => props.isOpen, (isOpen) => {
 .results-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #666;
+  color: var(--bento-text-muted, #666666);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 0 1rem;

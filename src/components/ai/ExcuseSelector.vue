@@ -156,14 +156,15 @@ watch(() => props.excuses, () => {
 <style scoped>
 .excuse-selector {
   padding: 1.5rem;
-  background: #f8f9fa;
+  background: var(--bento-card-bg, #ffffff);
+  border: 1px solid var(--bento-card-border, #e5e7eb);
   border-radius: 16px;
 }
 
 .selector-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--bento-card-title, #1f2937);
   margin: 0 0 1rem;
 }
 
@@ -178,22 +179,22 @@ watch(() => props.excuses, () => {
 .excuse-chip {
   padding: 0.625rem 1rem;
   font-size: 0.875rem;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--bento-card-bg, #ffffff);
+  border: 2px solid var(--bento-card-border, #e5e7eb);
   border-radius: 24px;
   cursor: pointer;
   transition: all 0.2s;
-  color: #374151;
+  color: var(--bento-text, #374151);
 }
 
 .excuse-chip:hover {
-  border-color: #6366f1;
-  background: #f0f0ff;
+  border-color: var(--brand-accent, #ff6b3d);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
 }
 
 .excuse-chip.active {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--brand-accent, #ff6b3d);
+  border-color: var(--brand-accent, #ff6b3d);
   color: white;
 }
 
@@ -222,7 +223,7 @@ watch(() => props.excuses, () => {
 .custom-label {
   display: block;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--bento-text-muted, #6b7280);
   margin-bottom: 0.5rem;
 }
 
@@ -235,16 +236,17 @@ watch(() => props.excuses, () => {
   padding: 0.75rem 1rem;
   padding-right: 4rem;
   font-size: 0.875rem;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--bento-card-bg, #ffffff);
+  border: 1px solid var(--bento-card-border, #e5e7eb);
   border-radius: 8px;
   outline: none;
+  color: var(--bento-text, #1f2937);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .custom-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--brand-accent, #ff6b3d);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
 }
 
 .char-count {
@@ -253,7 +255,7 @@ watch(() => props.excuses, () => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--bento-text-muted, #9ca3af);
 }
 
 /* Submit Button styles live in src/assets/css/components/buttons.css */

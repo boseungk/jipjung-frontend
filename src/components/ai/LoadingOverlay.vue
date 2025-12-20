@@ -166,11 +166,11 @@ onUnmounted(() => {
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 0 rgba(var(--brand-accent-rgb, 255, 107, 61), 0.4);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 0 20px rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 20px rgba(var(--brand-accent-rgb, 255, 107, 61), 0);
   }
 }
 

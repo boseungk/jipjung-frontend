@@ -142,7 +142,8 @@ onMounted(() => {
 
 <style scoped>
 .history-list {
-  background: white;
+  background: var(--bento-card-bg, #ffffff);
+  border: 1px solid var(--bento-card-border, #e5e7eb);
   border-radius: 16px;
   padding: 1.25rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
@@ -159,7 +160,7 @@ onMounted(() => {
 .history-title {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--bento-text-muted, #6b7280);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
@@ -170,14 +171,14 @@ onMounted(() => {
   background: none;
   border: none;
   border-radius: 6px;
-  color: #6b7280;
+  color: var(--bento-text-muted, #6b7280);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .refresh-button:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--surface-muted, #f3f4f6);
+  color: var(--brand-accent, #ff6b3d);
 }
 
 /* Loading State */
@@ -187,14 +188,14 @@ onMounted(() => {
   align-items: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--bento-text-muted, #6b7280);
 }
 
 .loading-spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #6366f1;
+  border: 2px solid var(--bento-card-border, #e5e7eb);
+  border-top-color: var(--brand-accent, #ff6b3d);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -227,13 +228,13 @@ onMounted(() => {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--bento-text, #374151);
 }
 
 .empty-subtext {
   margin: 0;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: var(--bento-text-muted, #9ca3af);
 }
 
 /* History Items */
@@ -251,13 +252,13 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem;
-  background: #f8f9fa;
+  background: var(--surface-muted, #f8f9fa);
   border-radius: 10px;
   transition: background 0.2s;
 }
 
 .history-item:hover {
-  background: #f3f4f6;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.06);
 }
 
 .item-left {
@@ -279,12 +280,12 @@ onMounted(() => {
 .store-name {
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--bento-text, #374151);
 }
 
 .item-date {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--bento-text-muted, #9ca3af);
 }
 
 .item-right {
@@ -297,7 +298,7 @@ onMounted(() => {
 .item-amount {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--bento-text, #111827);
 }
 
 .judgment-badge {
