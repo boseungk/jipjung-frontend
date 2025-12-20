@@ -279,6 +279,7 @@ export const useGamificationStore = defineStore('gamification', () => {
   }
 
   async function syncMilestones() {
+    if (buildTrack.value !== 'furniture') return
     if (experiencePoints.value >= nextLevelExp.value) {
       await addExperience(0)
     }

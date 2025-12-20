@@ -228,9 +228,11 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
      * 드림홈 설정 (백엔드 연동)
      * 
      * @param {Object} data - { aptSeq, targetAmount, targetDate, monthlyGoal }
+     * @param {Object} [options]
+     * @param {string} [options.themeCode] - 선택한 테마 코드 (대시보드 즉시 반영용)
      * @returns {Promise<DreamHomeSetResponse>} 설정 결과
      */
-    async function setDreamHome(data) {
+    async function setDreamHome(data, options = {}) {
         isLoading.value = true
         error.value = null
 
@@ -241,6 +243,15 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
             if (response.dreamHome) {
                 authStore.updateUserData({
                     dreamHome: response.dreamHome
+                })
+            }
+
+            if (options?.themeCode) {
+                authStore.updateUserData({
+                    showroom: {
+                        ...(authStore.userShowroom || {}),
+                        themeCode: options.themeCode
+                    }
                 })
             }
 

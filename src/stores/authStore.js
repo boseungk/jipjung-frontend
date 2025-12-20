@@ -14,7 +14,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/api/services/authService'
 import { dashboardService } from '@/api/services/dashboardService'
-import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
+import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION, LEVEL_THRESHOLDS, MAX_LEVEL } from '@/constants/user'
 import { SHOWROOM_TOTAL_STAGES } from '@/constants/showroomWebp'
 import { VALIDATION } from '@/constants/onboardingConstants'
 
@@ -94,13 +94,22 @@ export const useAuthStore = defineStore('auth', () => {
 
     /** 목표 설정 여부 (대시보드 응답을 우선 사용) */
     const hasDreamHomeGoal = computed(() => {
-        const rawHasTarget = user.value?._raw?.gapAnalysis?.hasTarget
-        if (typeof rawHasTarget === 'boolean') return rawHasTarget
-
         const dreamHome = userDreamHome.value
-        if (!dreamHome) return false
-        if (dreamHome.propertyName && dreamHome.propertyName !== DEFAULT_DREAM_HOME.propertyName) return true
-        return Boolean(dreamHome.targetAmount || dreamHome.currentAmount)
+        const isDefaultDreamHome = !!dreamHome
+            && dreamHome.dreamHomeId == null
+            && dreamHome.propertyName === DEFAULT_DREAM_HOME.propertyName
+            && !dreamHome.targetAmount
+            && !dreamHome.currentAmount
+        const derivedHasGoal = (() => {
+            if (!dreamHome) return false
+            if (dreamHome.dreamHomeId != null) return true
+            if (dreamHome.propertyName && dreamHome.propertyName !== DEFAULT_DREAM_HOME.propertyName) return true
+            return Boolean(dreamHome.targetAmount || dreamHome.currentAmount)
+        })()
+
+        const rawHasTarget = user.value?._raw?.gapAnalysis?.hasTarget
+        if (rawHasTarget === true && !isDefaultDreamHome) return true
+        return derivedHasGoal
     })
 
     // ============================================
@@ -645,12 +654,26 @@ export const useAuthStore = defineStore('auth', () => {
                 ? (backendFurnitureExp ?? existingFurnitureExp ?? storedFurnitureExp ?? 0)
                 : 0
 
+            const rawLevelValue = Number(response.profile?.level)
+            const currentLevelValue = Number.isFinite(rawLevelValue)
+                ? Math.max(1, Math.trunc(rawLevelValue))
+                : DEFAULT_GAMIFICATION.currentLevel
+            const levelForProgress = Math.min(MAX_LEVEL, currentLevelValue)
+            const levelStartExp = LEVEL_THRESHOLDS[levelForProgress - 1] || 0
+            const rawCurrentExp = Number(response.profile?.levelProgress?.currentExp)
+            const safeCurrentExp = Number.isFinite(rawCurrentExp)
+                ? Math.max(0, rawCurrentExp)
+                : (Number.isFinite(existingExperiencePoints) ? Math.max(0, existingExperiencePoints) : 0)
+            const derivedHouseExp = safeCurrentExp < levelStartExp
+                ? levelStartExp + safeCurrentExp
+                : safeCurrentExp
+
             const mappedGamification = {
-                currentLevel: response.profile?.level || 1,
+                currentLevel: currentLevelValue,
                 levelTitle: response.profile?.title || '신입 건축가',
                 experiencePoints: derivedTrack === 'furniture'
                     ? derivedFurnitureExp
-                    : (response.profile?.levelProgress?.currentExp || 0),
+                    : derivedHouseExp,
                 nextLevelExp: response.profile?.levelProgress?.targetExp || 100,
                 expProgress: response.profile?.levelProgress?.percent || 0,
                 remainingExp: response.profile?.levelProgress?.remainingExp || 0,
