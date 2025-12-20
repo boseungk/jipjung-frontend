@@ -21,9 +21,6 @@
       />
       <!-- M-5: 빈 상태 CTA -->
       <div v-else-if="chartLoaded" class="no-data-placeholder">
-        <div class="empty-chart-icon">
-          <AppIcon name="chartLine" :size="32" :active="true" />
-        </div>
         <p class="no-data-text">저축을 시작하면 성장 그래프가 표시됩니다</p>
         <button class="start-saving-btn" @click="handleStartSaving">
           <AppIcon name="plus" :size="16" />

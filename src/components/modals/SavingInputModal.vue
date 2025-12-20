@@ -12,7 +12,6 @@
         <!-- Header -->
         <div class="modal-header">
           <h2 id="saving-modal-title" class="modal-title">
-            <AppIcon name="piggyBank" :size="24" weight="fill" color="currentColor" />
             저축하기
           </h2>
           <button class="close-button" @click="closeModal" aria-label="닫기" :disabled="isSubmitting">
@@ -68,7 +67,6 @@
 
           <!-- XP Preview -->
           <div v-if="estimatedXp > 0" class="xp-preview">
-            <AppIcon name="star" :size="16" :active="true" />
             <span>예상 경험치: <strong>약 +{{ estimatedXp }} XP</strong></span>
           </div>
 

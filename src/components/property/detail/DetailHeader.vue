@@ -5,7 +5,7 @@
   >
     <div class="header-left">
       <button class="icon-btn back-btn" @click="$emit('back')" aria-label="Go back">
-        <PhArrowLeft :size="24" weight="bold" />
+        <AppIcon name="arrowLeft" :size="24" weight="bold" />
       </button>
       <transition name="fade-slide">
         <h2 v-if="isScrolled" class="header-title">{{ title }}</h2>
@@ -20,22 +20,18 @@
         aria-label="Save property"
         title="관심 매물"
       >
-        <PhHeart :size="24" :weight="isSaved ? 'fill' : 'regular'" />
-      </button>
-      <button 
-        class="icon-btn action-btn" 
-        aria-label="Share property"
-        title="공유하기"
-      >
-        <PhShareNetwork :size="24" />
+        <AppIcon
+          name="heart"
+          :size="24"
+          :weight="isSaved ? 'fill' : 'bold'"
+          :color="isSaved ? '#ef4444' : null"
+        />
       </button>
     </div>
   </header>
 </template>
 
 <script setup>
-import { PhArrowLeft, PhHeart, PhShareNetwork } from '@phosphor-icons/vue'
-
 defineProps({
   title: {
     type: String,
@@ -104,9 +100,9 @@ html[data-theme="night"] .header-title {
 }
 
 .icon-btn {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -114,9 +110,9 @@ html[data-theme="night"] .header-title {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--showroom-text-day);
+  color: #3D3530; /* 진한 갈색으로 아이콘 가시성 향상 */
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 html[data-theme="night"] .icon-btn {
