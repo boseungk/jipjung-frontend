@@ -115,6 +115,9 @@
 
         <!-- Progress Bar -->
         <div class="journey-progress">
+          <p v-if="isInProgress" class="progress-status">
+            진행 단계 {{ progressPhase }}/{{ totalPhases }}
+          </p>
           <div class="progress-bar">
             <div 
               class="progress-fill" 
@@ -127,7 +130,7 @@
               :key="phase"
               class="dot"
               :class="{
-                active: phase <= currentPhase && (!isInProgress || phase <= maxUnlockedPhase),
+                active: phase <= progressPhase,
                 current: phase === currentPhase,
                 locked: isInProgress && phase > maxUnlockedPhase
               }"
@@ -208,9 +211,12 @@
       </aside>
 
       <!-- Completion Celebration (when at 100%) -->
-      <div v-if="isJourneyCompleted && currentPhase === totalPhases" class="completion-overlay">
+      <div v-if="isJourneyCompleted && currentPhase === totalPhases && !isCompletionDismissed" class="completion-overlay">
         <div class="confetti-container"></div>
         <div class="completion-card">
+          <button class="completion-close-btn" @click="dismissCompletion" aria-label="닫기">
+            ✕
+          </button>
           <h2 class="completion-title">🎉 축하해요!</h2>
           <p class="completion-message">
             {{ journeySummary.totalDays }}일간의 여정을 완주했어요!
@@ -228,7 +234,9 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { useCollectionStore } from '@/stores/collectionStore'
+import { useGamificationStore } from '@/stores/gamificationStore'
 import { BRAND_ACCENT } from '@/constants/colors'
 import {
   getExteriorStageUrl,
@@ -242,6 +250,9 @@ import AppIcon from '@/components/common/AppIcon.vue'
 const route = useRoute()
 const router = useRouter()
 const collectionStore = useCollectionStore()
+const { inProgress } = storeToRefs(collectionStore)
+const gamificationStore = useGamificationStore()
+const { buildTrack, houseStage, furnitureStage } = storeToRefs(gamificationStore)
 const containerRef = ref(null)
 
 // State
@@ -250,6 +261,7 @@ const error = ref(null)
 const journeyData = ref(null)
 const currentPhase = ref(1)
 const isSheetExpanded = ref(false)
+const isCompletionDismissed = ref(false)
 const houseIncomingUrl = ref('')
 const houseOutgoingUrl = ref('')
 const houseIncomingImgRef = ref(null)
@@ -301,6 +313,16 @@ const toNumber = (value, fallback = 0) => {
   if (!Number.isFinite(numeric)) return fallback
   return numeric
 }
+
+const dashboardPhase = computed(() => {
+  if (buildTrack.value === 'furniture') {
+    const stage = Math.max(1, Number(furnitureStage.value || 1))
+    return toPhaseNumber(HOUSE_STAGE_COUNT + stage) ?? HOUSE_STAGE_COUNT + 1
+  }
+
+  const stage = Math.max(1, Number(houseStage.value || 1))
+  return toPhaseNumber(stage) ?? 1
+})
 
 const normalizedJourney = computed(() => {
   const data = journeyData.value
@@ -423,25 +445,54 @@ const isPhaseUnlocked = (phase) => {
 
 const maxUnlockedPhase = computed(() => {
   const explicit = normalizedJourney.value?.maxUnlockedPhase
-  if (Number.isInteger(explicit)) {
-    return Math.min(totalPhases, Math.max(1, explicit))
-  }
 
   const reached = journeyPhases.value
     .filter(isPhaseUnlocked)
     .map(phase => phase.phaseNumber)
     .filter(number => Number.isInteger(number))
 
-  if (reached.length > 0) {
-    return Math.min(totalPhases, Math.max(...reached))
+  if (!isInProgress.value) {
+    if (Number.isInteger(explicit)) {
+      return Math.min(totalPhases, Math.max(1, explicit))
+    }
+
+    if (reached.length > 0) {
+      return Math.min(totalPhases, Math.max(1, Math.max(...reached)))
+    }
+
+    const phaseNumbers = journeyPhases.value
+      .map(phase => phase?.phaseNumber)
+      .filter(number => Number.isInteger(number))
+
+    if (phaseNumbers.length > 0) {
+      return Math.min(totalPhases, Math.max(1, Math.max(...phaseNumbers)))
+    }
+
+    return 1
   }
 
-  const phaseNumbers = journeyPhases.value
-    .map(phase => phase?.phaseNumber)
-    .filter(number => Number.isInteger(number))
+  const inProgressCandidates = []
+  const inProgressPhase = toPhaseNumber(
+    inProgress.value?.currentPhase
+    ?? inProgress.value?.currentStage
+    ?? inProgress.value?.currentStep
+    ?? null
+  )
+  if (Number.isInteger(inProgressPhase)) inProgressCandidates.push(inProgressPhase)
 
-  if (phaseNumbers.length > 0) {
-    return Math.min(totalPhases, Math.max(...phaseNumbers))
+  const fallbackPhase = toPhaseNumber(dashboardPhase.value)
+  if (Number.isInteger(fallbackPhase)) inProgressCandidates.push(fallbackPhase)
+
+  if (inProgressCandidates.length > 0) {
+    return Math.min(totalPhases, Math.max(1, Math.max(...inProgressCandidates)))
+  }
+
+  if (reached.length > 0) {
+    return Math.min(totalPhases, Math.max(1, Math.max(...reached)))
+  }
+
+  if (Number.isInteger(explicit)) {
+    return Math.min(totalPhases, Math.max(1, explicit))
   }
 
   return 1
@@ -664,13 +715,19 @@ function handleImageError(event) {
 }
 
 const progressPercent = computed(() => {
-  return ((currentPhase.value - 1) / (totalPhases - 1)) * 100
+  const phaseValue = progressPhase.value || 1
+  return ((phaseValue - 1) / (totalPhases - 1)) * 100
 })
 
 const isLockedPhase = computed(() => {
   if (!isInProgress.value) return false
   if (maxUnlockedPhase.value >= totalPhases) return false
   return currentPhase.value > maxUnlockedPhase.value
+})
+
+const progressPhase = computed(() => {
+  if (!isInProgress.value) return currentPhase.value
+  return Math.min(totalPhases, Math.max(1, maxUnlockedPhase.value || 1))
 })
 
 const showScrollHint = computed(() => {
@@ -778,6 +835,10 @@ const shareJourney = async () => {
   }
 }
 
+const dismissCompletion = () => {
+  isCompletionDismissed.value = true
+}
+
 // Scroll-based Phase Transition
 let scrollHandler = null
 
@@ -794,13 +855,15 @@ const setupScrollListener = () => {
   if (!containerRef.value) return
 
   scrollHandler = () => {
-    const scrollTop = window.scrollY
-    const windowHeight = window.innerHeight
-    const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+    const root = document.documentElement
+    const scrollTop = window.scrollY || root.scrollTop || document.body.scrollTop || 0
+    const viewportHeight = root.clientHeight || window.innerHeight || 0
+    const docHeight = Math.max(root.scrollHeight, document.body.scrollHeight, viewportHeight)
 
     // Calculate progress (0 to 1)
-    const maxScroll = docHeight - windowHeight
-    const scrollProgress = maxScroll <= 0 ? 0 : Math.min(1, scrollTop / maxScroll)
+    const maxScroll = Math.max(0, docHeight - viewportHeight)
+    const isAtEnd = scrollTop + viewportHeight >= docHeight - 1
+    const scrollProgress = maxScroll <= 0 ? 0 : isAtEnd ? 1 : Math.min(1, scrollTop / maxScroll)
     
     // Map to phase (1 to 11)
     const phaseCount = Math.max(1, scrollPhases.value)
@@ -1109,6 +1172,13 @@ html[data-theme="night"] .journey-header {
   margin-top: 2rem;
 }
 
+.progress-status {
+  margin: 0 0 0.45rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--bento-text-muted, #6b7280);
+}
+
 .progress-bar {
   width: 100%;
   height: 6px;
@@ -1393,6 +1463,7 @@ html[data-theme="night"] .event-item {
 }
 
 .completion-card {
+  position: relative;
   background: white;
   padding: 3rem 2rem;
   border-radius: 24px;
@@ -1445,6 +1516,38 @@ html[data-theme="night"] .completion-card {
   border: none;
   border-radius: 50px;
   cursor: pointer;
+}
+
+.completion-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
+  color: var(--bento-text, #1f2937);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.completion-close-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+html[data-theme="night"] .completion-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--bento-text-muted, #9ca3af);
+}
+
+html[data-theme="night"] .completion-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive */

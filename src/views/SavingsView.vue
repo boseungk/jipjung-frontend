@@ -56,12 +56,14 @@
         <h2 class="section-title">직접 입력</h2>
         <div class="custom-input-group">
           <input
-            type="number"
-            v-model.number="customAmount"
+            type="text"
+            inputmode="numeric"
             class="amount-input"
             placeholder="저축할 금액"
-            min="0"
-            @focus="selectedAmount = null"
+            :value="customAmountDisplay"
+            @input="handleCustomAmountInput"
+            @blur="handleCustomAmountBlur"
+            @focus="handleCustomAmountFocus"
           />
           <span class="input-unit">원</span>
         </div>
@@ -120,6 +122,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
+import { useMoneyInput } from '@/composables/useMoneyInput'
 import { calculateEstimatedExp } from '@/constants/exp'
 import { 
   PhArrowLeft, PhStar, PhPiggyBank, PhSpinnerGap, PhFire, PhGift 
@@ -138,6 +141,18 @@ const { currentStreak } = storeToRefs(gamificationStore)
 const selectedAmount = ref(null)
 const customAmount = ref(null)
 const isSaving = ref(false)
+
+// Money input composable
+const { displayValue: customAmountDisplay, handleInput: moneyHandleInput, handleBlur: handleCustomAmountBlur } = useMoneyInput(customAmount)
+
+const handleCustomAmountFocus = (event) => {
+  selectedAmount.value = null
+  if (event.target) event.target.select()
+}
+
+const handleCustomAmountInput = (event) => {
+  moneyHandleInput(event)
+}
 
 // Quick save amounts (in 원)
 const quickAmounts = [10000, 50000, 100000, 500000, 1000000, 5000000]

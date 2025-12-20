@@ -67,7 +67,6 @@
       </div>
       <div class="xp-bar-container" role="progressbar" :aria-valuenow="Number(expProgress)" aria-valuemin="0" aria-valuemax="100">
         <div class="xp-bar" :style="{ width: expProgress + '%' }">
-          <span class="xp-text">{{ expProgress }}%</span>
         </div>
       </div>
       <div class="exp-row">

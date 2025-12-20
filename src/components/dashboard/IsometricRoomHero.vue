@@ -64,10 +64,7 @@
         <div class="stage-message">
           <p class="stage-eyebrow">{{ currentStep.label }} · Step {{ activeStage }}/{{ totalStages }}</p>
           <p class="stage-text">{{ currentStep.message }}</p>
-          <p v-if="latestBadge" class="badge-inline">
-            <AppIcon name="star" :size="16" :active="true" :is-major-cta="true" />
-            <span>{{ latestBadge.label }} 획득</span>
-          </p>
+
         </div>
 
         <!-- Progress Dots with M-2 Tooltips -->
@@ -162,7 +159,7 @@ const particlesRef = ref(null)
 // ============================================================================
 
 const gamificationStore = useGamificationStore()
-const { buildTrack, houseStage, furnitureStage, latestBadge } = storeToRefs(gamificationStore)
+const { buildTrack, houseStage, furnitureStage } = storeToRefs(gamificationStore)
 
 const authStore = useAuthStore()
 
@@ -634,18 +631,7 @@ html[data-theme='night'] .stage-text {
   color: var(--showroom-text-night, #f5f6f7);
 }
 
-.badge-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-  font-size: 0.9rem;
-  color: var(--brand-accent, #ff6b3d);
-}
 
-html[data-theme='night'] .badge-inline {
-  color: var(--showroom-accent-night, #ff8a5c);
-}
 
 /* Progress Dots */
 .progress-dots {

@@ -13,7 +13,7 @@
 
     <div class="dashboard-shell">
       <!-- Zone A: Hero Section (Isometric Room) -->
-      <IsometricRoomHero />
+      <IsometricRoomHero v-if="dashboardReady" />
 
       <!-- Zone B: Bento Grid Dashboard -->
       <BentoGrid />
@@ -54,6 +54,7 @@ const { showError } = useToast()
 
 /** @type {import('vue').Ref<boolean>} 목표 안내 모달 표시 여부 */
 const showGoalGuideModal = ref(false)
+const dashboardReady = ref(false)
 
 const dismissalKey = computed(() => {
   const id = authStore.userId
@@ -63,6 +64,7 @@ const dismissalKey = computed(() => {
 const hasGoal = computed(() => authStore.hasDreamHomeGoal)
 
 function syncGoalGuideVisibility() {
+  if (!dashboardReady.value) return
   if (hasGoal.value) {
     showGoalGuideModal.value = false
     return
@@ -92,6 +94,7 @@ async function loadDashboardData() {
     console.error('Failed to load dashboard:', err)
     showError('데이터를 불러오는 중 오류가 발생했습니다. 일부 정보가 최신이 아닐 수 있습니다.')
   } finally {
+    dashboardReady.value = true
     syncGoalGuideVisibility()
   }
 }
@@ -109,12 +112,15 @@ function handleDismissGoalGuide() {
   sessionStorage.setItem(dismissalKey.value, 'true')
 }
 
-watch([hasGoal, dismissalKey], syncGoalGuideVisibility, { immediate: true })
+watch([hasGoal, dismissalKey, dashboardReady], syncGoalGuideVisibility, { immediate: true })
 
 onMounted(() => {
   // 인증된 사용자만 대시보드 데이터 로드
   if (authStore.isAuthenticated) {
     loadDashboardData()
+  } else {
+    dashboardReady.value = true
+    syncGoalGuideVisibility()
   }
 })
 </script>

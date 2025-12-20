@@ -19,14 +19,8 @@
 
     <div class="nav-actions">
       <ThemeControls
-        :color-themes="colorThemes"
-        :current-color-theme="currentColorTheme"
-        :is-color-open="isColorOpen"
         :is-night="isNight"
-        @toggle-color-dropdown="dropdown.toggle(DROPDOWNS.COLOR)"
-        @select-color-theme="selectColorTheme"
         @toggle-theme="toggleTheme"
-        ref="themeControlsRef"
       />
 
       <UserMenu
@@ -61,11 +55,10 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
-import { useColorTheme } from '@/composables/useColorTheme'
 import { useDropdown } from '@/composables/useDropdown'
 import { useResponsive } from '@/composables/useResponsive'
 import { useAuthStore } from '@/stores/authStore'
-import { NAV_MENU_ITEMS, COLOR_THEMES } from '@/constants/navigation'
+import { NAV_MENU_ITEMS } from '@/constants/navigation'
 import { BRAND_ACCENT } from '@/constants/colors'
 import AppIcon from './common/AppIcon.vue'
 import NavMenu from './navigation/NavMenu.vue'
@@ -75,30 +68,25 @@ import UserMenu from './navigation/UserMenu.vue'
 const route = useRoute()
 const router = useRouter()
 const { isNight, toggleTheme } = useTheme()
-const { currentColorTheme, setColorTheme } = useColorTheme()
 const dropdown = useDropdown()
 const { isMobile } = useResponsive()
 const authStore = useAuthStore()
 
 const DROPDOWNS = {
-  COLOR: 'color',
   USER: 'user'
 }
 
 // Data
 const menuItems = NAV_MENU_ITEMS
-const colorThemes = COLOR_THEMES
 const mobileMenuOpen = ref(false)
 const brandAccent = BRAND_ACCENT
 const navMenuRef = ref(null)
-const themeControlsRef = ref(null)
 const userMenuRef = ref(null)
 const mobileHamburgerRef = ref(null)
 
 // Computed
 const userName = computed(() => authStore.userName)
 const showNavMenu = computed(() => !isMobile.value || mobileMenuOpen.value)
-const isColorOpen = computed(() => dropdown.isOpen(DROPDOWNS.COLOR))
 const isUserOpen = computed(() => dropdown.isOpen(DROPDOWNS.USER))
 
 const closeAllMenus = () => {
@@ -117,11 +105,6 @@ watch(isMobile, () => {
 })
 
 // Methods
-const selectColorTheme = (theme) => {
-  setColorTheme(theme)
-  dropdown.close(DROPDOWNS.COLOR)
-}
-
 const handleLogout = async () => {
   try {
     await authStore.logout()
@@ -151,15 +134,11 @@ const handleClickOutside = (event) => {
   if (typeof Node !== 'undefined' && !(target instanceof Node)) return
 
   const userEl = getExposedElement(userMenuRef, 'rootEl')
-  const colorMenuEl = getExposedElement(themeControlsRef, 'colorMenuEl')
   const navMenuEl = getExposedElement(navMenuRef, 'rootEl')
   const hamburgerEl = mobileHamburgerRef.value
 
   if (userEl && !userEl.contains(target)) {
     dropdown.close(DROPDOWNS.USER)
-  }
-  if (colorMenuEl && !colorMenuEl.contains(target)) {
-    dropdown.close(DROPDOWNS.COLOR)
   }
   if (
     mobileMenuOpen.value &&

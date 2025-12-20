@@ -73,7 +73,8 @@
             <div class="mini-crystal-wrapper">
               <CrystalBall class="mini-crystal" :themeCode="inProgress.themeCode" />
               <div class="progress-badge">
-                🏗️ 진행 중
+                <span class="progress-dot"></span>
+                진행 중
               </div>
             </div>
             <span class="mini-crystal-label">{{ inProgress.propertyName }}</span>
@@ -517,14 +518,44 @@ html[data-theme="night"] .section-subtitle {
   position: absolute;
   bottom: 4px;
   right: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: var(--bento-card-bg, #ffffff);
   color: var(--bento-text, #1f2937);
   font-size: 0.625rem;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 8px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 10;
+}
+
+html[data-theme="night"] .progress-badge {
+  background: rgba(32, 36, 42, 0.95);
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.progress-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--brand-accent, #FF7F50);
+  border-radius: 50%;
+  animation: dot-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 4px var(--brand-accent, #FF7F50);
+}
+
+@keyframes dot-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 4px var(--brand-accent, #FF7F50);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+    box-shadow: 0 0 8px var(--brand-accent, #FF7F50);
+  }
 }
 
 .in-progress-item .mini-crystal-wrapper {

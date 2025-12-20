@@ -377,6 +377,18 @@ html[data-theme='night'] .form-input:focus {
   border: 1px solid var(--dsr-subcard-border);
 }
 
+/* Remove number input arrows */
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Submit Button styles live in src/assets/css/components/buttons.css */
 
 .spin {
