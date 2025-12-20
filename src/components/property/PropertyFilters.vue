@@ -462,6 +462,18 @@ html[data-theme="night"] .range-input {
   flex: 1;
 }
 
+/* Remove number input arrows */
+.range-input[type="number"]::-webkit-inner-spin-button,
+.range-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.range-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;

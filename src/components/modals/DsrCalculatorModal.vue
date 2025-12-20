@@ -21,12 +21,14 @@
             <div class="input-wrapper">
               <input
                 id="annual-income"
-                v-model.number="formData.annualIncome"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="form-input"
                 placeholder="연소득을 입력하세요"
-                min="1"
-                required
+                :value="annualIncomeDisplay"
+                @input="handleAnnualIncomeInput"
+                @blur="handleAnnualIncomeBlur"
+                @focus="handleAnnualIncomeFocus"
               />
               <span class="input-suffix">만원</span>
             </div>
@@ -38,11 +40,14 @@
             <div class="input-wrapper">
               <input
                 id="existing-loan"
-                v-model.number="formData.existingLoanMonthly"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="form-input"
                 placeholder="기존 대출 월 상환액"
-                min="0"
+                :value="existingLoanDisplay"
+                @input="handleExistingLoanInput"
+                @blur="handleExistingLoanBlur"
+                @focus="handleExistingLoanFocus"
               />
               <span class="input-suffix">만원</span>
             </div>
@@ -54,12 +59,14 @@
             <div class="input-wrapper">
               <input
                 id="loan-amount"
-                v-model.number="formData.loanAmount"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="form-input"
                 placeholder="대출 금액을 입력하세요"
-                min="1"
-                required
+                :value="loanAmountDisplay"
+                @input="handleLoanAmountInput"
+                @blur="handleLoanAmountBlur"
+                @focus="handleLoanAmountFocus"
               />
               <span class="input-suffix">만원</span>
             </div>
@@ -184,8 +191,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { PhBank, PhX, PhChartLine, PhLightbulb, PhCheckCircle, PhXCircle } from '@phosphor-icons/vue'
+import { useMoneyInput } from '@/composables/useMoneyInput'
 
 const props = defineProps({
   isOpen: {
@@ -208,6 +216,24 @@ const formData = ref({
 
 // Result
 const result = ref(null)
+
+// Money input composables
+const annualIncomeRef = computed({
+  get: () => formData.value.annualIncome,
+  set: (val) => { formData.value.annualIncome = val }
+})
+const existingLoanRef = computed({
+  get: () => formData.value.existingLoanMonthly,
+  set: (val) => { formData.value.existingLoanMonthly = val }
+})
+const loanAmountRef = computed({
+  get: () => formData.value.loanAmount,
+  set: (val) => { formData.value.loanAmount = val }
+})
+
+const { displayValue: annualIncomeDisplay, handleInput: handleAnnualIncomeInput, handleBlur: handleAnnualIncomeBlur, handleFocus: handleAnnualIncomeFocus } = useMoneyInput(annualIncomeRef)
+const { displayValue: existingLoanDisplay, handleInput: handleExistingLoanInput, handleBlur: handleExistingLoanBlur, handleFocus: handleExistingLoanFocus } = useMoneyInput(existingLoanRef)
+const { displayValue: loanAmountDisplay, handleInput: handleLoanAmountInput, handleBlur: handleLoanAmountBlur, handleFocus: handleLoanAmountFocus } = useMoneyInput(loanAmountRef)
 
 const closeModal = () => {
   emit('close')
@@ -417,7 +443,7 @@ html[data-theme="night"] .input-suffix {
 .form-input,
 .form-select {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.9375rem;
   font-family: 'Noto Sans KR', sans-serif;
@@ -476,6 +502,7 @@ html[data-theme="night"] .form-input::placeholder {
 
 .form-input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Submit Button styles live in src/assets/css/components/buttons.css */

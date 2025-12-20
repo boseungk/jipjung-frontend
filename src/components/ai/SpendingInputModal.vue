@@ -59,12 +59,14 @@
                 <div class="input-wrapper">
                   <input
                     id="amount"
-                    v-model.number="form.amount"
-                    type="number"
+                    type="text"
+                    inputmode="numeric"
                     class="form-input"
                     placeholder="0"
-                    required
-                    min="1"
+                    :value="formAmountDisplay"
+                    @input="handleFormAmountInput"
+                    @blur="handleFormAmountBlur"
+                    @focus="handleFormAmountFocus"
                   />
                   <span class="input-suffix">원</span>
                 </div>
@@ -198,11 +200,13 @@
                   <div class="input-wrapper">
                     <input
                       id="confirmAmount"
-                      v-model.number="confirmForm.amount"
-                      type="number"
+                      type="text"
+                      inputmode="numeric"
                       class="form-input"
-                      required
-                      min="1"
+                      :value="confirmAmountDisplay"
+                      @input="handleConfirmAmountInput"
+                      @blur="handleConfirmAmountBlur"
+                      @focus="handleConfirmAmountFocus"
                     />
                     <span class="input-suffix">원</span>
                   </div>
@@ -286,6 +290,7 @@ import { ref, computed, watch } from 'vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import { SPENDING_CATEGORIES } from '@/constants/spendingCategories'
 import { useAiManagerStore } from '@/stores/aiManagerStore'
+import { useMoneyInput } from '@/composables/useMoneyInput'
 
 // ============================================================================
 // Props & Emits
@@ -341,6 +346,22 @@ const aiMessage = ref('')
 
 // Error
 const errorMessage = ref('')
+
+// ============================================================================
+// Money Input Composables
+// ============================================================================
+
+const formAmountRef = computed({
+  get: () => form.value.amount,
+  set: (val) => { form.value.amount = val }
+})
+const confirmAmountRef = computed({
+  get: () => confirmForm.value.amount,
+  set: (val) => { confirmForm.value.amount = val }
+})
+
+const { displayValue: formAmountDisplay, handleInput: handleFormAmountInput, handleBlur: handleFormAmountBlur, handleFocus: handleFormAmountFocus } = useMoneyInput(formAmountRef)
+const { displayValue: confirmAmountDisplay, handleInput: handleConfirmAmountInput, handleBlur: handleConfirmAmountBlur, handleFocus: handleConfirmAmountFocus } = useMoneyInput(confirmAmountRef)
 
 // ============================================================================
 // Computed
@@ -787,7 +808,7 @@ html[data-theme="night"] .form-label {
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   font-size: 1rem;
   border: 1px solid var(--bento-card-border, #dddddd);
   border-radius: 8px;
@@ -818,6 +839,18 @@ html[data-theme="night"] .form-input:focus {
   right: 1rem;
   color: var(--bento-text-muted, #888888);
   font-size: 0.875rem;
+}
+
+/* Remove number input arrows */
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Category Chips */
