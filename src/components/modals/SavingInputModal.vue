@@ -94,6 +94,16 @@
     </div>
   </transition>
   </Teleport>
+
+  <!-- Stage Upgrade Celebration Modal -->
+  <StageUpgradeModal
+    :is-open="isStageUpModalOpen"
+    :previous-stage="stageUpInfo?.previousStage ?? 1"
+    :current-stage="stageUpInfo?.currentStage ?? 1"
+    :track="stageUpInfo?.track ?? 'house'"
+    :level-label="stageUpInfo?.levelLabel ?? ''"
+    @confirm="handleStageUpConfirm"
+  />
 </template>
 
 <script setup>
@@ -114,10 +124,12 @@ import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { PhX } from '@phosphor-icons/vue'
 import AppIcon from '@/components/common/AppIcon.vue'
+import StageUpgradeModal from './StageUpgradeModal.vue'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useToast } from '@/composables/useToast'
 import { formatWon } from '@/utils/formatters'
+import { calculateEstimatedExp } from '@/constants/exp'
 
 const props = defineProps({
   isOpen: {
@@ -151,6 +163,10 @@ const formData = ref({
   memo: ''
 })
 
+// Stage Upgrade Modal State
+const isStageUpModalOpen = ref(false)
+const stageUpInfo = ref(null)
+
 // 빠른 저축 금액 옵션
 const quickAmounts = [10000, 50000, 100000, 500000]
 
@@ -162,12 +178,9 @@ const finalAmount = computed(() => {
 })
 
 /**
- * XP 예상치 계산 (보수적 표현)
- * 백엔드 정책: 1만원당 약 1XP (실제 정책은 백엔드에서 결정)
+ * XP 예상치 계산 (centralized constant 사용)
  */
-const estimatedXp = computed(() => {
-  return Math.floor(finalAmount.value / 10000)
-})
+const estimatedXp = computed(() => calculateEstimatedExp(finalAmount.value))
 
 /**
  * 제출 버튼 텍스트
@@ -238,12 +251,14 @@ const handleSubmit = async () => {
       formData.value.memo || ''
     )
 
-    // 경험치/레벨 반영
+    // 경험치/레벨 반영 및 단계 상승 정보 획득
     if (result.growth) {
-      gamificationStore.applyGrowthResult(result.growth)
+      const upgradeResult = gamificationStore.applyGrowthResult(result.growth)
 
-      if (result.growth.isLevelUp) {
-        showSuccess(`🎉 레벨업! ${result.growth.levelLabel}`)
+      // 단계 상승 시 모달 표시, 그렇지 않으면 토스트
+      if (upgradeResult?.isStageUp) {
+        stageUpInfo.value = upgradeResult
+        isStageUpModalOpen.value = true
       } else {
         showSuccess(`+${result.growth.expChange} XP 획득!`)
       }
@@ -259,6 +274,14 @@ const handleSubmit = async () => {
     showError(error.message || '저축 기록에 실패했습니다')
     isSubmitting.value = false
   }
+}
+
+/**
+ * 단계 상승 모달 확인 핸들러
+ */
+const handleStageUpConfirm = () => {
+  isStageUpModalOpen.value = false
+  stageUpInfo.value = null
 }
 
 /**

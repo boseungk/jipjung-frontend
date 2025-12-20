@@ -120,6 +120,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
+import { calculateEstimatedExp } from '@/constants/exp'
 import { 
   PhArrowLeft, PhStar, PhPiggyBank, PhSpinnerGap, PhFire, PhGift 
 } from '@phosphor-icons/vue'
@@ -162,13 +163,8 @@ const streakMessage = computed(() => {
 // Final amount to save
 const finalAmount = computed(() => selectedAmount.value || customAmount.value || 0)
 
-// Estimated experience points
-const estimatedExp = computed(() => {
-  const amount = finalAmount.value
-  if (amount <= 0) return 0
-  // Simple formula: 1 XP per 10,000원
-  return Math.floor(amount / 10000)
-})
+// Estimated experience points (using centralized constant with 500 max)
+const estimatedExp = computed(() => calculateEstimatedExp(finalAmount.value))
 
 function formatCurrency(value) {
   if (!value) return '₩0'
