@@ -39,19 +39,37 @@
 
         <!-- Form -->
         <form class="modal-form" @submit.prevent="handleSubmit">
+          <!-- House Name (Custom) -->
+          <div class="form-group">
+            <label class="form-label">집 이름 (선택)</label>
+            <div class="input-wrapper">
+              <input
+                v-model="formData.houseName"
+                type="text"
+                class="form-input"
+                :placeholder="property?.title || '아파트 이름'"
+                maxlength="50"
+                :disabled="isSubmitting"
+              />
+            </div>
+            <p class="hint">{{ houseNameHint }}</p>
+          </div>
+
           <!-- Target Amount -->
           <div class="form-group">
             <label class="form-label">목표 금액 (필요 계약금)</label>
             <div class="input-with-calc">
               <div class="input-wrapper">
                 <input
-                  v-model.number="formData.targetAmount"
-                  type="number"
+                  type="text"
+                  inputmode="numeric"
                   class="form-input"
                   placeholder="목표 금액 입력"
-                  min="1"
-                  required
+                  :value="targetAmountDisplay"
                   :disabled="isSubmitting"
+                  @input="handleTargetAmountInput"
+                  @blur="handleTargetAmountBlur"
+                  @focus="handleTargetAmountFocus"
                 />
                 <span class="input-suffix">원</span>
               </div>
@@ -79,13 +97,15 @@
             <label class="form-label">월 목표 저축액</label>
             <div class="input-wrapper">
               <input
-                v-model.number="formData.monthlyGoal"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="form-input"
                 placeholder="월 저축 목표"
-                min="1"
-                required
+                :value="monthlyGoalDisplay"
                 :disabled="isSubmitting"
+                @input="handleMonthlyGoalInput"
+                @blur="handleMonthlyGoalBlur"
+                @focus="handleMonthlyGoalFocus"
               />
               <span class="input-suffix">원</span>
             </div>
@@ -124,6 +144,8 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
+import { resolveThemeCode } from '@/constants/showroomWebp'
+import { useMoneyInput } from '@/composables/useMoneyInput'
 
 const props = defineProps({
   isOpen: {
@@ -150,10 +172,24 @@ const { showSuccess, showError } = useToast()
 // State
 const isSubmitting = ref(false)
 const formData = ref({
+  houseName: '',
   targetAmount: null,
   targetDate: '',
   monthlyGoal: null
 })
+
+// Money input composables
+const targetAmountRef = computed({
+  get: () => formData.value.targetAmount,
+  set: (val) => { formData.value.targetAmount = val }
+})
+const monthlyGoalRef = computed({
+  get: () => formData.value.monthlyGoal,
+  set: (val) => { formData.value.monthlyGoal = val }
+})
+
+const { displayValue: targetAmountDisplay, handleInput: handleTargetAmountInput, handleBlur: handleTargetAmountBlur, handleFocus: handleTargetAmountFocus } = useMoneyInput(targetAmountRef)
+const { displayValue: monthlyGoalDisplay, handleInput: handleMonthlyGoalInput, handleBlur: handleMonthlyGoalBlur, handleFocus: handleMonthlyGoalFocus } = useMoneyInput(monthlyGoalRef)
 
 // 최소 날짜 (오늘)
 const minDate = computed(() => new Date().toISOString().split('T')[0])
@@ -179,6 +215,31 @@ const isFormValid = computed(() => {
          formData.value.targetDate && 
          formData.value.monthlyGoal > 0
 })
+
+// 집 이름 힌트 메시지
+const houseNameHint = computed(() => {
+  if (formData.value.houseName?.trim()) {
+    return '입력한 이름으로 대시보드에 표시됩니다'
+  }
+  return '입력하지 않으면 아파트 이름이 사용됩니다'
+})
+
+const resolveSelectedThemeCode = (theme) => {
+  if (!theme) return null
+  const identityText = [
+    theme.themeCode,
+    theme.theme_code,
+    theme.code,
+    theme.themeName,
+    theme.name,
+    theme.title
+  ]
+    .filter((value) => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+
+  if (!identityText) return null
+  return resolveThemeCode(identityText)
+}
 
 // 목표 달성일 변경 시 월 저축액 자동 계산
 watch(() => formData.value.targetDate, () => {
@@ -233,13 +294,17 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await dreamHomeStore.setDreamHome({
-      aptSeq: props.property?.aptSeq || props.property?.id,
-      targetAmount: formData.value.targetAmount,
-      targetDate: formData.value.targetDate,
-      monthlyGoal: formData.value.monthlyGoal || 0,
-      ...(props.selectedTheme?.themeId && { themeId: props.selectedTheme.themeId })
-    })
+    const response = await dreamHomeStore.setDreamHome(
+      {
+        aptSeq: props.property?.aptSeq || props.property?.id,
+        targetAmount: formData.value.targetAmount,
+        targetDate: formData.value.targetDate,
+        monthlyGoal: formData.value.monthlyGoal || 0,
+        houseName: formData.value.houseName?.trim() || null,
+        ...(props.selectedTheme?.themeId && { themeId: props.selectedTheme.themeId })
+      },
+      { themeCode: resolveSelectedThemeCode(props.selectedTheme) }
+    )
 
     showSuccess(`"${props.property?.title}"을(를) 드림홈으로 설정했습니다!`)
     emit('success', response)
@@ -259,6 +324,7 @@ const handleSubmit = async () => {
  */
 const resetForm = () => {
   formData.value = {
+    houseName: '',
     targetAmount: null,
     targetDate: '',
     monthlyGoal: null
@@ -641,6 +707,18 @@ html[data-theme="night"] .form-input:focus {
 .form-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Remove number input arrows */
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Hint Text */

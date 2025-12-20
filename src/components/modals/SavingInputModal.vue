@@ -53,13 +53,15 @@
             <div class="input-wrapper">
               <input
                 id="amount"
-                v-model.number="formData.amount"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="form-input"
                 placeholder="금액을 입력하세요"
-                min="1"
+                :value="amountDisplay"
                 :disabled="isSubmitting"
-                @input="clearQuickSelection"
+                @input="handleAmountInput"
+                @blur="handleAmountBlur"
+                @focus="handleAmountFocus"
               />
               <span class="input-suffix">원</span>
             </div>
@@ -128,6 +130,7 @@ import StageUpgradeModal from './StageUpgradeModal.vue'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useToast } from '@/composables/useToast'
+import { useMoneyInput } from '@/composables/useMoneyInput'
 import { formatWon } from '@/utils/formatters'
 import { calculateEstimatedExp } from '@/constants/exp'
 
@@ -209,10 +212,20 @@ const formatQuickAmount = (amount) => {
 }
 
 /**
- * 직접 입력 시 빠른 선택 해제
+ * 금액 입력 composable
  */
-const clearQuickSelection = () => {
+const amountRef = computed({
+  get: () => formData.value.amount,
+  set: (val) => { formData.value.amount = val }
+})
+const { displayValue: amountDisplay, handleInput: moneyHandleInput, handleBlur: handleAmountBlur, handleFocus: handleAmountFocus } = useMoneyInput(amountRef)
+
+/**
+ * 금액 입력 핸들러 (빠른 선택 해제 포함)
+ */
+const handleAmountInput = (event) => {
   selectedQuickAmount.value = null
+  moneyHandleInput(event)
 }
 
 /**
@@ -588,7 +601,7 @@ html[data-theme="night"] .input-suffix {
 .form-input,
 .form-textarea {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.875rem 2.5rem 0.875rem 1rem;
   border-radius: 12px;
   border: 1px solid var(--nav-btn-border-day, rgba(255, 255, 255, 0.6));
   font-size: 1rem;
@@ -653,6 +666,18 @@ html[data-theme="night"] .form-textarea::placeholder {
 .form-textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+/* Remove number input arrows */
+.form-input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Submit Button styles live in src/assets/css/components/buttons.css */

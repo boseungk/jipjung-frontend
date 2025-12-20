@@ -14,29 +14,61 @@
           <div ref="effectsRef" class="effects-layer" aria-hidden="true"></div>
           
           <!-- Stage Transition Visual -->
-          <div class="stage-transition">
-            <div class="stage-card stage-card--previous">
-              <img 
-                :src="previousStageImageUrl" 
-                :alt="`이전 단계: ${previousStage}`"
-                class="stage-image"
-                @error="handleImageError"
-              />
-              <span class="stage-label">{{ previousStage }}단계</span>
+          <div class="stage-showcase">
+            <div ref="stageFrameRef" class="stage-frame">
+              <!-- House Track: Single Image Transition -->
+              <template v-if="track === 'house'">
+                <img 
+                  ref="previousImgRef"
+                  :src="previousStageImageUrl" 
+                  :alt="`이전 단계: ${previousStage}`"
+                  class="stage-img stage-img--previous"
+                  @error="handleImageError"
+                />
+                <img 
+                  ref="currentImgRef"
+                  :src="currentStageImageUrl" 
+                  :alt="`현재 단계: ${currentStage}`"
+                  class="stage-img stage-img--current"
+                  @error="handleImageError"
+                />
+              </template>
+              
+              <!-- Furniture Track: Multi-Layer Interior -->
+              <template v-else>
+                <!-- Background layer (always visible) -->
+                <img 
+                  v-if="interiorBackground"
+                  :src="interiorBackground.url"
+                  class="stage-img stage-img--base"
+                  alt="인테리어 배경"
+                />
+                <!-- Previous state overlay layers (will fade out) -->
+                <div ref="previousImgRef" class="interior-layers interior-layers--previous">
+                  <img 
+                    v-for="layer in previousVisibleLayers"
+                    :key="`prev-${layer.id}`"
+                    :src="layer.url"
+                    class="interior-layer"
+                    :alt="layer.id"
+                  />
+                </div>
+                <!-- Current state overlay layers (will animate in) -->
+                <div ref="currentImgRef" class="interior-layers interior-layers--current">
+                  <img 
+                    v-for="layer in currentVisibleLayers"
+                    :key="`curr-${layer.id}`"
+                    :src="layer.url"
+                    class="interior-layer"
+                    :alt="layer.id"
+                  />
+                </div>
+              </template>
             </div>
-
-            <div class="transition-arrow" aria-hidden="true">
-              <PhArrowRight :size="28" weight="bold" />
-            </div>
-
-            <div class="stage-card stage-card--current">
-              <img 
-                :src="currentStageImageUrl" 
-                :alt="`현재 단계: ${currentStage}`"
-                class="stage-image"
-                @error="handleImageError"
-              />
-              <span class="stage-label">{{ currentStage }}단계</span>
+            <div class="stage-badge">
+              <span class="badge-previous">{{ previousStage }}단계</span>
+              <span class="badge-arrow">→</span>
+              <span class="badge-current">{{ currentStage }}단계</span>
             </div>
           </div>
 
@@ -76,66 +108,43 @@
  * StageUpgradeModal
  * 
  * 저축 후 단계(house/furniture)가 상승할 때 축하 모달을 표시합니다.
- * 
- * Features:
- * - Before/After 이미지 전환 애니메이션
- * - Confetti 파티클 효과
- * - 다음 목표까지 남은 정보 표시
- * - 확인 시 Hero Section으로 스크롤
- * 
- * @example
- * <StageUpgradeModal
- *   :is-open="isStageUpModalOpen"
- *   :previous-stage="upgradeInfo.previousStage"
- *   :current-stage="upgradeInfo.currentStage"
- *   track="house"
- *   level-label="2층 골조 공사"
- *   @confirm="handleStageUpConfirm"
- * />
+ * - House 트랙: 외관 이미지 전환
+ * - Furniture 트랙: 인테리어 레이어 전환
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { PhArrowRight } from '@phosphor-icons/vue'
-import { getExteriorStageUrl, getInteriorLayerUrls, SHOWROOM_TOTAL_STAGES } from '@/constants/showroomWebp'
+import gsap from 'gsap'
+import { 
+  getExteriorStageUrl, 
+  getInteriorLayerUrls, 
+  getInteriorVisibleLayerIds,
+  SHOWROOM_TOTAL_STAGES 
+} from '@/constants/showroomWebp'
 import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '@/stores/gamificationStore'
+
+// ============================================================================
+// Animation Constants
+// ============================================================================
+
+const STAGE_TRANSITION = {
+  recognitionDelay: 0.8,
+  previousFadeOut: 0.7,
+  currentPopIn: 1.2,
+  currentDelay: 0.3
+}
 
 // ============================================================================
 // Props & Emits
 // ============================================================================
 
 const props = defineProps({
-  /** 모달 열림 상태 */
-  isOpen: {
-    type: Boolean,
-    default: false
-  },
-  /** 이전 단계 번호 */
-  previousStage: {
-    type: Number,
-    required: true
-  },
-  /** 현재(새) 단계 번호 */
-  currentStage: {
-    type: Number,
-    required: true
-  },
-  /** 트랙 타입: 'house' | 'furniture' */
-  track: {
-    type: String,
-    default: 'house',
-    validator: (v) => ['house', 'furniture'].includes(v)
-  },
-  /** 레벨 라벨 (백엔드에서 제공) */
-  levelLabel: {
-    type: String,
-    default: ''
-  },
-  /** 다음 레벨까지 남은 경험치 */
-  remainingExp: {
-    type: Number,
-    default: 0
-  }
+  isOpen: { type: Boolean, default: false },
+  previousStage: { type: Number, required: true },
+  currentStage: { type: Number, required: true },
+  track: { type: String, default: 'house', validator: (v) => ['house', 'furniture'].includes(v) },
+  levelLabel: { type: String, default: '' },
+  remainingExp: { type: Number, default: 0 }
 })
 
 const emit = defineEmits(['confirm'])
@@ -150,80 +159,137 @@ const { remainingExp: storeRemainingExp } = storeToRefs(gamificationStore)
 
 const confirmButtonRef = ref(null)
 const effectsRef = ref(null)
+const stageFrameRef = ref(null)
+const previousImgRef = ref(null)
+const currentImgRef = ref(null)
 
 // ============================================================================
 // Computed Properties
 // ============================================================================
 
-/** 사용자 테마 코드 */
 const themeCode = computed(() => authStore.userShowroom?.themeCode || 'CLASSIC')
 
-/** 이전 단계 이미지 URL */
+// ----- House Track Images -----
 const previousStageImageUrl = computed(() => {
-  if (props.track === 'furniture') {
-    // 인테리어는 최종 외관 이미지 사용
-    return getExteriorStageUrl(themeCode.value, SHOWROOM_TOTAL_STAGES.house)
-  }
+  if (props.track === 'furniture') return ''
   return getExteriorStageUrl(themeCode.value, props.previousStage)
 })
 
-/** 현재 단계 이미지 URL */
 const currentStageImageUrl = computed(() => {
-  if (props.track === 'furniture') {
-    // 인테리어도 외관 이미지 (실제로는 인테리어 레이어가 변경됨)
-    return getExteriorStageUrl(themeCode.value, SHOWROOM_TOTAL_STAGES.house)
-  }
+  if (props.track === 'furniture') return ''
   return getExteriorStageUrl(themeCode.value, props.currentStage)
 })
 
-/** 타이틀 텍스트 */
+// ----- Furniture Track Layers -----
+const interiorLayers = computed(() => getInteriorLayerUrls(themeCode.value))
+const interiorLayerIds = computed(() => interiorLayers.value.map(l => l.id))
+
+const interiorBackground = computed(() => 
+  interiorLayers.value.find(l => l.id === 'background')
+)
+
+const interiorOverlayLayers = computed(() => 
+  interiorLayers.value.filter(l => l.id !== 'background')
+)
+
+const previousVisibleLayerIds = computed(() => 
+  getInteriorVisibleLayerIds(interiorLayerIds.value, props.previousStage)
+)
+
+const currentVisibleLayerIds = computed(() => 
+  getInteriorVisibleLayerIds(interiorLayerIds.value, props.currentStage)
+)
+
+const previousVisibleLayers = computed(() => 
+  interiorOverlayLayers.value.filter(l => previousVisibleLayerIds.value.has(l.id))
+)
+
+const currentVisibleLayers = computed(() => 
+  interiorOverlayLayers.value.filter(l => currentVisibleLayerIds.value.has(l.id))
+)
+
+// ----- UI Text -----
 const titleText = computed(() => {
-  if (props.track === 'furniture') {
-    return '인테리어 업그레이드!'
-  }
-  const totalStages = SHOWROOM_TOTAL_STAGES.house
-  if (props.currentStage >= totalStages) {
-    return '집 완공!'
-  }
+  if (props.track === 'furniture') return '인테리어 업그레이드!'
+  if (props.currentStage >= SHOWROOM_TOTAL_STAGES.house) return '집 완공!'
   return '단계 상승!'
 })
 
-/** 기본 메시지 */
 const defaultMessage = computed(() => {
-  if (props.track === 'furniture') {
-    return '집이 더 아늑해졌어요!'
-  }
+  if (props.track === 'furniture') return '집이 더 아늑해졌어요!'
   return '집이 한 단계 성장했어요!'
 })
 
-/** 다음 목표 정보 표시 여부 */
 const showNextGoalInfo = computed(() => {
   const totalStages = SHOWROOM_TOTAL_STAGES[props.track]
   return props.currentStage < totalStages
 })
 
-/** 남은 경험치 텍스트 */
 const remainingExpText = computed(() => {
   const remaining = props.remainingExp || storeRemainingExp.value || 0
   return `${remaining.toLocaleString()} XP`
 })
 
 // ============================================================================
-// Methods
+// Animation Methods
 // ============================================================================
 
-/**
- * 시스템 설정에서 모션 감소 선호 여부 확인
- */
 function prefersReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-/**
- * 축하 파티클 효과 생성
- * ShowroomUnlockModal.vue 패턴 재사용
- */
+async function playStageTransition() {
+  const previousEl = previousImgRef.value
+  const currentEl = currentImgRef.value
+
+  if (!previousEl || !currentEl) return
+
+  if (prefersReducedMotion()) {
+    gsap.set(previousEl, { opacity: 0 })
+    gsap.set(currentEl, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' })
+    return
+  }
+
+  gsap.killTweensOf([previousEl, currentEl])
+
+  // Initial state
+  gsap.set(previousEl, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' })
+  gsap.set(currentEl, { opacity: 0, y: 32, scale: 0.92, filter: 'blur(12px)' })
+
+  const tl = gsap.timeline()
+
+  // Phase 1: Recognition time
+  tl.to({}, { duration: STAGE_TRANSITION.recognitionDelay })
+
+  // Phase 2: Previous fadeout (up + blur)
+  tl.to(previousEl, {
+    duration: STAGE_TRANSITION.previousFadeOut,
+    opacity: 0,
+    y: -16,
+    scale: 1.03,
+    filter: 'blur(12px)',
+    ease: 'power2.inOut'
+  })
+
+  // Phase 3: Current pop in (from below)
+  tl.to(currentEl, {
+    duration: STAGE_TRANSITION.currentPopIn,
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    ease: 'power3.out'
+  }, `-=${STAGE_TRANSITION.currentDelay}`)
+
+  // Phase 4: Enable idle float
+  tl.call(() => {
+    if (stageFrameRef.value) {
+      stageFrameRef.value.classList.add('idle-float')
+    }
+  })
+}
+
 function spawnCelebrationParticles() {
   const container = effectsRef.value
   if (!container || prefersReducedMotion()) return
@@ -240,7 +306,7 @@ function spawnCelebrationParticles() {
       color,
       backgroundColor: color,
       left: `${50 + (Math.random() - 0.5) * 20}%`,
-      top: `${50 + (Math.random() - 0.5) * 16}%`
+      top: `${40 + (Math.random() - 0.5) * 20}%`
     })
 
     const angle = Math.random() * 360 * (Math.PI / 180)
@@ -258,17 +324,19 @@ function spawnCelebrationParticles() {
   }
 }
 
-/**
- * 확인 버튼 클릭 핸들러
- */
+// ============================================================================
+// Event Handlers
+// ============================================================================
+
 function handleConfirm() {
+  if (previousImgRef.value) gsap.killTweensOf(previousImgRef.value)
+  if (currentImgRef.value) gsap.killTweensOf(currentImgRef.value)
+  if (stageFrameRef.value) stageFrameRef.value.classList.remove('idle-float')
+
   emit('confirm')
   scrollToHeroSection()
 }
 
-/**
- * Hero Section으로 부드럽게 스크롤
- */
 function scrollToHeroSection() {
   nextTick(() => {
     const heroElement = document.querySelector('.gamified-hero')
@@ -278,16 +346,10 @@ function scrollToHeroSection() {
   })
 }
 
-/**
- * 이미지 로드 실패 시 폴백 처리
- */
 function handleImageError(event) {
   event.target.src = getExteriorStageUrl('CLASSIC', 1)
 }
 
-/**
- * 키보드 이벤트 핸들러 (ESC, Enter)
- */
 function handleKeydown(event) {
   if (!props.isOpen) return
   if (event.key === 'Escape' || event.key === 'Enter') {
@@ -306,6 +368,7 @@ watch(
     if (!isOpen) return
     await nextTick()
     confirmButtonRef.value?.focus()
+    playStageTransition()
     spawnCelebrationParticles()
   }
 )
@@ -316,6 +379,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  if (previousImgRef.value) gsap.killTweensOf(previousImgRef.value)
+  if (currentImgRef.value) gsap.killTweensOf(currentImgRef.value)
 })
 </script>
 
@@ -351,12 +416,12 @@ html[data-theme="night"] .modal-overlay {
 .modal-container {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  border-radius: 24px;
-  padding: 2rem 1.75rem;
+  max-width: 480px;
+  border-radius: 28px;
+  padding: 2.5rem 2rem;
   text-align: center;
   overflow: hidden;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 html[data-theme="day"] .modal-container {
@@ -415,81 +480,114 @@ html[data-theme="night"] .modal-container {
 }
 
 /* ============================================================================
-   Stage Transition Visual
+   Stage Showcase
    ============================================================================ */
-.stage-transition {
+.stage-showcase {
   position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
 
-.stage-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+.stage-frame {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto 1rem;
+  will-change: transform;
+  transform-origin: center bottom;
 }
 
-.stage-card--previous {
-  opacity: 0.65;
-  transform: scale(0.9);
-}
-
-.stage-card--current {
-  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
-}
-
-@keyframes pop-in {
-  0% {
-    transform: scale(0.85);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.stage-image {
-  width: 100px;
-  height: 100px;
+.stage-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   border-radius: 16px;
-  background: var(--surface-muted, rgba(0, 0, 0, 0.03));
 }
 
-html[data-theme="night"] .stage-image {
-  background: rgba(255, 255, 255, 0.05);
+.stage-img--previous {
+  z-index: 1;
 }
 
-.stage-label {
-  font-size: 0.75rem;
+.stage-img--current {
+  z-index: 2;
+}
+
+.stage-img--base {
+  z-index: 0;
+}
+
+/* ============================================================================
+   Interior Layers (Furniture Track)
+   ============================================================================ */
+.interior-layers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.interior-layers--previous {
+  z-index: 1;
+}
+
+.interior-layers--current {
+  z-index: 2;
+}
+
+.interior-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ============================================================================
+   Idle Float Animation
+   ============================================================================ */
+@keyframes idle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.stage-frame.idle-float {
+  animation: idle-float 3s ease-in-out infinite;
+}
+
+/* ============================================================================
+   Stage Badge
+   ============================================================================ */
+.stage-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--showroom-text-secondary-day, #8D6E63);
 }
 
-html[data-theme="night"] .stage-label {
+.badge-previous {
+  color: var(--showroom-text-secondary-day, #8D6E63);
+  opacity: 0.7;
+}
+
+html[data-theme="night"] .badge-previous {
   color: var(--showroom-text-secondary-night, #D7CCC8);
 }
 
-.transition-arrow {
+.badge-arrow {
   color: var(--brand-accent, #ff6b3d);
-  animation: arrow-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes arrow-pulse {
-  0%, 100% {
-    transform: translateX(0);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateX(4px);
-    opacity: 1;
-  }
+.badge-current {
+  color: var(--brand-accent, #ff6b3d);
+  font-weight: 700;
+}
+
+html[data-theme="night"] .badge-current {
+  color: var(--showroom-accent-night, #D4A574);
 }
 
 /* ============================================================================
@@ -560,7 +658,7 @@ html[data-theme="night"] .next-goal-value {
 }
 
 /* ============================================================================
-   Confirm Button (extends global .confirm-button)
+   Confirm Button
    ============================================================================ */
 .confirm-button {
   position: relative;
@@ -592,20 +690,31 @@ html[data-theme="night"] .next-goal-value {
 }
 
 /* ============================================================================
+   Reduced Motion
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .stage-frame,
+  .stage-frame.idle-float {
+    animation: none !important;
+  }
+}
+
+/* ============================================================================
    Responsive
    ============================================================================ */
 @media (max-width: 480px) {
   .modal-container {
-    padding: 1.5rem 1.25rem;
+    padding: 2rem 1.5rem;
+    max-width: 95%;
   }
 
-  .stage-image {
-    width: 80px;
-    height: 80px;
+  .stage-frame {
+    width: 180px;
+    height: 180px;
   }
 
   .modal-title {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
   }
 }
 </style>
