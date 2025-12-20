@@ -8,7 +8,7 @@ import VueApexCharts from 'vue3-apexcharts'
 // Phosphor Icons 전역 등록
 import {
   PhHouse, PhChartBar, PhBuildings, PhMagicWand,
-  PhPalette, PhUser, PhDoorOpen, PhGear,
+  PhUser, PhDoorOpen, PhGear,
   PhCheck, PhX, PhCaretDown, PhCaretUp,
   PhPencilLine, PhPencilSimple,
   PhPiggyBank, PhFloppyDisk, PhStar, PhFire,
@@ -29,7 +29,7 @@ const pinia = createPinia()
 // Phosphor Icons 전역 등록
 const icons = {
   PhHouse, PhChartBar, PhBuildings, PhMagicWand,
-  PhPalette, PhUser, PhDoorOpen, PhGear,
+  PhUser, PhDoorOpen, PhGear,
   PhCheck, PhX, PhCaretDown, PhCaretUp,
   PhPencilLine, PhPencilSimple,
   PhPiggyBank, PhFloppyDisk, PhStar, PhFire,
