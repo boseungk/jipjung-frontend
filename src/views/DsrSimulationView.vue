@@ -37,7 +37,7 @@ function goBack() {
 .dsr-simulation-view {
   position: relative;
   min-height: 100vh;
-  background: var(--showroom-bg-day, #f7f8fa);
+  background: var(--showroom-bg-day);
   padding-bottom: 2rem;
   overflow-x: hidden;
 
@@ -62,7 +62,7 @@ function goBack() {
 }
 
 html[data-theme='night'] .dsr-simulation-view {
-  background: var(--showroom-bg-night, #1a1c20);
+  background: var(--showroom-bg-night);
   --dsr-ink: var(--showroom-text-night, #f5f6f7);
   --dsr-ink-muted: rgba(245, 246, 247, 0.75);
   --dsr-subcard-bg: rgba(255, 255, 255, 0.08);
@@ -74,7 +74,8 @@ html[data-theme='night'] .dsr-simulation-view {
   --dsr-danger-bg: rgba(244, 67, 54, 0.14);
   --dsr-danger-fg: #fca5a5;
 
-  --glass-bg: rgba(30, 30, 35, 0.75);
+  /* Updated to match Bento Grid warm brown theme */
+  --glass-bg: rgba(74, 69, 63, 0.75);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 

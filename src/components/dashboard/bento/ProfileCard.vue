@@ -209,6 +209,10 @@ html[data-theme="night"] .avatar-circle {
   color: var(--ink-base, #1f2937);
 }
 
+html[data-theme="night"] .avatar-initial {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
 /* User Info */
 .user-info {
   flex: 1;
@@ -230,6 +234,10 @@ html[data-theme="night"] .avatar-circle {
   color: var(--bento-text, #1f2937);
 }
 
+html[data-theme="night"] .username {
+  color: var(--showroom-text-night, #f9fafb);
+}
+
 .level-chip {
   display: inline-flex;
   align-items: center;
@@ -243,9 +251,22 @@ html[data-theme="night"] .avatar-circle {
   border: 1px solid var(--border-soft, #e5e7eb);
 }
 
+html[data-theme="night"] .level-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--showroom-text-night, #f9fafb);
+}
+
 .heading-level {
   padding: 0.35rem 0.75rem;
   box-shadow: 0 6px 18px -10px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.45);
+}
+
+html[data-theme="night"] .heading-level {
+  background: rgba(255, 107, 61, 0.16);
+  border-color: rgba(255, 107, 61, 0.3);
+  color: #ff9a75;
+  box-shadow: 0 8px 20px -10px rgba(255, 107, 61, 0.35);
 }
 
 .level-icon {

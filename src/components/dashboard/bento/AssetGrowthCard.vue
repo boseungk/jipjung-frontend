@@ -295,12 +295,24 @@ onMounted(() => {
   color: var(--brand-accent, #ff6b3d);
 }
 
+html[data-theme="night"] .meta-change {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .meta-change.is-up {
   color: var(--brand-accent, #ff6b3d);
 }
 
+html[data-theme="night"] .meta-change.is-up {
+  color: #ff9a75;
+}
+
 .meta-change.is-down {
   color: #dc2626;
+}
+
+html[data-theme="night"] .meta-change.is-down {
+  color: #fca5a5;
 }
 
 .chart-wrapper {

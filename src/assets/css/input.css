@@ -8,6 +8,8 @@
 @tailwind utilities;
 
 /* ================================================
+
+/* ================================================
    SSAFYHome - Tailwind CSS Custom Styles
    ================================================ */
 
@@ -16,84 +18,12 @@
    ================================================ */
 @layer base {
 
-    /* Theme 1: Warm Beige (기본) */
-    :root,
-    :root[data-color-theme="warm-beige"] {
-        /* Day Mode */
-        --showroom-bg-day: #f7f8fa;
-        --showroom-card-bg-day: #ffffff;
-        --showroom-shadow-light-day: #ffffff;
-        --showroom-shadow-dark-day: #e5e7eb;
-        --showroom-accent-day: #ff6b3d;
-        --showroom-text-day: #1f2937;
-
-        /* Night Mode */
-        --showroom-bg-night: #1a1c20;
-        --showroom-card-bg-night: #20242a;
-        --showroom-shadow-light-night: #2a2e35;
-        --showroom-shadow-dark-night: #0f1114;
-        --showroom-accent-night: #ff8a5c;
-        --showroom-text-night: #f5f6f7;
-        --showroom-glow-night: rgba(255, 138, 92, 0.35);
-
-        /* Glassmorphism Specific */
-        --glass-bg-day: rgba(255, 255, 255, 0.6);
-        --glass-border-day: rgba(255, 255, 255, 0.35);
-        --glass-bg-night: rgba(26, 28, 32, 0.65);
-        --glass-border-night: rgba(255, 255, 255, 0.1);
-        --glass-glow-night: rgba(255, 138, 92, 0.35);
-
-        /* Minimal Text */
-        --minimal-bg-day: rgba(255, 255, 255, 0.5);
-        --minimal-text-day: #1f2937;
-        --minimal-bg-night: rgba(20, 22, 25, 0.6);
-        --minimal-text-night: #f5f6f7;
-
-        /* Lighting Effects */
-        --light-warm-glow: rgba(255, 138, 92, 0.35);
-        --light-ambient: rgba(255, 138, 92, 0.2);
-        --light-spotlight: rgba(255, 255, 255, 0.8);
-    }
-
-    /* Theme 2: Cool Gray */
-    :root[data-color-theme="cool-gray"] {
-        --showroom-bg-day: #E8EAED;
-        --showroom-card-bg-day: #F5F6F8;
-        --showroom-shadow-light-day: #FFFFFF;
-        --showroom-shadow-dark-day: #D1D5DB;
-        --showroom-accent-day: #6B7280;
-        --showroom-text-day: #1F2937;
-
-        --showroom-bg-night: #2d3238;
-        --showroom-card-bg-night: #3d4248;
-        --showroom-shadow-light-night: #4a5058;
-        --showroom-shadow-dark-night: #1d2228;
-        --showroom-accent-night: #9CA3AF;
-        --showroom-text-night: #F3F4F6;
-        --showroom-glow-night: rgba(156, 163, 175, 0.4);
-
-        --glass-bg-day: rgba(245, 246, 248, 0.75);
-        --glass-border-day: rgba(255, 255, 255, 0.5);
-        --glass-bg-night: rgba(45, 50, 56, 0.75);
-        --glass-border-night: rgba(156, 163, 175, 0.4);
-        --glass-glow-night: rgba(156, 163, 175, 0.5);
-
-        --minimal-bg-day: rgba(255, 255, 255, 0.5);
-        --minimal-text-day: #1F2937;
-        --minimal-bg-night: rgba(30, 32, 35, 0.4);
-        --minimal-text-night: #F3F4F6;
-
-        --light-warm-glow: rgba(156, 163, 175, 0.6);
-        --light-ambient: rgba(156, 163, 175, 0.3);
-        --light-spotlight: rgba(255, 255, 255, 0.8);
-    }
-
-    /* Global Variables */
+    /* Global Variables - Brand & Neutral System Only */
     :root {
         --cursor-size: 30px;
         --mouse-x: 50%;
         --mouse-y: 50%;
-        /* Navigation variables are centralized in src/assets/css/core/variables.css */
+
         /* Brand Accent */
         --brand-accent: #ff6b3d;
         --brand-accent-rgb: 255, 107, 61;
@@ -113,7 +43,7 @@
         --border-strong: #d1d5db;
     }
 
-    /* Body Styles - NO transition for instant theme switching */
+    /* Body Styles */
     html[data-theme="day"] body {
         background-color: var(--showroom-bg-day);
         color: var(--showroom-text-day);
@@ -132,24 +62,6 @@
             background-color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1)),
             color var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
     }
-
-    /* Remove spinner arrows from number inputs globally */
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    input[type="number"] {
-        -moz-appearance: textfield;
-        appearance: textfield;
-    }
-}
-
-/* ================================================
-   2. Custom Components
-   ================================================ */
-@layer components {
 
     /* SVG-specific styles that can't be expressed in utilities */
     #furniture-svg-wrapper svg>rect:not([id]),
@@ -186,15 +98,15 @@
         opacity: 1;
     }
 
-	    /* Mouse Tracking Light Effect */
-	    .mouse-light-effect {
-	        position: fixed;
-	        inset: 0;
-	        pointer-events: none;
-	        z-index: -1;
-	        opacity: 1;
-	        transition: opacity var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
-	    }
+    /* Mouse Tracking Light Effect */
+    .mouse-light-effect {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 1;
+        transition: opacity var(--theme-switch-duration, 0.45s) var(--theme-switch-easing, cubic-bezier(0.4, 0, 0.2, 1));
+    }
 
     html[data-theme="day"] .mouse-light-effect {
         background: radial-gradient(circle 600px at var(--mouse-x) var(--mouse-y),

@@ -330,16 +330,10 @@ onUnmounted(() => {
 
 <style scoped>
 /* ================================================
-   LOCAL CSS VARIABLES
-   - Brand accent RGB for rgba() usage
-   - Ensures maintainability and DRY principle
+   AI MANAGER VIEW
+   - Uses global CSS variables from input.css
    ================================================ */
 .ai-manager-view {
-  /* Brand Accent Colors (from colors.js) */
-  --brand-accent: #FF6B3D;
-  --brand-accent-rgb: 255, 107, 61;
-  --brand-accent-secondary: #FF8557;
-  
   /* Layout */
   width: 100%;
   min-height: 100vh;

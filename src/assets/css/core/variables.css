@@ -1,5 +1,7 @@
 ﻿/* ================================================
    SSAFYHome - CSS Variables (통합 변수 시스템)
+/* ================================================
+   SSAFYHome - CSS Variables (통합 변수 시스템)
    ================================================ */
 
 /* ================================================
@@ -9,10 +11,25 @@
    /* 커서 */
    --cursor-size: 30px;
 
+   /* ================================================
+      Theme Colors (Day/Night Mode)
+      ================================================ */
+   /* Day Mode Colors */
+   --showroom-bg-day: #F9F8F6;
+   --showroom-card-bg-day: #FFFFFF;
+   --showroom-text-day: #2C2420;
+   --showroom-text-muted-day: #6D5D4F;
+
+   /* Night Mode Colors */
+   --showroom-bg-night: #3a3530;
+   --showroom-card-bg-night: #4a453f;
+   --showroom-text-night: #F5EDE3;
+   --showroom-text-muted-night: #C4B5A0;
+
+
    /* 타이포그래피 */
    --font-family-display: 'Space Grotesk', 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
    --font-family-body: 'Noto Sans KR', 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
    --font-size-hero: 2.5rem;
    --font-size-title: 1.75rem;
    --font-size-subtitle: 1.5rem;
@@ -217,7 +234,7 @@
    --bento-card-title: var(--ink-base, #1f2937);
    --bento-text: var(--ink-base, #1f2937);
    --bento-text-muted: var(--ink-muted, #6b7280);
-   
+
    /* Ink Colors (fallback) */
    --ink-base: #1f2937;
    --ink-muted: #6b7280;

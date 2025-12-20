@@ -135,7 +135,7 @@ const displayMaxExp = computed(() => levelProgress.value.requiredForLevel)
   animation: fade-in-up 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-:global([data-theme='night']) .judgment-result-container {
+html[data-theme="night"] .judgment-result-container {
   --bg-glass: linear-gradient(145deg, rgba(30, 30, 35, 0.7), rgba(30, 30, 35, 0.5));
   --border-glass: rgba(255, 255, 255, 0.08);
   --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -238,7 +238,7 @@ const displayMaxExp = computed(() => levelProgress.value.requiredForLevel)
   margin: 0 1rem 2rem;
 }
 
-:global([data-theme='night']) .divider {
+html[data-theme="night"] .divider {
   background: linear-gradient(90deg, transparent, #fff, transparent);
   opacity: 0.15;
 }
@@ -307,7 +307,7 @@ const displayMaxExp = computed(() => levelProgress.value.requiredForLevel)
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
 
-:global([data-theme='night']) .progress-container {
+html[data-theme="night"] .progress-container {
   background: rgba(255, 255, 255, 0.1);
 }
 

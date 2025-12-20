@@ -170,6 +170,11 @@ const dayAriaLabel = (day) => {
   font-weight: 700;
 }
 
+html[data-theme="night"] .streak-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(245, 246, 247, 0.85);
+}
+
 /* Days Grid */
 .days-grid {
   display: flex;
@@ -204,6 +209,10 @@ const dayAriaLabel = (day) => {
   font-weight: 600;
   color: var(--bento-text-muted, #6b7280);
   transition: color 0.2s ease;
+}
+
+html[data-theme="night"] .day-label {
+  color: rgba(245, 246, 247, 0.7);
 }
 
 /* Flame Icons */
@@ -270,6 +279,10 @@ const dayAriaLabel = (day) => {
   font-weight: 700;
 }
 
+html[data-theme="night"] .day-item.active .day-label {
+  color: #ff9a75;
+}
+
 /* Today State */
 .day-item.today {
   background: linear-gradient(
@@ -283,6 +296,10 @@ const dayAriaLabel = (day) => {
 .day-item.today .day-label {
   color: #FFB800;
   font-weight: 700;
+}
+
+html[data-theme="night"] .day-item.today .day-label {
+  color: #FFD700;
 }
 
 /* Hover States */

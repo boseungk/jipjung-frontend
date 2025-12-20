@@ -368,6 +368,12 @@ html[data-theme="night"] .subtitle-info {
   border: 1px solid var(--border-soft, #e5e7eb);
 }
 
+html[data-theme="night"] .pill.ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(245, 246, 247, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 /* Button visuals (.savings-button / .explore-button) live in src/assets/css/components/buttons.css */
 
 .btn-text {

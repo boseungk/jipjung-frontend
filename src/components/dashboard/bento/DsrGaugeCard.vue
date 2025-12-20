@@ -197,5 +197,13 @@ html[data-theme="night"] .tone-danger {
   color: var(--ink-base, #1f2937);
 }
 
+html[data-theme="night"] .status-info {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="night"] .status-text {
+  color: var(--showroom-text-night, #f9fafb);
+}
 
 </style>
