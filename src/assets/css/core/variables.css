@@ -259,10 +259,9 @@ html[data-theme="night"] {
 }
 
 /* ================================================
-   4. 색상 테마 - Theme 1: Warm Beige (기본)
+   4. 쇼룸 컬러 토큰 (기본 팔레트)
    ================================================ */
-:root,
-:root[data-color-theme="warm-beige"] {
+:root {
    /* Day Mode - 새로운 색상 시스템 */
    --showroom-bg-day: #F9F8F6;
    /* 기존: #E8E0D5 → 모던한 웜 그레이 */
@@ -314,47 +313,7 @@ html[data-theme="night"] {
 }
 
 /* ================================================
-   5. 색상 테마 - Theme 2: Cool Gray (세련된 그레이)
-   ================================================ */
-:root[data-color-theme="cool-gray"] {
-   /* Day Mode */
-   --showroom-bg-day: #E8EAED;
-   --showroom-card-bg-day: #F5F6F8;
-   --showroom-shadow-light-day: #FFFFFF;
-   --showroom-shadow-dark-day: #D1D5DB;
-   --showroom-accent-day: #6B7280;
-   --showroom-text-day: #1F2937;
-
-   /* Night Mode */
-   --showroom-bg-night: #2d3238;
-   --showroom-card-bg-night: #3d4248;
-   --showroom-shadow-light-night: #4a5058;
-   --showroom-shadow-dark-night: #1d2228;
-   --showroom-accent-night: #9CA3AF;
-   --showroom-text-night: #F3F4F6;
-   --showroom-glow-night: rgba(156, 163, 175, 0.4);
-
-   /* Glassmorphism Specific */
-   --glass-bg-day: rgba(245, 246, 248, 0.75);
-   --glass-border-day: rgba(255, 255, 255, 0.5);
-   --glass-bg-night: rgba(45, 50, 56, 0.75);
-   --glass-border-night: rgba(156, 163, 175, 0.4);
-   --glass-glow-night: rgba(156, 163, 175, 0.5);
-
-   /* Minimal Text */
-   --minimal-bg-day: rgba(255, 255, 255, 0.5);
-   --minimal-text-day: #1F2937;
-   --minimal-bg-night: rgba(30, 32, 35, 0.4);
-   --minimal-text-night: #F3F4F6;
-
-   /* Lighting Effects */
-   --light-warm-glow: rgba(156, 163, 175, 0.6);
-   --light-ambient: rgba(156, 163, 175, 0.3);
-   --light-spotlight: rgba(255, 255, 255, 0.8);
-}
-
-/* ================================================
-   6. 그림자 시스템 (Shadow System)
+   5. 그림자 시스템 (Shadow System)
    ================================================ */
 :root {
    /* Day Mode Shadows */
@@ -385,7 +344,7 @@ html[data-theme="night"] {
 }
 
 /* ================================================
-   7. 반응형 브레이크포인트 (사용 참고)
+   6. 반응형 브레이크포인트 (사용 참고)
    ================================================ */
 /*
   --breakpoint-mobile: 480px;
