@@ -137,6 +137,10 @@ onUnmounted(() => {
   z-index: 2000;
 }
 
+html[data-theme="night"] .loading-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
 .loading-content {
   display: flex;
   flex-direction: column;
