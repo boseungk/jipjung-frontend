@@ -161,11 +161,20 @@ watch(() => props.excuses, () => {
   border-radius: 16px;
 }
 
+html[data-theme="night"] .excuse-selector {
+  background: var(--bento-card-bg);
+  border-color: var(--bento-card-border);
+}
+
 .selector-title {
   font-size: 1rem;
   font-weight: 600;
   color: var(--bento-card-title, #1f2937);
   margin: 0 0 1rem;
+}
+
+html[data-theme="night"] .selector-title {
+  color: var(--bento-card-title);
 }
 
 /* Excuse Chips */
@@ -187,9 +196,20 @@ watch(() => props.excuses, () => {
   color: var(--bento-text, #374151);
 }
 
+html[data-theme="night"] .excuse-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--bento-text);
+}
+
 .excuse-chip:hover {
   border-color: var(--brand-accent, #ff6b3d);
   background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
+}
+
+html[data-theme="night"] .excuse-chip:hover {
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.15);
+  border-color: var(--brand-accent);
 }
 
 .excuse-chip.active {
@@ -204,8 +224,19 @@ watch(() => props.excuses, () => {
   color: #92400e;
 }
 
+html[data-theme="night"] .excuse-chip.give-up {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+}
+
 .excuse-chip.give-up:hover {
   background: #fde68a;
+  border-color: #f59e0b;
+}
+
+html[data-theme="night"] .excuse-chip.give-up:hover {
+  background: rgba(251, 191, 36, 0.3);
   border-color: #f59e0b;
 }
 
@@ -227,6 +258,10 @@ watch(() => props.excuses, () => {
   margin-bottom: 0.5rem;
 }
 
+html[data-theme="night"] .custom-label {
+  color: var(--bento-text-muted);
+}
+
 .custom-input-wrapper {
   position: relative;
 }
@@ -244,9 +279,20 @@ watch(() => props.excuses, () => {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+html[data-theme="night"] .custom-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--bento-text);
+}
+
 .custom-input:focus {
   border-color: var(--brand-accent, #ff6b3d);
   box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+}
+
+html[data-theme="night"] .custom-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.2);
 }
 
 .char-count {
@@ -256,6 +302,10 @@ watch(() => props.excuses, () => {
   transform: translateY(-50%);
   font-size: 0.75rem;
   color: var(--bento-text-muted, #9ca3af);
+}
+
+html[data-theme="night"] .char-count {
+  color: var(--bento-text-muted);
 }
 
 /* Submit Button styles live in src/assets/css/components/buttons.css */
@@ -284,5 +334,9 @@ watch(() => props.excuses, () => {
   margin: 0.75rem 0 0;
   font-size: 0.875rem;
   color: #ef4444;
+}
+
+html[data-theme="night"] .error-message {
+  color: #fca5a5;
 }
 </style>
