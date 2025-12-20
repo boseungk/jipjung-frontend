@@ -37,7 +37,6 @@
           <div class="receipt-amount">₩{{ formatAmount(receiptInfo.amount) }}</div>
           <div class="receipt-details">
             <p class="receipt-merchant">
-              {{ getCategoryEmoji(receiptInfo.category) }}
               {{ receiptInfo.storeName }}
               ({{ receiptInfo.categoryLabel }})
             </p>
@@ -95,7 +94,6 @@
             v-else-if="aiManagerStore.isJudged"
             :judgment="aiManagerStore.judgmentResult?.judgment"
             :growth="aiManagerStore.judgmentResult?.growth"
-            :character="aiManagerStore.judgmentResult?.character"
             @newEntry="handleNewEntry"
             @viewHistory="toggleHistoryView"
           />
@@ -331,7 +329,18 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ================================================
+   LOCAL CSS VARIABLES
+   - Brand accent RGB for rgba() usage
+   - Ensures maintainability and DRY principle
+   ================================================ */
 .ai-manager-view {
+  /* Brand Accent Colors (from colors.js) */
+  --brand-accent: #FF6B3D;
+  --brand-accent-rgb: 255, 107, 61;
+  --brand-accent-secondary: #FF8557;
+  
+  /* Layout */
   width: 100%;
   min-height: 100vh;
   padding: 2rem;
@@ -342,7 +351,9 @@ html[data-theme="night"] .ai-manager-view {
   background: var(--showroom-bg-night, #3a3530);
 }
 
-/* Page Header */
+/* ================================================
+   PAGE HEADER
+   ================================================ */
 .page-header {
   max-width: 1200px;
   margin: 0 auto 2rem;
@@ -366,7 +377,9 @@ html[data-theme="night"] .page-title {
   margin: 0;
 }
 
-/* Main Container */
+/* ================================================
+   MAIN CONTAINER
+   ================================================ */
 .manager-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -376,17 +389,46 @@ html[data-theme="night"] .page-title {
   min-height: 600px;
 }
 
-/* Card Base */
+/* ================================================
+   GLASSMORPHIC CARD BASE
+   - Multi-layer shadows for depth
+   - Backdrop blur for glass effect
+   - Gradient backgrounds for premium feel
+   ================================================ */
 .card {
-  background: var(--showroom-shadow-light-day, #ffffff);
+  /* Day Mode: Light glass with warm gradient */
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.85), 
+    rgba(255, 255, 255, 0.65)
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  
+  /* Multi-layer shadow: ambient + highlight */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html[data-theme="night"] .card {
-  background: var(--showroom-card-bg-night, #2a2520);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  /* Night Mode: Dark glass with subtle glow */
+  background: linear-gradient(145deg,
+    rgba(42, 37, 32, 0.9),
+    rgba(42, 37, 32, 0.7)
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* Enhanced shadows for night depth */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Sidebar */
@@ -404,10 +446,22 @@ html[data-theme="night"] .card {
   gap: 1rem;
 }
 
+/* ================================================
+   CHARACTER PROFILE CARD
+   ================================================ */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
 .character-image-wrapper {
   position: relative;
   width: 120px;
   height: 120px;
+  /* 3D elevation: outer shadow for lift effect */
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
 }
 
 .character-image {
@@ -415,7 +469,32 @@ html[data-theme="night"] .card {
   height: 100%;
   object-fit: contain;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  
+  /* Glassmorphic background */
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.4)
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  
+  /* Multi-layer depth shadow */
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.08),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme="night"] .character-image {
+  background: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.06)
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+  
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
 .character-badge {
@@ -433,16 +512,41 @@ html[data-theme="night"] .card {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Badge State Colors - Using brand accent for angry state */
 .character-badge.badge-angry {
-  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  background: linear-gradient(135deg, 
+    var(--brand-accent), 
+    var(--brand-accent-secondary)
+  );
 }
 
+/* Happy state keeps distinct warm yellow */
 .character-badge.badge-happy {
   background: linear-gradient(135deg, #FFD93D, #FFE066);
 }
 
+/* Neutral state keeps cool gray */
 .character-badge.badge-neutral {
   background: linear-gradient(135deg, #94a3b8, #cbd5e1);
+}
+
+/* Night mode glow animation for badges */
+html[data-theme="night"] .character-badge {
+  animation: badge-glow 3s ease-in-out infinite;
+}
+
+@keyframes badge-glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 12px rgba(var(--brand-accent-rgb), 0.4),
+      0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px rgba(var(--brand-accent-rgb), 0.6),
+      0 0 32px rgba(var(--brand-accent-rgb), 0.3),
+      0 4px 8px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .character-info {
@@ -518,7 +622,11 @@ html[data-theme="night"] .receipt-details {
   margin: 0.25rem 0;
 }
 
-/* Input Trigger Card */
+/* ================================================
+   INPUT TRIGGER CARD
+   - Glassmorphic CTA with brand accent
+   - Tactile pressed state for feedback
+   ================================================ */
 .input-trigger-card {
   display: flex;
   flex-direction: column;
@@ -527,28 +635,65 @@ html[data-theme="night"] .receipt-details {
   padding: 2rem 1.5rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px dashed transparent;
   width: 100%;
   appearance: none;
+  
+  /* Glassmorphic base with subtle brand tint */
+  background: linear-gradient(135deg,
+    rgba(var(--brand-accent-rgb), 0.08),
+    rgba(var(--brand-accent-rgb), 0.04)
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px dashed rgba(var(--brand-accent-rgb), 0.25);
+  
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .input-trigger-card:hover {
-  border-color: var(--brand-accent, #ff6b3d);
-  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.06);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg,
+    rgba(var(--brand-accent-rgb), 0.15),
+    rgba(var(--brand-accent-rgb), 0.08)
+  );
+  border-color: var(--brand-accent);
+  box-shadow: 
+    0 12px 32px rgba(var(--brand-accent-rgb), 0.16),
+    0 0 24px rgba(var(--brand-accent-rgb), 0.12);
+  transform: translateY(-4px);
+}
+
+/* Tactile pressed state */
+.input-trigger-card:active {
+  background: rgba(var(--brand-accent-rgb), 0.05);
+  box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(2px) scale(0.98);
+}
+
+html[data-theme="night"] .input-trigger-card {
+  background: linear-gradient(135deg,
+    rgba(var(--brand-accent-rgb), 0.12),
+    rgba(var(--brand-accent-rgb), 0.06)
+  );
 }
 
 html[data-theme="night"] .input-trigger-card:hover {
-  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.1);
+  background: linear-gradient(135deg,
+    rgba(var(--brand-accent-rgb), 0.2),
+    rgba(var(--brand-accent-rgb), 0.1)
+  );
+}
+
+html[data-theme="night"] .input-trigger-card:active {
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .input-trigger-card svg {
-  color: var(--brand-accent, #ff6b3d);
+  color: var(--brand-accent);
 }
 
 .input-trigger-card:focus-visible {
-  outline: 3px solid rgba(var(--brand-accent-rgb, 255, 107, 61), 0.35);
+  outline: 3px solid rgba(var(--brand-accent-rgb), 0.35);
   outline-offset: 2px;
 }
 
@@ -588,19 +733,45 @@ html[data-theme="night"] .trigger-text {
   margin: 0;
 }
 
-/* Chat Area */
+/* ================================================
+   CHAT AREA
+   - Glassmorphic container with subtle gradient
+   - Visual hierarchy differentiation from sidebar
+   ================================================ */
 .chat-area {
-  background: var(--showroom-shadow-light-day, #ffffff);
+  /* Gradient background for depth */
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(249, 248, 246, 0.85) 50%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 html[data-theme="night"] .chat-area {
-  background: var(--showroom-card-bg-night, #2a2520);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(180deg,
+    rgba(42, 37, 32, 0.95) 0%,
+    rgba(42, 37, 32, 0.8) 50%,
+    rgba(42, 37, 32, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .time-indicator {
@@ -670,15 +841,36 @@ html[data-theme="night"] .time-indicator {
   line-height: 1.5;
 }
 
+/* Glassmorphic AI message bubble */
 .message-ai .message-bubble {
-  background: var(--surface-muted, #F5F5F5);
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.4)
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   color: var(--showroom-text-day, #2C2420);
   border-bottom-left-radius: 4px;
+  
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 html[data-theme="night"] .message-ai .message-bubble {
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.04)
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--showroom-text-night, #F5EDE3);
+  
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Error Banner */
