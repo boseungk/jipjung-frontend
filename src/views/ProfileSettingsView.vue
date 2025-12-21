@@ -45,11 +45,13 @@
             </label>
             <div class="income-input-wrapper">
               <input
-                v-model.number="editableUser.annualIncome"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="field-input income-input"
-                :min="0"
-                :max="50000"
+                :value="annualIncomeDisplay"
+                @input="handleAnnualIncomeInput"
+                @blur="handleAnnualIncomeBlur"
+                @focus="handleAnnualIncomeFocus"
               />
               <span class="input-suffix">만원</span>
             </div>
@@ -65,13 +67,37 @@
             </label>
             <div class="income-input-wrapper">
               <input
-                v-model.number="editableUser.existingLoanMonthly"
-                type="number"
+                type="text"
+                inputmode="numeric"
                 class="field-input income-input"
-                :min="0"
-                :max="1000"
+                :value="existingLoanDisplay"
+                @input="handleExistingLoanInput"
+                @blur="handleExistingLoanBlur"
+                @focus="handleExistingLoanFocus"
               />
               <span class="input-suffix">만원</span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">
+              현재 보유 자산
+              <span class="field-hint">(만원 단위)</span>
+            </label>
+            <div class="income-input-wrapper">
+              <input
+                type="text"
+                inputmode="numeric"
+                class="field-input income-input"
+                :value="currentAssetsDisplay"
+                @input="handleCurrentAssetsInput"
+                @blur="handleCurrentAssetsBlur"
+                @focus="handleCurrentAssetsFocus"
+              />
+              <span class="input-suffix">만원</span>
+            </div>
+            <div class="field-description">
+              예산 맞춤 필터에 사용됩니다
             </div>
           </div>
         </section>
@@ -165,6 +191,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import { useMoneyInput } from '@/composables/useMoneyInput'
 import AppIcon from '@/components/common/AppIcon.vue'
 import DeleteAccountModal from '@/components/common/DeleteAccountModal.vue'
 
@@ -182,6 +209,25 @@ const deleteAccountErrorMessage = ref('')
 let successMessageTimeoutId = null
 const birthYearMin = 1950
 const birthYearMax = new Date().getFullYear() - 19
+
+// 금액 입력 refs
+const annualIncomeRef = computed({
+  get: () => editableUser.value.annualIncome ?? 0,
+  set: (val) => { editableUser.value.annualIncome = val }
+})
+const existingLoanRef = computed({
+  get: () => editableUser.value.existingLoanMonthly ?? 0,
+  set: (val) => { editableUser.value.existingLoanMonthly = val }
+})
+const currentAssetsRef = computed({
+  get: () => editableUser.value.currentAssets ?? 0,
+  set: (val) => { editableUser.value.currentAssets = val }
+})
+
+// useMoneyInput 적용
+const { displayValue: annualIncomeDisplay, handleInput: handleAnnualIncomeInput, handleBlur: handleAnnualIncomeBlur, handleFocus: handleAnnualIncomeFocus } = useMoneyInput(annualIncomeRef, { max: 50000 })
+const { displayValue: existingLoanDisplay, handleInput: handleExistingLoanInput, handleBlur: handleExistingLoanBlur, handleFocus: handleExistingLoanFocus } = useMoneyInput(existingLoanRef, { max: 1000 })
+const { displayValue: currentAssetsDisplay, handleInput: handleCurrentAssetsInput, handleBlur: handleCurrentAssetsBlur, handleFocus: handleCurrentAssetsFocus } = useMoneyInput(currentAssetsRef, { max: 100000 })
 
 const isProfileReady = computed(() => {
   const currentUser = user.value
@@ -208,7 +254,8 @@ function normalizeProfileForCompare(raw) {
     nickname: String(raw?.nickname ?? raw?.name ?? '').trim(),
     birthYear: Number.isFinite(birthYearValue) ? birthYearValue : null,
     annualIncome: Math.trunc(toFiniteNumber(raw?.annualIncome, 0)),
-    existingLoanMonthly: Math.trunc(toFiniteNumber(raw?.existingLoanMonthly, 0))
+    existingLoanMonthly: Math.trunc(toFiniteNumber(raw?.existingLoanMonthly, 0)),
+    currentAssets: Math.trunc(toFiniteNumber(raw?.currentAssets, 0))
   }
 }
 
@@ -222,7 +269,8 @@ const hasChanges = computed(() => {
   return (
     currentEditable.nickname !== currentUser.nickname ||
     currentEditable.annualIncome !== currentUser.annualIncome ||
-    currentEditable.existingLoanMonthly !== currentUser.existingLoanMonthly
+    currentEditable.existingLoanMonthly !== currentUser.existingLoanMonthly ||
+    currentEditable.currentAssets !== currentUser.currentAssets
   )
 })
 
@@ -234,7 +282,8 @@ function initializeEditableUser() {
       nickname: currentUser.nickname,
       birthYear: currentUser.birthYear,
       annualIncome: currentUser.annualIncome,
-      existingLoanMonthly: currentUser.existingLoanMonthly
+      existingLoanMonthly: currentUser.existingLoanMonthly,
+      currentAssets: currentUser.currentAssets
     }
   }
 }
@@ -280,6 +329,10 @@ async function handleSave() {
 
     if (normalizedEditable.existingLoanMonthly !== normalizedUser.existingLoanMonthly) {
       profileUpdatePayload.existingLoanMonthly = clampNumber(normalizedEditable.existingLoanMonthly, 0, 1000)
+    }
+
+    if (normalizedEditable.currentAssets !== normalizedUser.currentAssets) {
+      profileUpdatePayload.currentAssets = clampNumber(normalizedEditable.currentAssets, 0, 100000)
     }
 
     await authStore.updateProfile(profileUpdatePayload)

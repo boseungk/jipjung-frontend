@@ -433,7 +433,8 @@ export const useAuthStore = defineStore('auth', () => {
         const hasApiPatch = profileData && typeof profileData === 'object' && (
             Object.prototype.hasOwnProperty.call(profileData, 'nickname') ||
             Object.prototype.hasOwnProperty.call(profileData, 'annualIncome') ||
-            Object.prototype.hasOwnProperty.call(profileData, 'existingLoanMonthly')
+            Object.prototype.hasOwnProperty.call(profileData, 'existingLoanMonthly') ||
+            Object.prototype.hasOwnProperty.call(profileData, 'currentAssets')
         )
 
         if (profileData && typeof profileData === 'object') {
@@ -442,6 +443,7 @@ export const useAuthStore = defineStore('auth', () => {
             delete localOnlyPatch.nickname
             delete localOnlyPatch.annualIncome
             delete localOnlyPatch.existingLoanMonthly
+            delete localOnlyPatch.currentAssets
             if (Object.keys(localOnlyPatch).length > 0) {
                 updateUserData(localOnlyPatch)
             }
@@ -461,11 +463,16 @@ export const useAuthStore = defineStore('auth', () => {
             profileData?.existingLoanMonthly ?? user.value?.existingLoanMonthly ?? 0,
             0
         )
+        const nextCurrentAssetsManwon = toFiniteInteger(
+            profileData?.currentAssets ?? user.value?.currentAssets ?? 0,
+            0
+        )
 
         const apiPayload = {
             nickname: nextNickname,
             annualIncome: toWonMaybe(nextAnnualIncomeManwon, PROFILE_LIMITS_MANWON.annualIncome),
-            existingLoanMonthly: toWonMaybe(nextExistingLoanMonthlyManwon, PROFILE_LIMITS_MANWON.existingLoanMonthly)
+            existingLoanMonthly: toWonMaybe(nextExistingLoanMonthlyManwon, PROFILE_LIMITS_MANWON.existingLoanMonthly),
+            currentAssets: toWonMaybe(nextCurrentAssetsManwon, PROFILE_LIMITS_MANWON.currentAssets)
         }
 
         const response = await authService.updateProfile(apiPayload)
@@ -492,6 +499,9 @@ export const useAuthStore = defineStore('auth', () => {
             }
             if (normalizedPatch.existingLoanMonthly != null) {
                 normalizedPatch.existingLoanMonthly = toManwonMaybe(normalizedPatch.existingLoanMonthly, PROFILE_LIMITS_MANWON.existingLoanMonthly)
+            }
+            if (normalizedPatch.currentAssets != null) {
+                normalizedPatch.currentAssets = toManwonMaybe(normalizedPatch.currentAssets, PROFILE_LIMITS_MANWON.currentAssets)
             }
 
             // 기존 사용자 정보와 병합
