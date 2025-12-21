@@ -33,6 +33,51 @@ const FURNITURE_BADGE_MESSAGES = [
   '살고 싶은 집, 인테리어 끝! 🥳'
 ]
 
+const toFiniteNumber = (value, fallback = 0) => {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+
+const toNonNegativeNumber = (value, fallback = 0) => Math.max(0, toFiniteNumber(value, fallback))
+
+const clampNumber = (value, min, max, fallback = min) => {
+  const number = toFiniteNumber(value, fallback)
+  return Math.min(max, Math.max(min, number))
+}
+
+function calculateNextMilestoneExp(track, stage) {
+  const base = track === 'house' ? 150 : 180
+  const step = track === 'house' ? 20 : 25
+  const stageIndex = Math.max(0, (stage || 1) - 1)
+  return base + stageIndex * step
+}
+
+function deriveLevelFromBadges(count) {
+  if (count >= 8) return 5
+  if (count >= 6) return 4
+  if (count >= 4) return 3
+  if (count >= 2) return 2
+  return 1
+}
+
+function buildBadgePayload(track, stage, order) {
+  const isHouse = track === 'house'
+  const labels = isHouse ? HOUSE_BADGE_MESSAGES : FURNITURE_BADGE_MESSAGES
+  const safeIndex = Math.min(labels.length - 1, Math.max(0, stage - 1))
+
+  return {
+    id: `badge-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    track,
+    stage,
+    label: isHouse
+      ? `집 단계 ${stage}/${HOUSE_TOTAL_STAGES}`
+      : `가구 단계 ${stage}/${FURNITURE_TOTAL_STAGES}`,
+    message: labels[safeIndex],
+    earnedAt: new Date().toISOString(),
+    order
+  }
+}
+
 export const useGamificationStore = defineStore('gamification', () => {
   const authStore = useAuthStore()
   const gamification = computed(() => ({
@@ -43,24 +88,16 @@ export const useGamificationStore = defineStore('gamification', () => {
   // State derived from user data
   const currentLevel = computed(() => gamification.value.currentLevel ?? DEFAULT_GAMIFICATION.currentLevel)
   const levelTitle = computed(() => gamification.value.levelTitle || LEVEL_TITLES[currentLevel.value] || DEFAULT_GAMIFICATION.levelTitle)
-  const experiencePoints = computed(() => Math.max(0, Number(gamification.value.experiencePoints) || 0))
+  const experiencePoints = computed(() => toNonNegativeNumber(gamification.value.experiencePoints))
   const buildTrack = computed(() => gamification.value.buildTrack || 'house')
-  const houseStage = computed(() => {
-    const stage = Number(gamification.value.houseStage)
-    const safeStage = Number.isFinite(stage) && stage > 0 ? stage : 1
-    return Math.min(HOUSE_TOTAL_STAGES, safeStage)
-  })
-  const furnitureStage = computed(() => {
-    const stage = Number(gamification.value.furnitureStage)
-    const safeStage = Number.isFinite(stage) && stage >= 0 ? stage : 0
-    return Math.min(FURNITURE_TOTAL_STAGES, safeStage)
-  })
+  const houseStage = computed(() => clampNumber(gamification.value.houseStage, 1, HOUSE_TOTAL_STAGES, 1))
+  const furnitureStage = computed(() => clampNumber(gamification.value.furnitureStage, 0, FURNITURE_TOTAL_STAGES, 0))
   const badgeHistory = computed(() => gamification.value.badges || [])
   const latestBadge = computed(() => badgeHistory.value[0] || null)
   const badgeCount = computed(() => badgeHistory.value.length)
-  const currentStreak = computed(() => Number(gamification.value.currentStreak) || 0)
-  const longestStreak = computed(() => Number(gamification.value.longestStreak) || 0)
-  const treesCollected = computed(() => Number(gamification.value.treesCollected) || 0)
+  const currentStreak = computed(() => toFiniteNumber(gamification.value.currentStreak))
+  const longestStreak = computed(() => toFiniteNumber(gamification.value.longestStreak))
+  const treesCollected = computed(() => toFiniteNumber(gamification.value.treesCollected))
 
   const activeStage = computed(() => {
     if (buildTrack.value === 'house') return houseStage.value
@@ -122,39 +159,6 @@ export const useGamificationStore = defineStore('gamification', () => {
     isFurnitureComplete: isFurnitureComplete.value
   }))
 
-  function calculateNextMilestoneExp(track, stage) {
-    const base = track === 'house' ? 150 : 180
-    const step = track === 'house' ? 20 : 25
-    const stageIndex = Math.max(0, (stage || 1) - 1)
-    return base + stageIndex * step
-  }
-
-  function deriveLevelFromBadges(count) {
-    if (count >= 8) return 5
-    if (count >= 6) return 4
-    if (count >= 4) return 3
-    if (count >= 2) return 2
-    return 1
-  }
-
-  function buildBadgePayload(track, stage, order) {
-    const isHouse = track === 'house'
-    const labels = isHouse ? HOUSE_BADGE_MESSAGES : FURNITURE_BADGE_MESSAGES
-    const safeIndex = Math.min(labels.length - 1, Math.max(0, stage - 1))
-
-    return {
-      id: `badge-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      track,
-      stage,
-      label: isHouse
-        ? `집 단계 ${stage}/${HOUSE_TOTAL_STAGES}`
-        : `가구 단계 ${stage}/${FURNITURE_TOTAL_STAGES}`,
-      message: labels[safeIndex],
-      earnedAt: new Date().toISOString(),
-      order
-    }
-  }
-
   async function saveGamification(updatedGamification) {
     try {
       authStore.updateUserData({ gamification: updatedGamification })
@@ -168,12 +172,12 @@ export const useGamificationStore = defineStore('gamification', () => {
     if (!progress || typeof progress !== 'object') return
     if (progress.buildTrack !== 'furniture') return
 
-    const rawStage = Number(progress.furnitureStage)
-    const rawExp = Number(progress.furnitureExp)
+    const rawStage = toFiniteNumber(progress.furnitureStage, NaN)
+    const rawExp = toFiniteNumber(progress.furnitureExp, NaN)
     if (!Number.isFinite(rawStage) || !Number.isFinite(rawExp)) return
 
     const nextStage = Math.min(FURNITURE_TOTAL_STAGES, Math.max(1, Math.trunc(rawStage)))
-    const nextExp = Math.max(0, rawExp)
+    const nextExp = toNonNegativeNumber(rawExp)
 
     authStore.updateUserData({
       gamification: {
@@ -190,9 +194,15 @@ export const useGamificationStore = defineStore('gamification', () => {
     })
   }
 
+  function requestFurnitureProgressSync(payload) {
+    syncFurnitureProgressToServer(payload)
+      .then(applyFurnitureProgressSync)
+      .catch(err => console.warn('Furniture progress sync failed:', err))
+  }
+
   // Actions
   async function addExperience(rawExp) {
-    let pendingExp = Math.max(0, Number(rawExp) || 0)
+    let pendingExp = toNonNegativeNumber(rawExp)
     let nextTrack = buildTrack.value || 'house'
     let nextHouseStage = houseStage.value
     let nextFurnitureStage = furnitureStage.value
@@ -357,13 +367,11 @@ export const useGamificationStore = defineStore('gamification', () => {
     })
 
     // 서버에도 동기화 (비동기, 실패해도 로컬 상태는 유지)
-    syncFurnitureProgressToServer({
+    requestFurnitureProgressSync({
       buildTrack: 'furniture',
       furnitureStage: updated.furnitureStage,
       furnitureExp: 0
     })
-      .then(applyFurnitureProgressSync)
-      .catch(err => console.warn('Furniture progress sync failed:', err))
   }
 
   /**
@@ -383,14 +391,14 @@ export const useGamificationStore = defineStore('gamification', () => {
   function applyGrowthResult(growth) {
     if (!growth) return null
 
-    const rawStep = Number(growth.level || 1)
+    const rawStep = toFiniteNumber(growth.level, 1)
     const nextStep = Number.isFinite(rawStep) ? Math.max(1, Math.trunc(rawStep)) : 1
     const currentTrack = authStore.userGamification?.buildTrack || 'house'
-    const currentFurnitureStage = Number(authStore.userGamification?.furnitureStage) || 0
-    const currentTrackExp = Number(authStore.userGamification?.experiencePoints) || 0
+    const currentFurnitureStage = toFiniteNumber(authStore.userGamification?.furnitureStage) || 0
+    const currentTrackExp = toFiniteNumber(authStore.userGamification?.experiencePoints) || 0
 
     // 이전 단계 저장 (모달 표시용)
-    const previousHouseStage = Number(authStore.userGamification?.houseStage) || 1
+    const previousHouseStage = toFiniteNumber(authStore.userGamification?.houseStage) || 1
 
     // 트랙 결정 로직:
     // - 현재 트랙이 furniture면 유지
@@ -403,14 +411,12 @@ export const useGamificationStore = defineStore('gamification', () => {
       ? Math.min(FURNITURE_TOTAL_STAGES, Math.max(1, currentFurnitureStage, nextStep - HOUSE_TOTAL_STAGES))
       : 0
 
-    const isUnlockingFurniture = currentTrack !== 'furniture' && nextTrack === 'furniture'
-    const rawExpDelta = Math.max(0, Number(growth.expChange) || 0)
-    const expDelta = isUnlockingFurniture ? 0 : rawExpDelta
+    const expDelta = toNonNegativeNumber(growth.expChange)
 
     let nextFurnitureStage = baseFurnitureStage
     let nextTrackExp = nextTrack === 'furniture'
-      ? (isUnlockingFurniture ? 0 : currentTrackExp)
-      : Math.max(0, Number(growth.currentExp) || 0)
+      ? currentTrackExp
+      : toNonNegativeNumber(growth.currentExp)
 
     // Phase 2(인테리어) 진행도는 XP 임계값 기반으로 프론트에서 계산합니다.
     // - Stage 1: 배경(언락 시 기본 지급)
@@ -479,13 +485,11 @@ export const useGamificationStore = defineStore('gamification', () => {
       })
 
       // 서버에도 동기화
-      syncFurnitureProgressToServer({
+      requestFurnitureProgressSync({
         buildTrack: 'furniture',
         furnitureStage: nextFurnitureStage,
         furnitureExp: nextTrackExp
       })
-        .then(applyFurnitureProgressSync)
-        .catch(err => console.warn('Furniture progress sync failed:', err))
     } else {
       authStore.clearFurnitureProgress()
     }
@@ -524,16 +528,16 @@ export const useGamificationStore = defineStore('gamification', () => {
     const currentTrack = currentGamification.buildTrack || 'house'
     const fallbackLevel = currentGamification.currentLevel ?? DEFAULT_GAMIFICATION.currentLevel
     const fallbackMaxExp = currentGamification.nextLevelExp
-    const fallbackExp = Number(currentGamification.experiencePoints) || 0
+    const fallbackExp = toFiniteNumber(currentGamification.experiencePoints)
 
-    const rawLevel = Number(growth.level)
+    const rawLevel = toFiniteNumber(growth.level, NaN)
     const nextLevel = Number.isFinite(rawLevel) ? Math.max(1, Math.trunc(rawLevel)) : fallbackLevel
     const fallbackLevelTitle = currentGamification.levelTitle || LEVEL_TITLES[nextLevel] || DEFAULT_GAMIFICATION.levelTitle
     const nextLevelTitle = growth.levelLabel || fallbackLevelTitle
-    const rawMaxExp = Number(growth.maxExp)
+    const rawMaxExp = toFiniteNumber(growth.maxExp, NaN)
     const nextMaxExp = Number.isFinite(rawMaxExp) ? rawMaxExp : fallbackMaxExp
-    const expChange = Number(growth.expChange) || 0
-    const rawCurrentExp = Number(growth.currentExp)
+    const expChange = toFiniteNumber(growth.expChange)
+    const rawCurrentExp = toFiniteNumber(growth.currentExp, NaN)
     const nextExp = Number.isFinite(rawCurrentExp)
       ? Math.max(0, rawCurrentExp)
       : Math.max(0, fallbackExp + expChange)
@@ -605,13 +609,11 @@ export const useGamificationStore = defineStore('gamification', () => {
       })
 
       // 서버에도 동기화
-      syncFurnitureProgressToServer({
+      requestFurnitureProgressSync({
         buildTrack: 'furniture',
         furnitureStage: nextFurnitureStage,
         furnitureExp: accumulatedExp
       })
-        .then(applyFurnitureProgressSync)
-        .catch(err => console.warn('Furniture progress sync failed:', err))
     }
   }
 
