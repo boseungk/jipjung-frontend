@@ -10,7 +10,7 @@
           button-text="인테리어 시작하기"
           @confirm="handleUnlockConfirm"
         />
-        <div class="scene-inner">
+        <div class="scene-inner" :class="{ 'scene-inner--no-goal': !hasGoal }">
           <!-- WebP Stage -->
           <div v-if="isHouseTrack" ref="houseStageRef" class="stage-frame" aria-label="집 단계 애니메이션">
             <img
@@ -58,6 +58,19 @@
           <div v-else-if="isLoading" class="stage-loader">
             게이미피케이션 일러스트를 불러오는 중...
           </div>
+
+          <!-- Empty State: No Goal Overlay -->
+          <transition name="fade-overlay">
+            <div v-if="!hasGoal && !isLoading" class="no-goal-overlay">
+              <div class="no-goal-card">
+                <h3 class="no-goal-title">나만의 드림홈을 찾아보세요</h3>
+                <p class="no-goal-desc">목표를 설정하면 집이 함께 성장해요</p>
+              <button class="btn btn-primary no-goal-cta" @click="goToProperties">
+                  <span>매물 둘러보기</span>
+                </button>
+              </div>
+            </div>
+          </transition>
         </div>
 
         <!-- Stage Message -->
@@ -89,6 +102,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import gsap from 'gsap'
 import AppIcon from '../common/AppIcon.vue'
 import ShowroomUnlockModal from '../modals/ShowroomUnlockModal.vue'
@@ -158,13 +172,23 @@ const particlesRef = ref(null)
 // Stores
 // ============================================================================
 
+const router = useRouter()
 const gamificationStore = useGamificationStore()
 const { buildTrack, houseStage, furnitureStage } = storeToRefs(gamificationStore)
 
 const authStore = useAuthStore()
+const { hasDreamHomeGoal } = storeToRefs(authStore)
 
 const displayTrack = ref(buildTrack.value || 'house')
 const isUnlockModalOpen = ref(false)
+
+// 목표 설정 여부
+const hasGoal = computed(() => hasDreamHomeGoal.value)
+
+// 매물 보러가기
+function goToProperties() {
+  router.push('/properties')
+}
 
 // ============================================================================
 // Computed Properties
@@ -727,6 +751,110 @@ html[data-theme='night'] .dot {
   }
 }
 
+/* ============================================
+   No Goal Empty State
+   ============================================ */
+
+/* Blur effect on images when no goal */
+.scene-inner--no-goal .stage-frame {
+  filter: blur(8px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Overlay container */
+.no-goal-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+/* CTA Card */
+.no-goal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 1.75rem 2rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  max-width: 280px;
+}
+
+html[data-theme='night'] .no-goal-card {
+  background: rgba(40, 42, 48, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.no-goal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(255, 107, 61, 0.15), 
+    rgba(255, 154, 117, 0.1)
+  );
+  color: var(--brand-accent, #ff6b3d);
+}
+
+html[data-theme='night'] .no-goal-icon {
+  background: linear-gradient(135deg,
+    rgba(255, 107, 61, 0.25),
+    rgba(255, 154, 117, 0.15)
+  );
+}
+
+.no-goal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink-base, #1f2937);
+}
+
+html[data-theme='night'] .no-goal-title {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+.no-goal-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-muted, #6b7280);
+  line-height: 1.5;
+}
+
+html[data-theme='night'] .no-goal-desc {
+  color: rgba(245, 246, 247, 0.7);
+}
+
+/* CTA Button - 전역 btn btn-primary 사용, 최소한의 로컬 조정만 */
+.no-goal-cta {
+  margin-top: 0.5rem;
+}
+
+/* Fade transition for overlay */
+.fade-overlay-enter-active,
+.fade-overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-overlay-enter-from,
+.fade-overlay-leave-to {
+  opacity: 0;
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   .hero-card {
@@ -736,6 +864,20 @@ html[data-theme='night'] .dot {
 
   .scene-inner {
     min-height: 200px;
+  }
+
+  .no-goal-card {
+    padding: 1.25rem 1.5rem;
+    max-width: 260px;
+  }
+
+  .no-goal-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .no-goal-title {
+    font-size: 1rem;
   }
 }
 </style>

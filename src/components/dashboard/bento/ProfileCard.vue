@@ -33,12 +33,10 @@
         <div v-if="showLevelInfo" class="level-info-popup">
           <p class="level-info-title">레벨 시스템 안내</p>
           <ul class="level-info-list">
-            <li><strong>Lv.1~3:</strong> 기초 단계 (씨앗 심기)</li>
-            <li><strong>Lv.4~6:</strong> 성장 단계 (뿌리 내리기)</li>
-            <li><strong>Lv.7~9:</strong> 발전 단계 (꽃 피우기)</li>
-            <li><strong>Lv.10+:</strong> 마스터 단계 (열매 맺기)</li>
+            <li><strong>집 짓기:</strong> 6단계 (터파기 → 완공)</li>
+            <li><strong>인테리어:</strong> 5단계 (집 완공 후)</li>
           </ul>
-          <p class="level-info-desc">저축을 통해 XP를 쌓고 레벨업하세요!</p>
+          <p class="level-info-desc">저축으로 XP를 모아 내 집을 완성하세요!</p>
         </div>
       </Transition>
     </div>

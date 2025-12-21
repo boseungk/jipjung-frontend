@@ -326,12 +326,12 @@ html[data-theme="night"] .meta-change.is-down {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1rem;
   min-height: 170px;
-  padding: 1.5rem;
-  background: var(--surface-muted, #f9fafb);
-  border-radius: 12px;
-  border: 1px dashed var(--border-muted, #e5e7eb);
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(255, 127, 80, 0.04), rgba(255, 154, 117, 0.02));
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 127, 80, 0.25);
 }
 
 .empty-state-inner {
@@ -351,14 +351,43 @@ html[data-theme="night"] .meta-change.is-down {
   font-size: 0.875rem;
   text-align: center;
   margin: 0;
+  line-height: 1.5;
 }
 
-/* .start-saving-btn visuals live in src/assets/css/components/buttons.css */
+.start-saving-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, var(--brand-accent, #ff6b3d), #ff8f6b);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px -4px rgba(255, 107, 61, 0.4);
+}
+
+.start-saving-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(255, 107, 61, 0.5);
+}
+
+.start-saving-btn:active {
+  transform: translateY(0);
+}
 
 /* 다크모드 대응 */
 html[data-theme="night"] .no-data-placeholder {
-  background: var(--surface-muted, #1f2937);
-  border-color: var(--border-muted, #374151);
+  background: linear-gradient(135deg, rgba(255, 127, 80, 0.08), rgba(255, 127, 80, 0.03));
+  border-color: rgba(255, 127, 80, 0.2);
+}
+
+html[data-theme="night"] .no-data-text {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 html[data-theme="night"] .meta-primary {

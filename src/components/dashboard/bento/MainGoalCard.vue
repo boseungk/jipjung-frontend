@@ -61,7 +61,7 @@
         <p class="empty-desc">
           꿈의 집을 선택하고<br>저축 목표를 시작해보세요!
         </p>
-        <button class="explore-button" @click="goToProperties">
+        <button class="btn btn-primary" @click="goToProperties">
           <AppIcon name="search" :size="18" />
           <span>매물 둘러보기</span>
         </button>

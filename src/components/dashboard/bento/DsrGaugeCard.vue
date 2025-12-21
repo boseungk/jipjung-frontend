@@ -21,7 +21,8 @@
     <div class="status-info">
       <AppIcon name="checkCircle" :size="18" :active="true" class="status-icon" aria-hidden="true" />
       <span class="status-text">기존 상환 {{ formatWon(existingLoanMonthly) }} · 여력 {{ formatWon(monthlyRepaymentCapacity) }}</span>
-      <InfoTooltip :description="`DSR ${DSR_THRESHOLDS.SAFE}% 이하 시 대출 승인에 유리해요`" id="dsr-criteria-tooltip" />
+      <InfoTooltip description="• 기존 상환: 현재 갚고 있는 월 상환액
+• 여력: 추가 대출 가능한 월 한도" id="dsr-criteria-tooltip" />
     </div>
   </div>
 </template>
@@ -180,30 +181,34 @@ html[data-theme="night"] .tone-danger {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 0.75rem;
-  background: var(--surface-muted, #f3f4f6);
-  border-radius: 10px;
-  border: 1px solid var(--border-soft, #e5e7eb);
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08);
 }
 
 .status-icon {
   color: var(--brand-accent, #ff6b3d);
+  flex-shrink: 0;
 }
 
 .status-text {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--ink-base, #1f2937);
+  color: var(--ink-base, #374151);
+  letter-spacing: -0.01em;
 }
 
 html[data-theme="night"] .status-info {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
 }
 
 html[data-theme="night"] .status-text {
-  color: var(--showroom-text-night, #f9fafb);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 </style>

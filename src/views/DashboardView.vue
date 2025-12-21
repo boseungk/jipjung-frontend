@@ -4,7 +4,6 @@
     <header class="page-header">
       <div class="header-content">
         <div class="header-left">
-          <AppIcon name="house" :size="28" weight="fill" />
           <h1>라이프스타일 쇼룸</h1>
         </div>
         <p class="subtitle">당신의 저축을 아름다운 공간으로 전시하세요</p>
