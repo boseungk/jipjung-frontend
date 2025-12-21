@@ -56,6 +56,20 @@ const MOOD_LABELS = Object.freeze({
     ANNOYED: '짜증'
 })
 
+/**
+ * 기분-이미지 매핑 (mood → 이미지 파일명)
+ * @readonly
+ */
+const MOOD_IMAGE_MAP = Object.freeze({
+    NORMAL: 'normal.webp',
+    ANGRY: 'upset.webp',
+    HAPPY: 'curious.webp',
+    STRICT: 'strict.webp',
+    CURIOUS: 'curious.webp',
+    CONFUSED: 'confuse.webp',
+    ANNOYED: 'upset.webp'
+})
+
 export const useAiManagerStore = defineStore('aiManager', () => {
     // =========================================================================
     // State
@@ -120,6 +134,13 @@ export const useAiManagerStore = defineStore('aiManager', () => {
 
     /** 현재 레제의 기분 라벨 */
     const currentMoodLabel = computed(() => persona.value?.moodLabel ?? '보통')
+
+    /** 현재 레제의 감정 이미지 URL */
+    const currentMoodImageUrl = computed(() => {
+        const mood = currentMood.value
+        const filename = MOOD_IMAGE_MAP[mood] ?? 'normal.webp'
+        return new URL(`../assets/images/characters/${filename}`, import.meta.url).href
+    })
 
     /** 주요 액션 로딩 여부 (오버레이 노출용) */
     const isOverlayLoading = computed(() => actionLoading.value)
@@ -402,6 +423,7 @@ export const useAiManagerStore = defineStore('aiManager', () => {
         currentScript,
         currentMood,
         currentMoodLabel,
+        currentMoodImageUrl,
         isOverlayLoading,
         overlayType,
         isActionLoading,

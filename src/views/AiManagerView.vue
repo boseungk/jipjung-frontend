@@ -12,15 +12,13 @@
       <aside class="sidebar">
         <!-- Character Profile Card -->
         <div class="profile-card card">
-          <div class="character-image-wrapper">
+          <div ref="characterImageWrapperRef" class="character-image-wrapper">
             <img 
-              :src="rezeImageUrl"
+              ref="characterImageRef"
+              :src="currentMoodImageUrl"
               alt="레제" 
               class="character-image"
             />
-            <div class="character-badge" :class="badgeClass">
-              {{ statusEmoji }}
-            </div>
           </div>
           
           <div class="character-info">
@@ -128,17 +126,34 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAiManagerStore, AI_MANAGER_STATUS } from '@/stores/aiManagerStore'
 import { useAuthStore } from '@/stores/authStore'
 import { getCategoryEmoji } from '@/constants/spendingCategories'
 import AppIcon from '@/components/common/AppIcon.vue'
-import rezeImageUrl from '@/assets/images/reze.png'
+import gsap from 'gsap'
 import SpendingInputModal from '@/components/ai/SpendingInputModal.vue'
 import ExcuseSelector from '@/components/ai/ExcuseSelector.vue'
 import JudgmentResult from '@/components/ai/JudgmentResult.vue'
 import HistoryList from '@/components/ai/HistoryList.vue'
 import LoadingOverlay from '@/components/ai/LoadingOverlay.vue'
+
+// Character emotion images
+import normalImg from '@/assets/images/characters/normal.webp'
+import strictImg from '@/assets/images/characters/strict.webp'
+import curiousImg from '@/assets/images/characters/curious.webp'
+import confuseImg from '@/assets/images/characters/confuse.webp'
+import upsetImg from '@/assets/images/characters/upset.webp'
+
+const MOOD_IMAGE_MAP = {
+  NORMAL: normalImg,
+  ANGRY: upsetImg,
+  HAPPY: curiousImg,
+  STRICT: strictImg,
+  CURIOUS: curiousImg,
+  CONFUSED: confuseImg,
+  ANNOYED: upsetImg
+}
 
 // ============================================================================
 // Store
@@ -157,9 +172,53 @@ const showHistory = ref(false)
 let clockTimeoutId = null
 let clockIntervalId = null
 
+// Refs for animation
+const characterImageRef = ref(null)
+const characterImageWrapperRef = ref(null)
+
+// ============================================================================
+// Mood Change Animation
+// ============================================================================
+
+watch(
+  () => aiManagerStore.currentMood,
+  (newMood, oldMood) => {
+    // 초기 로드 시나 동일 mood는 애니메이션 스킵
+    if (!oldMood || newMood === oldMood) return
+
+    // 이미지 bounce + glow 애니메이션
+    if (characterImageWrapperRef.value) {
+      gsap.timeline()
+        .to(characterImageWrapperRef.value, {
+          scale: 1.15,
+          duration: 0.25,
+          ease: 'back.out(1.7)'
+        })
+        .to(characterImageWrapperRef.value, {
+          scale: 1,
+          duration: 0.3,
+          ease: 'power2.out'
+        })
+    }
+
+    // Glow 효과 (CSS 클래스로 처리)
+    if (characterImageRef.value) {
+      characterImageRef.value.classList.add('mood-changed')
+      setTimeout(() => {
+        characterImageRef.value?.classList.remove('mood-changed')
+      }, 800)
+    }
+  }
+)
+
 // ============================================================================
 // Computed
 // ============================================================================
+
+const currentMoodImageUrl = computed(() => {
+  const mood = aiManagerStore.currentMood
+  return MOOD_IMAGE_MAP[mood] ?? normalImg
+})
 
 const receiptInfo = computed(() => aiManagerStore.receiptInfo)
 
@@ -451,30 +510,56 @@ html[data-theme="night"] .card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
 }
 
 .character-image-wrapper {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 100%;
+  max-width: 240px;
   /* 3D elevation: outer shadow for lift effect */
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
 }
 
 .character-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  height: auto;
+  object-fit: contain;
   background: transparent;
-  border: 3px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  transition: transform 0.3s ease;
+  /* Improve image quality when scaling down */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 html[data-theme="night"] .character-image {
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Mood Change Glow Animation */
+.character-image.mood-changed {
+  border-color: var(--brand-accent, #ff6b3d);
+  box-shadow: 
+    0 0 20px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.5),
+    0 0 40px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.3);
+  animation: glow-pulse 0.8s ease-out;
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 25px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.6),
+      0 0 50px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.3);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .character-badge {
