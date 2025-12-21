@@ -27,7 +27,7 @@
           목표를 설정하고 저축을 시작하면<br>
           여기서 집짓기 여정을 확인할 수 있어요!
         </p>
-        <button class="cta-button" @click="goToPropertySearch">
+        <button class="btn btn-primary" @click="goToPropertySearch">
           <AppIcon name="magnifyingGlass" :size="20" weight="bold" />
           <span>매물 둘러보기</span>
         </button>
@@ -307,21 +307,11 @@ html[data-theme="night"] .cta-card {
 }
 
 .cta-icon-wrapper {
-  width: 100px;
-  height: 100px;
   margin: 0 auto 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--showroom-bg-day, #F9F8F6);
-  border-radius: 50%;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   animation: float 3s ease-in-out infinite;
-}
-
-html[data-theme="night"] .cta-icon-wrapper {
-  background: var(--showroom-bg-night, #3a3530);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes float {
@@ -352,33 +342,7 @@ html[data-theme="night"] .cta-description {
   color: rgba(245, 237, 227, 0.7);
 }
 
-.cta-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--app-btn-gap, 0.55rem);
-  padding: var(--app-btn-padding-y, 0.95rem) var(--app-btn-padding-x, 1.6rem);
-  min-height: var(--app-btn-min-height, 52px);
-  background: var(--brand-accent, #FF7F50);
-  color: white;
-  border: none;
-  border-radius: var(--app-btn-radius, 12px);
-  font-size: var(--app-btn-font-size, 1.05rem);
-  font-weight: var(--app-btn-font-weight, 700);
-  line-height: var(--app-btn-line-height, 1.2);
-  cursor: pointer;
-  transition: var(--app-btn-transition, all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1));
-  box-shadow: 0 4px 14px rgba(255, 127, 80, 0.35);
-}
 
-.cta-button:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(255, 127, 80, 0.45);
-}
-
-.cta-button:active {
-  transform: translateY(0) scale(0.98);
-}
 
 .cta-hint {
   font-size: 0.875rem;

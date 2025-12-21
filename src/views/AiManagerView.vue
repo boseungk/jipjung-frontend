@@ -106,8 +106,8 @@
           </div>
         </div>
 
-        <!-- History Section (Toggle) -->
-        <div v-if="showHistory" class="history-section">
+        <!-- History Section (Auto-show on IDLE or Toggle) -->
+        <div v-if="showHistory || aiManagerStore.isIdle" class="history-section">
           <HistoryList />
         </div>
       </main>
@@ -321,6 +321,10 @@ const toggleHistoryView = () => {
 
 onMounted(() => {
   startClock()
+  // IDLE 상태면 히스토리 미리 로드
+  if (aiManagerStore.isIdle) {
+    aiManagerStore.fetchHistory()
+  }
 })
 
 onUnmounted(() => {
@@ -461,34 +465,16 @@ html[data-theme="night"] .card {
 .character-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 50%;
-  
-  /* Glassmorphic background */
-  background: linear-gradient(145deg,
-    rgba(255, 255, 255, 0.8),
-    rgba(255, 255, 255, 0.4)
-  );
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   border: 3px solid rgba(255, 255, 255, 0.6);
-  
-  /* Multi-layer depth shadow */
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.08),
-    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 html[data-theme="night"] .character-image {
-  background: linear-gradient(145deg,
-    rgba(255, 255, 255, 0.12),
-    rgba(255, 255, 255, 0.06)
-  );
   border-color: rgba(255, 255, 255, 0.2);
-  
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.25),
-    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .character-badge {
