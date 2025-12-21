@@ -9,7 +9,7 @@
           DSR 시뮬레이션
         </InfoTooltip>
       </h1>
-      <p class="view-subtitle">내 소득과 부채로 2026년 정책 기반 PRO 분석</p>
+      <p class="view-subtitle">내 소득과 부채로 2026년 정책 기반 분석</p>
     </div>
   </header>
 </template>

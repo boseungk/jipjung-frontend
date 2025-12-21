@@ -1,7 +1,10 @@
 <template>
   <div class="section-header">
     <div>
-      <h2 class="section-title">PRO 시뮬레이션</h2>
+      <InfoTooltip description="지역/대출 조건을 입력하면
+내 소득으로 최대 얼마까지 대출받을 수 있는지 계산해드려요!" id="sim-usage-tip">
+        <h2 class="section-title">시뮬레이션</h2>
+      </InfoTooltip>
       <p class="section-description">입력값에 따라 최대 대출 가능액과 등급을 계산해요</p>
     </div>
   </div>
@@ -114,6 +117,7 @@ import { storeToRefs } from 'pinia'
 import { useDsrStore } from '@/stores/dsrStore'
 import { useAuthStore } from '@/stores/authStore'
 import { toWonMaybe } from '@/utils/krwUnits'
+import InfoTooltip from '@/components/common/InfoTooltip.vue'
 
 const dsrStore = useDsrStore()
 const authStore = useAuthStore()

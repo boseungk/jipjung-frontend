@@ -693,8 +693,9 @@ html[data-theme='night'] .result-hero.tone-warning {
 
 .secondary-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 3.5rem;
 }
 /* Action button visuals live in src/assets/css/components/buttons.css */
 
