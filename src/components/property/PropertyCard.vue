@@ -88,7 +88,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
-import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useDsrStore } from '@/stores/dsrStore'
 import { 
   PhHouse, 
   PhMapPin, 
@@ -108,26 +108,25 @@ const props = defineProps({
 const emit = defineEmits(['select', 'save'])
 
 const propertyStore = usePropertyStore()
-const dreamHomeStore = useDreamHomeStore()
+const dsrStore = useDsrStore()
 const { selectedProperty, savedPropertyIds } = storeToRefs(propertyStore)
-const { targetAmount } = storeToRefs(dreamHomeStore)
+const { maxLoanAmount, gapAnalysis } = storeToRefs(dsrStore)
 
 const isSelected = computed(() => selectedProperty.value?.id === props.property.id)
 const propertyAptSeq = computed(() => props.property.aptSeq || props.property.id)
 const isSaved = computed(() => savedPropertyIds.value.includes(propertyAptSeq.value))
 
-// 구매 가능 여부
+// 구매 가능 여부: 현재 자산 + 대출 가능액 >= 매물 가격
 const isAffordable = computed(() => {
-  const targetAmountWon = Number(targetAmount.value) || 0
-  if (targetAmountWon <= 0) return false
-
-  if (typeof props.property?.isAffordableByTargetAmount === 'function') {
-    return props.property.isAffordableByTargetAmount(targetAmountWon)
-  }
+  const currentAssets = gapAnalysis.value?.currentAssets || 0  // 원 단위
+  const loanLimit = maxLoanAmount.value || 0  // 원 단위
+  const totalBudgetWon = currentAssets + loanLimit
+  
+  if (totalBudgetWon <= 0) return false
 
   const priceManwon = Number(props.property?.price) || 0
-  const downPaymentWon = Math.ceil(priceManwon * 10000 * 0.3)
-  return downPaymentWon <= targetAmountWon
+  const priceWon = priceManwon * 10000
+  return priceWon <= totalBudgetWon
 })
 
 function cleanFloor(floor) {
@@ -416,15 +415,43 @@ html[data-theme="night"] .feature-tag {
   background: rgba(var(--brand-accent-rgb, 255, 127, 80), 0.2);
 }
 
-/* Affordable Highlight */
-.property-card.affordable::before {
-  content: '';
+/* Affordable Highlight - Premium Design */
+.property-card.affordable {
+  border: 2px solid transparent;
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)) padding-box,
+    linear-gradient(135deg, #10B981, #34D399, #6EE7B7) border-box;
+  box-shadow: 
+    0 4px 6px -1px rgba(16, 185, 129, 0.15),
+    0 2px 4px -1px rgba(16, 185, 129, 0.1);
+}
+
+html[data-theme="night"] .property-card.affordable {
+  background: 
+    linear-gradient(rgba(45, 45, 45, 0.85), rgba(45, 45, 45, 0.85)) padding-box,
+    linear-gradient(135deg, #10B981, #34D399, #6EE7B7) border-box;
+}
+
+.property-card.affordable:hover {
+  box-shadow: 
+    0 20px 25px -5px rgba(16, 185, 129, 0.2),
+    0 10px 10px -5px rgba(16, 185, 129, 0.1);
+}
+
+/* Affordable Badge in Image */
+.property-card.affordable .card-image-wrapper::after {
+  content: '구매 가능';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: #66BB6A;
-  z-index: 5;
+  bottom: 1rem;
+  left: 1rem;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  z-index: 10;
 }
 </style>

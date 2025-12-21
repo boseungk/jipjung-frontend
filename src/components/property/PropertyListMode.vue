@@ -121,7 +121,7 @@
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
-import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useDsrStore } from '@/stores/dsrStore'
 import { usePropertyFilters } from '@/composables/usePropertyFilters'
 import {
   PhSliders,
@@ -139,9 +139,9 @@ import SkeletonCard from './SkeletonCard.vue'
 const emit = defineEmits(['openFilters'])
 
 const propertyStore = usePropertyStore()
-const dreamHomeStore = useDreamHomeStore()
+const dsrStore = useDsrStore()
 const { filteredProperties, loading, filters } = storeToRefs(propertyStore)
-const { targetAmount } = storeToRefs(dreamHomeStore)
+const { maxLoanAmount, gapAnalysis } = storeToRefs(dsrStore)
 
 // Composable에서 필터 관련 computed/methods 가져오기
 const {
@@ -175,28 +175,32 @@ const hasActivePriceFilter = computed(() => {
 })
 
 // 예산 필터 활성 여부
-// targetAmount는 원 단위, 매물가격은 만원 단위
-// 계약금(30%) 기준: 매물가격(만원) × 10000 × 0.3 ≤ targetAmount(원)
-// → 매물가격(만원) ≤ targetAmount / 10000 / 0.3
+// 구매 가능 금액 = 현재 자산 + 대출 가능액 (둘 다 원 단위)
+// 매물 가격은 만원 단위이므로 변환 필요
+const budgetLimitManwon = computed(() => {
+  const currentAssets = gapAnalysis.value?.currentAssets || 0
+  const loanLimit = maxLoanAmount.value || 0
+  const totalBudgetWon = currentAssets + loanLimit
+  return Math.floor(totalBudgetWon / 10000)  // 원 → 만원
+})
+
 const isBudgetFilterActive = computed(() => {
-  const target = targetAmount.value
-  if (!target || target <= 0) return false
-  const budgetLimitManwon = Math.floor(target / 10000 / 0.3)
-  return filters.value.priceMax === budgetLimitManwon
+  const limit = budgetLimitManwon.value
+  if (!limit || limit <= 0) return false
+  return filters.value.priceMax === limit
 })
 
 /**
  * 예산 필터 토글
- * targetAmount(원) / 10000 / 0.3 = 구매 가능 최대 매물가(만원)
+ * 구매 가능 금액 = 현재 자산 + 대출 가능액
  */
 function toggleBudgetFilter() {
   if (isBudgetFilterActive.value) {
     propertyStore.updateFilters({ priceMax: null })
   } else {
-    const target = targetAmount.value
-    if (!target || target <= 0) return
-    const budgetLimitManwon = Math.floor(target / 10000 / 0.3)
-    propertyStore.updateFilters({ priceMax: budgetLimitManwon })
+    const limit = budgetLimitManwon.value
+    if (!limit || limit <= 0) return
+    propertyStore.updateFilters({ priceMax: limit })
   }
 }
 

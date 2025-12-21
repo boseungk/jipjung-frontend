@@ -87,16 +87,15 @@ export const propertyService = {
    */
   async getProperties(options = {}) {
     const { filters = {}, sortBy, sortOrder, page = 1, limit = 50 } = options
+    const params = {
+      ...filters,
+      sortBy,
+      sortOrder,
+      page: Math.max(0, page - 1), // 백엔드는 0-based, 프론트엔드는 1-based
+      size: limit // 백엔드는 size 사용
+    }
 
-    const response = await apiClient.get(PROPERTY_ENDPOINTS.LIST, {
-      params: {
-        ...filters,
-        sortBy,
-        sortOrder,
-        page: Math.max(0, page - 1), // 백엔드는 0-based, 프론트엔드는 1-based
-        size: limit // 백엔드는 size 사용
-      }
-    })
+    const response = await apiClient.get(PROPERTY_ENDPOINTS.LIST, { params })
 
     // 백엔드 ApiResponse 구조: { code, status, message, data: { apartments, totalCount, ... } }
     return response.data.data || response.data

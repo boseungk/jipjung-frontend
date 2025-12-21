@@ -5,7 +5,7 @@
  * dreamHomeStore 패턴을 따라 setup pattern으로 구현
  */
 
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { propertyService } from '@/api/services/propertyService'
 import { useDreamHomeStore } from './dreamHomeStore'
@@ -21,6 +21,7 @@ export const usePropertyStore = defineStore('property', () => {
     const loading = ref(false) // 로딩 상태
     const error = ref(null) // 에러 메시지
     const authStore = useAuthStore()
+    const { userPreferredAreas } = storeToRefs(authStore)
 
     // 관심 아파트 (백엔드 /api/apartments/favorites 연동)
     const favorites = ref([]) // FavoriteResponse 배열: [{id, aptSeq, apartmentInfo...}]
@@ -55,6 +56,7 @@ export const usePropertyStore = defineStore('property', () => {
     const totalPages = ref(1)
     const totalProperties = ref(0)
     const itemsPerPage = ref(50)
+    const preferredRegionApplied = ref(false)
 
     // Computed: 관심 아파트 aptSeq 목록
     const favoriteAptSeqs = computed(() => favorites.value.map(f => f.aptSeq))
@@ -63,6 +65,49 @@ export const usePropertyStore = defineStore('property', () => {
     const savedPropertyIds = computed(() => favoriteAptSeqs.value)
 
     // Getters (Computed)
+
+    function parsePreferredArea(area) {
+        if (!area) return null
+
+        if (typeof area === 'string') {
+            const tokens = area.trim().split(/\s+/).filter(Boolean)
+            if (tokens.length < 2) return null
+            const sigungu = tokens[tokens.length - 1]
+            const sido = tokens.slice(0, -1).join(' ')
+            return { sido, sigungu }
+        }
+
+        if (area.sido && area.sigungu) {
+            return { sido: area.sido, sigungu: area.sigungu }
+        }
+
+        return null
+    }
+
+    function resolvePreferredRegion() {
+        const preferredAreas = userPreferredAreas.value || []
+        if (preferredAreas.length === 0) return null
+        return parsePreferredArea(preferredAreas[0])
+    }
+
+    function applyPreferredRegionIfEmpty() {
+        if (preferredRegionApplied.value) return false
+        if (filters.value.sigungu) {
+            preferredRegionApplied.value = true
+            return false
+        }
+
+        const preferred = resolvePreferredRegion()
+        if (!preferred) return false
+
+        filters.value = {
+            ...filters.value,
+            sido: preferred.sido,
+            sigungu: preferred.sigungu
+        }
+        preferredRegionApplied.value = true
+        return true
+    }
 
     /**
      * 필터가 적용된 매물 목록
@@ -99,11 +144,6 @@ export const usePropertyStore = defineStore('property', () => {
         }
         if (filters.value.areaMax !== null) {
             result = result.filter((p) => p.area <= filters.value.areaMax)
-        }
-
-        // 지역 필터
-        if (filters.value.sigungu) {
-            result = result.filter((p) => p.sigungu === filters.value.sigungu)
         }
 
         // 방 개수 필터 (null 안전 처리)
@@ -219,6 +259,7 @@ export const usePropertyStore = defineStore('property', () => {
         error.value = null
 
         try {
+            applyPreferredRegionIfEmpty()
             const response = await propertyService.getProperties({
                 filters: filters.value,
                 sortBy: sortBy.value,
@@ -601,6 +642,17 @@ export const usePropertyStore = defineStore('property', () => {
         { immediate: true }
     )
 
+    watch(
+        userPreferredAreas,
+        () => {
+            const applied = applyPreferredRegionIfEmpty()
+            if (applied && !loading.value) {
+                fetchProperties({ page: 1 })
+            }
+        },
+        { immediate: true }
+    )
+
     /**
      * 필터 업데이트
      * @param {Object} newFilters - 새로운 필터
@@ -652,6 +704,8 @@ export const usePropertyStore = defineStore('property', () => {
             keyword: '',
             favoritesOnly: false
         }
+        preferredRegionApplied.value = false
+        applyPreferredRegionIfEmpty()
     }
 
     /**

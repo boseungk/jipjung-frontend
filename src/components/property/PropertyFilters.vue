@@ -1,9 +1,16 @@
 <template>
   <Teleport to="body">
-    <Transition name="bottom-sheet">
+    <Transition
+      name="bottom-sheet"
+      @before-enter="isAnimating = true"
+      @after-enter="isAnimating = false"
+      @before-leave="isAnimating = true"
+      @after-leave="isAnimating = false"
+    >
       <div
         v-if="isOpen"
         class="bottom-sheet-overlay"
+        :class="{ 'is-animating': isAnimating }"
         @click.self="closeSheet"
       >
         <div 
@@ -220,6 +227,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'apply'])
 
+const isAnimating = ref(false)
+
 // Composable에서 필터 로직 가져오기
 const {
   localFilters,
@@ -352,11 +361,24 @@ async function handleReset() {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 9999;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+.bottom-sheet-overlay.is-animating {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.bottom-sheet-overlay.is-animating .filter-section,
+.bottom-sheet-overlay.is-animating .preset-chip,
+.bottom-sheet-overlay.is-animating .segmented-control {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* ========================================
@@ -465,7 +487,8 @@ html[data-theme="night"] .close-btn {
    ======================================== */
 .filter-section {
   background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 16px;
   padding: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.03);
@@ -541,7 +564,6 @@ html[data-theme="night"] .filter-select {
   border-radius: var(--app-btn-radius, 12px);
   border: 1.5px solid var(--nav-btn-border-day, rgba(0, 0, 0, 0.06));
   background: var(--nav-btn-bg-day, rgba(255, 255, 255, 0.82));
-  backdrop-filter: blur(var(--nav-btn-blur-day, 8px));
   font-size: var(--font-size-body-small, 0.875rem);
   font-weight: var(--font-weight-medium, 500);
   cursor: pointer;
@@ -553,7 +575,6 @@ html[data-theme="night"] .filter-select {
 html[data-theme="night"] .preset-chip {
   border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
   background: var(--nav-btn-bg-night, rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(var(--nav-btn-blur-night, 16px));
   color: var(--showroom-text-night);
   box-shadow: var(--nav-btn-shadow-night);
 }
@@ -580,7 +601,6 @@ html[data-theme="night"] .preset-chip:hover {
 .segmented-control {
   display: flex;
   background: var(--nav-btn-bg-day, rgba(255, 255, 255, 0.82));
-  backdrop-filter: blur(var(--nav-btn-blur-day, 8px));
   border-radius: var(--app-btn-radius, 12px);
   padding: 4px;
   gap: 4px;
@@ -590,7 +610,6 @@ html[data-theme="night"] .preset-chip:hover {
 
 html[data-theme="night"] .segmented-control {
   background: var(--nav-btn-bg-night, rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(var(--nav-btn-blur-night, 16px));
   box-shadow: var(--nav-btn-shadow-night);
   border-color: var(--nav-btn-border-night, rgba(255, 255, 255, 0.15));
 }

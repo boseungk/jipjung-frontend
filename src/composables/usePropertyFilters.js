@@ -17,6 +17,7 @@ import {
     formatPriceLabel,
     formatAreaLabel
 } from '@/constants/filterPresets'
+import { getSigunguList } from '@/constants/regions'
 
 /**
  * 필터 기본값
@@ -40,7 +41,7 @@ const DEFAULT_SORT = {
 
 export function usePropertyFilters() {
     const propertyStore = usePropertyStore()
-    const { filters, sortBy, sortOrder, filteredProperties, properties } = storeToRefs(propertyStore)
+    const { filters, sortBy, sortOrder, filteredProperties } = storeToRefs(propertyStore)
 
     // 로컬 필터 상태 (Store 반영 전 임시 상태)
     const localFilters = ref({ ...DEFAULT_FILTERS })
@@ -48,10 +49,8 @@ export function usePropertyFilters() {
 
     // 사용 가능한 시/군/구 옵션 (현재 데이터 기반)
     const availableSigunguOptions = computed(() => {
-        const values = (properties.value || [])
-            .map((p) => p?.sigungu)
-            .filter(Boolean)
-        return [...new Set(values)].sort((a, b) => a.localeCompare(b, 'ko'))
+        if (!localFilters.value.sido) return []
+        return getSigunguList(localFilters.value.sido)
     })
 
     // 필터링된 결과 수 (실시간)
