@@ -3,8 +3,7 @@
     <!-- Logo -->
     <div class="nav-logo">
       <router-link to="/" class="logo-link">
-        <AppIcon name="house" :size="28" weight="fill" :color="brandAccent" class="logo-icon" />
-        <span class="logo-text">집-중</span>
+        <img src="@/assets/images/brand-name.webp" alt="집-중" class="logo-image" />
       </router-link>
     </div>
 
@@ -59,8 +58,6 @@ import { useDropdown } from '@/composables/useDropdown'
 import { useResponsive } from '@/composables/useResponsive'
 import { useAuthStore } from '@/stores/authStore'
 import { NAV_MENU_ITEMS } from '@/constants/navigation'
-import { BRAND_ACCENT } from '@/constants/colors'
-import AppIcon from './common/AppIcon.vue'
 import NavMenu from './navigation/NavMenu.vue'
 import ThemeControls from './navigation/ThemeControls.vue'
 import UserMenu from './navigation/UserMenu.vue'
@@ -79,7 +76,6 @@ const DROPDOWNS = {
 // Data
 const menuItems = NAV_MENU_ITEMS
 const mobileMenuOpen = ref(false)
-const brandAccent = BRAND_ACCENT
 const navMenuRef = ref(null)
 const userMenuRef = ref(null)
 const mobileHamburgerRef = ref(null)
@@ -228,19 +224,14 @@ html[data-theme="night"] .top-nav {
   opacity: 0.8;
 }
 
-.logo-icon {
-  font-size: 1.75rem;
+.logo-image {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
 }
 
-.logo-text {
-  font-family: var(--font-family-display);
-  font-size: 1.375rem;
-  font-weight: 600;
-  color: var(--showroom-text-day, #5D4037);
-}
-
-html[data-theme="night"] .logo-text {
-  color: var(--showroom-text-night, #F5EDE3);
+html[data-theme="night"] .logo-image {
+  filter: brightness(1.1);
 }
 
 .nav-actions {
@@ -282,8 +273,8 @@ html[data-theme="night"] .hamburger-line {
     padding: 0 1rem;
   }
 
-  .logo-text {
-    font-size: 1.125rem;
+  .logo-image {
+    height: 28px;
   }
 
   .mobile-hamburger {
@@ -292,12 +283,8 @@ html[data-theme="night"] .hamburger-line {
 }
 
 @media (max-width: 480px) {
-  .logo-icon {
-    font-size: 1.5rem;
-  }
-
-  .logo-text {
-    display: none;
+  .logo-image {
+    height: 24px;
   }
 }
 </style>

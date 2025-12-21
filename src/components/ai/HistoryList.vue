@@ -20,7 +20,6 @@
 
     <!-- Empty State -->
     <div v-else-if="history.length === 0" class="empty-state">
-      <span class="empty-icon">📋</span>
       <p class="empty-text">아직 분석 내역이 없습니다</p>
       <p class="empty-subtext">첫 지출을 등록해보세요!</p>
     </div>
@@ -243,8 +242,12 @@ html[data-theme="night"] .loading-spinner {
 }
 
 .empty-icon {
-  font-size: 2.5rem;
-  opacity: 0.5;
+  opacity: 0.4;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+html[data-theme="night"] .empty-icon {
+  color: var(--bento-text-muted);
 }
 
 .empty-text {

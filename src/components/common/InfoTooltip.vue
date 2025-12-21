@@ -182,8 +182,8 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  min-width: 220px;
-  max-width: 300px;
+  min-width: 260px;
+  max-width: 350px;
   padding: 0.875rem 1rem;
   padding-right: 2rem;
   background: var(--surface-card-bg, #fff);
@@ -203,6 +203,7 @@ html[data-theme="night"] .tooltip-content {
 
 .tooltip-content p {
   margin: 0;
+  white-space: pre-line;
 }
 
 .close-btn {
