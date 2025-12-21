@@ -4,7 +4,7 @@
       <!-- 헤더 -->
       <div class="list-header">
         <h2 class="list-title">매물 목록 ({{ filteredProperties.length }})</h2>
-        <button @click="emit('openFilters')" class="filter-icon-btn" aria-label="Filters">
+        <button @click="handleOpenFilters()" class="filter-icon-btn" aria-label="Filters">
           <PhSliders :size="20" weight="bold" />
           <span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
         </button>
@@ -25,31 +25,69 @@
         </button>
       </div>
 
-      <!-- Quick Filters -->
+      <!-- Quick Filters (드롭다운 + 칩) -->
       <div class="quick-filters">
+        <!-- 지역 드롭다운 칩 -->
+        <button 
+          class="chip-btn dropdown-chip" 
+          @click="handleOpenFilters('region')"
+        >
+          <PhMapPin :size="16" weight="bold" />
+          <span>{{ selectedRegionLabel }}</span>
+          <PhCaretDown :size="14" />
+        </button>
+
+        <!-- 가격 드롭다운 칩 -->
+        <button 
+          class="chip-btn dropdown-chip"
+          :class="{ active: hasActivePriceFilter }"
+          @click="handleOpenFilters('price')"
+        >
+          <PhCurrencyKrw :size="16" weight="bold" />
+          <span>{{ selectedPriceLabel }}</span>
+          <PhCaretDown :size="14" />
+        </button>
+
+        <!-- 구분선 -->
+        <div class="chip-divider"></div>
+
+        <!-- 예산 맞춤 -->
         <button
           class="chip-btn"
           :class="{ active: isBudgetFilterActive }"
           @click="toggleBudgetFilter"
         >
-          <PhCurrencyKrw :size="16" weight="bold" />
-          <span>내 예산 맞춤</span>
+          <PhWallet :size="16" weight="bold" />
+          <span>예산맞춤</span>
         </button>
+
+        <!-- 관심 매물 -->
         <button
           class="chip-btn"
           :class="{ active: filters.favoritesOnly }"
           @click="propertyStore.toggleFavoritesFilter()"
         >
           <PhHeart :size="16" :weight="filters.favoritesOnly ? 'fill' : 'regular'" />
-          <span>관심 매물</span>
+          <span>관심</span>
         </button>
-        <button
-          class="chip-btn"
-          :class="{ active: filters.propertyType === '아파트' }"
-          @click="toggleTypeFilter('아파트')"
-        >
-          <PhBuildings :size="16" weight="bold" />
-          <span>아파트</span>
+      </div>
+
+      <!-- Active Filter Tags -->
+      <div v-if="activeFilterTags.length > 0" class="active-filter-tags">
+        <TransitionGroup name="tag">
+          <span 
+            v-for="tag in activeFilterTags" 
+            :key="tag.key" 
+            class="filter-tag"
+          >
+            {{ tag.label }}
+            <button @click="handleRemoveFilter(tag.key)" class="tag-remove-btn" aria-label="Remove filter">
+              <PhX :size="12" weight="bold" />
+            </button>
+          </span>
+        </TransitionGroup>
+        <button v-if="activeFilterTags.length > 1" @click="handleClearAllFilters" class="clear-all-btn">
+          전체 해제
         </button>
       </div>
     </div>
@@ -61,10 +99,9 @@
 
     <!-- Empty State -->
     <div v-else-if="filteredProperties.length === 0" class="empty-state">
-      <div class="empty-icon">🏠</div>
       <h3>검색 조건에 맞는 매물이 없습니다</h3>
       <p>필터를 조정하거나 초기화해보세요</p>
-      <button @click="resetFilters" class="reset-btn">필터 초기화</button>
+      <button @click="handleClearAllFilters" class="reset-btn">필터 초기화</button>
     </div>
 
     <!-- Grid -->
@@ -85,7 +122,17 @@ import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePropertyStore } from '@/stores/propertyStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
-import { PhSliders, PhMagnifyingGlass, PhX, PhCurrencyKrw, PhHeart, PhBuildings } from '@phosphor-icons/vue'
+import { usePropertyFilters } from '@/composables/usePropertyFilters'
+import {
+  PhSliders,
+  PhMagnifyingGlass,
+  PhX,
+  PhMapPin,
+  PhCurrencyKrw,
+  PhCaretDown,
+  PhWallet,
+  PhHeart
+} from '@phosphor-icons/vue'
 import PropertyCard from './PropertyCard.vue'
 import SkeletonCard from './SkeletonCard.vue'
 
@@ -96,7 +143,17 @@ const dreamHomeStore = useDreamHomeStore()
 const { filteredProperties, loading, filters } = storeToRefs(propertyStore)
 const { targetAmount } = storeToRefs(dreamHomeStore)
 
-// 검색 디바운스 (300ms, 외부 의존성 없음)
+// Composable에서 필터 관련 computed/methods 가져오기
+const {
+  activeFilterTags,
+  activeFilterCount,
+  selectedRegionLabel,
+  selectedPriceLabel,
+  removeFilter,
+  resetAllFilters
+} = usePropertyFilters()
+
+// 검색 디바운스
 const searchKeyword = ref(filters.value.keyword || '')
 let searchTimer = null
 
@@ -112,37 +169,69 @@ onBeforeUnmount(() => {
   if (searchTimer) clearTimeout(searchTimer)
 })
 
-const isBudgetFilterActive = computed(() => {
-  if (!targetAmount.value || targetAmount.value <= 0) return false
-  // Check if priceMax is set to our calculated budget
-  const budgetLimit = Math.floor((targetAmount.value / 0.3) / 10000)
-  return filters.value.priceMax === budgetLimit
+// 가격 필터 활성 여부
+const hasActivePriceFilter = computed(() => {
+  return filters.value.priceMin !== null || filters.value.priceMax !== null
 })
 
+// 예산 필터 활성 여부
+// targetAmount는 원 단위, 매물가격은 만원 단위
+// 계약금(30%) 기준: 매물가격(만원) × 10000 × 0.3 ≤ targetAmount(원)
+// → 매물가격(만원) ≤ targetAmount / 10000 / 0.3
+const isBudgetFilterActive = computed(() => {
+  const target = targetAmount.value
+  if (!target || target <= 0) return false
+  const budgetLimitManwon = Math.floor(target / 10000 / 0.3)
+  return filters.value.priceMax === budgetLimitManwon
+})
+
+/**
+ * 예산 필터 토글
+ * targetAmount(원) / 10000 / 0.3 = 구매 가능 최대 매물가(만원)
+ */
 function toggleBudgetFilter() {
   if (isBudgetFilterActive.value) {
-    // Clear filter
     propertyStore.updateFilters({ priceMax: null })
   } else {
-    // Set filter (Target / 30% downpayment)
-    if (!targetAmount.value) return
-    const budgetLimit = Math.floor((targetAmount.value / 0.3) / 10000)
-    propertyStore.updateFilters({ priceMax: budgetLimit })
+    const target = targetAmount.value
+    if (!target || target <= 0) return
+    const budgetLimitManwon = Math.floor(target / 10000 / 0.3)
+    propertyStore.updateFilters({ priceMax: budgetLimitManwon })
   }
 }
 
-function toggleTypeFilter(type) {
-  if (filters.value.propertyType === type) {
-    propertyStore.updateFilters({ propertyType: null })
-  } else {
-    propertyStore.updateFilters({ propertyType: type })
-  }
+/**
+ * 필터 모달 열기 (특정 섹션으로 스크롤)
+ */
+function handleOpenFilters(section = null) {
+  emit('openFilters', section)
 }
 
+/**
+ * 개별 필터 제거
+ */
+async function handleRemoveFilter(key) {
+  await removeFilter(key)
+}
+
+/**
+ * 모든 필터 초기화
+ */
+async function handleClearAllFilters() {
+  await resetAllFilters()
+  searchKeyword.value = ''
+}
+
+/**
+ * 매물 선택
+ */
 function handleSelect(id) {
   propertyStore.selectProperty(id)
 }
 
+/**
+ * 매물 저장 토글
+ */
 async function handleSave(id) {
   try {
     await propertyStore.toggleSaveProperty(id)
@@ -151,30 +240,9 @@ async function handleSave(id) {
   }
 }
 
-function resetFilters() {
-  propertyStore.resetFilters()
-  searchKeyword.value = '' // 검색어도 초기화
-  propertyStore.updateSort('createdAt', 'desc')
-  propertyStore.fetchProperties({ page: 1 })
-}
-
-// 필터 적용 개수 카운트
-const activeFilterCount = computed(() => {
-  let count = 0
-  // sigungu만 카운트 (sido는 기본값 '서울특별시'이므로 제외)
-  if (filters.value.sigungu) count++
-  if (filters.value.priceMin || filters.value.priceMax) count++
-  if (filters.value.areaMin || filters.value.areaMax) count++
-  if (filters.value.propertyType) count++
-  if (filters.value.transactionType) count++
-  if (filters.value.rooms) count++
-  if (filters.value.bathrooms) count++
-  if (filters.value.features && filters.value.features.length > 0) count++
-  if (filters.value.keyword) count++
-  if (filters.value.favoritesOnly) count++
-  return count
-})
-
+/**
+ * 검색 실행 (디바운스)
+ */
 function handleSearch() {
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
@@ -182,6 +250,9 @@ function handleSearch() {
   }, 300)
 }
 
+/**
+ * 검색어 초기화
+ */
 function clearSearch() {
   searchKeyword.value = ''
   if (searchTimer) clearTimeout(searchTimer)
@@ -190,6 +261,9 @@ function clearSearch() {
 </script>
 
 <style scoped>
+/* ========================================
+   Container
+   ======================================== */
 .property-list-mode {
   width: 100%;
   height: 100%;
@@ -203,11 +277,13 @@ html[data-theme="night"] .property-list-mode {
   background: var(--showroom-bg-night);
 }
 
-/* 헤더 */
+/* ========================================
+   Sticky Header
+   ======================================== */
 .list-sticky {
   position: sticky;
   top: 0;
-  z-index: 50; /* ensure above cards */
+  z-index: 50;
   background: var(--showroom-bg-day);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -217,6 +293,9 @@ html[data-theme="night"] .list-sticky {
   border-bottom-color: rgba(255, 255, 255, 0.05);
 }
 
+/* ========================================
+   Header
+   ======================================== */
 .list-header {
   display: flex;
   justify-content: space-between;
@@ -260,7 +339,6 @@ html[data-theme="night"] .filter-icon-btn {
   transform: translateY(-2px);
 }
 
-/* 필터 배지 */
 .filter-badge {
   position: absolute;
   top: -4px;
@@ -277,7 +355,9 @@ html[data-theme="night"] .filter-icon-btn {
   justify-content: center;
 }
 
-/* 검색바 */
+/* ========================================
+   Search Bar
+   ======================================== */
 .search-bar {
   display: flex;
   align-items: center;
@@ -348,13 +428,15 @@ html[data-theme="night"] .clear-btn {
   color: var(--showroom-text-night);
 }
 
-/* Quick Filters */
+/* ========================================
+   Quick Filters
+   ======================================== */
 .quick-filters {
   display: flex;
-  gap: 0.75rem;
-  padding: 0 1.5rem 1rem 1.5rem;
+  gap: 0.5rem;
+  padding: 0 1.5rem 0.75rem 1.5rem;
   overflow-x: auto;
-  scrollbar-width: none; /* Hide scrollbar */
+  scrollbar-width: none;
 }
 
 .quick-filters::-webkit-scrollbar {
@@ -363,23 +445,23 @@ html[data-theme="night"] .clear-btn {
 
 .chip-btn {
   white-space: nowrap;
-  padding: 0.625rem 1.125rem;
+  padding: 0.5rem 0.875rem;
   border-radius: 999px;
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(4px);
   color: var(--showroom-text-day);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 html[data-theme="night"] .chip-btn {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.12);
   background: rgba(60, 60, 60, 0.5);
   color: var(--showroom-text-night);
 }
@@ -400,28 +482,116 @@ html[data-theme="night"] .chip-btn:hover {
   box-shadow: 0 2px 8px rgba(255, 127, 80, 0.3);
 }
 
-/* 그리드 */
+.dropdown-chip {
+  gap: 0.25rem;
+}
+
+.chip-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+html[data-theme="night"] .chip-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   Active Filter Tags
+   ======================================== */
+.active-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 1.5rem 0.75rem 1.5rem;
+  align-items: center;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(255, 127, 80, 0.12);
+  color: var(--brand-accent);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+html[data-theme="night"] .filter-tag {
+  background: rgba(255, 127, 80, 0.2);
+}
+
+.tag-remove-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--brand-accent);
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.tag-remove-btn:hover {
+  opacity: 1;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  padding: 0.375rem 0.5rem;
+  color: var(--showroom-text-day);
+  opacity: 0.6;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  opacity: 1;
+}
+
+html[data-theme="night"] .clear-all-btn {
+  color: var(--showroom-text-night);
+}
+
+/* Tag transition */
+.tag-enter-active,
+.tag-leave-active {
+  transition: all 0.2s ease;
+}
+.tag-enter-from,
+.tag-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* ========================================
+   Grid
+   ======================================== */
 .property-grid {
   display: grid;
   gap: 1.5rem;
   padding: 1.5rem;
 }
 
-/* Desktop: 2 columns */
 @media (min-width: 1040px) {
   .property-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Tablet: 1 column */
 @media (min-width: 768px) and (max-width: 1039px) {
   .property-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Mobile: 1 column */
 @media (max-width: 767px) {
   .property-grid {
     grid-template-columns: 1fr;
@@ -436,9 +606,23 @@ html[data-theme="night"] .chip-btn:hover {
   .list-title {
     font-size: 1.25rem;
   }
+
+  .search-bar {
+    margin: 0 1rem 0.75rem;
+  }
+
+  .quick-filters {
+    padding: 0 1rem 0.75rem 1rem;
+  }
+
+  .active-filter-tags {
+    padding: 0 1rem 0.75rem 1rem;
+  }
 }
 
-/* Empty State */
+/* ========================================
+   Empty State
+   ======================================== */
 .empty-state {
   display: flex;
   flex-direction: column;

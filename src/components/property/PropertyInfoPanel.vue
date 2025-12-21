@@ -2,7 +2,7 @@
   <div class="property-info-panel">
     <PropertyListMode
       v-if="!selectedProperty"
-      @openFilters="emit('openFilters')"
+      @openFilters="(section) => emit('openFilters', section)"
     />
     <PropertyDetailMode v-else />
   </div>

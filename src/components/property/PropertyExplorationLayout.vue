@@ -15,13 +15,14 @@
 
       <!-- 정보 패널 -->
       <div class="info-panel" :style="{ width: infoPanelWidth + 'px' }">
-        <PropertyInfoPanel @openFilters="showFilters = true" />
+        <PropertyInfoPanel @openFilters="handleOpenFilters" />
       </div>
     </div>
 
-    <!-- 필터 모달 -->
+    <!-- 필터 Bottom Sheet -->
     <PropertyFilters
       :isOpen="showFilters"
+      :initialSection="filterInitialSection"
       @close="showFilters = false"
       @apply="handleFilterApply"
     />
@@ -38,6 +39,7 @@ import PanelResizer from './PanelResizer.vue'
 
 const propertyStore = usePropertyStore()
 const showFilters = ref(false)
+const filterInitialSection = ref(null)
 
 // 리사이저 상태
 const MIN_PANEL_WIDTH = 505 // 최소 너비 (글자 줄바꿈 고려 + 핸들 영역)
@@ -55,10 +57,20 @@ onMounted(async () => {
 })
 
 /**
+ * 필터 열기 (특정 섹션으로)
+ * @param {string|null} section - 스크롤할 섹션 ('region' | 'price' | null)
+ */
+function handleOpenFilters(section = null) {
+  filterInitialSection.value = section
+  showFilters.value = true
+}
+
+/**
  * 필터 적용 후 매물 재조회
  */
 function handleFilterApply() {
   showFilters.value = false
+  filterInitialSection.value = null
 }
 
 /**
