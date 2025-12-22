@@ -10,13 +10,13 @@
         @mouseleave="resumeToast"
       >
         <div class="toast-content">
-          <!-- Icon with gradient background -->
-          <div class="toast-icon-wrapper" :class="`icon-${toastState.type}`">
+          <!-- Icon -->
+          <div class="toast-icon-wrapper">
             <AppIcon
               :name="toastIconName"
-              :size="18"
+              :size="28"
               weight="fill"
-              color="#fff"
+              :color="toastIconColor"
               :active="true"
               customClass="toast-icon"
               aria-hidden="true"
@@ -75,6 +75,20 @@ const toastIconName = computed(() => {
     case 'info':
     default:
       return 'info'
+  }
+})
+
+const toastIconColor = computed(() => {
+  switch (toastState.type) {
+    case 'success':
+      return '#4CAF50'
+    case 'error':
+      return '#EF4444'
+    case 'warning':
+      return '#F59E0B'
+    case 'info':
+    default:
+      return '#3B82F6'
   }
 })
 
@@ -145,44 +159,20 @@ html[data-theme="night"] .toast-content:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Icon wrapper with gradient */
+/* Icon wrapper - no background, matches SuccessModal style */
 .toast-icon-wrapper {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toast-content:hover .toast-icon-wrapper {
-  transform: scale(1.1) rotate(-3deg);
-}
-
-.icon-success {
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
-}
-
-.icon-error {
-  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
-}
-
-.icon-warning {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
-}
-
-.icon-info {
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+  transform: scale(1.1);
 }
 
 .toast-icon {
-  color: #fff;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
