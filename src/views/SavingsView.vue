@@ -112,6 +112,15 @@
       </section>
     </div>
   </div>
+
+  <CollectionCompleteModal
+    :is-open="isCompletionModalOpen"
+    :target-amount="completionInfo?.targetAmount ?? 0"
+    :total-saved="completionInfo?.totalSaved ?? 0"
+    @close="handleCompletionClose"
+    @view-collection="handleCompletionViewCollection"
+    @set-next-goal="handleCompletionSetNextGoal"
+  />
 </template>
 
 <script setup>
@@ -121,9 +130,11 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useCollectionStore } from '@/stores/collectionStore'
 import { useToast } from '@/composables/useToast'
 import { useMoneyInput } from '@/composables/useMoneyInput'
 import { calculateEstimatedExp } from '@/constants/exp'
+import CollectionCompleteModal from '@/components/modals/CollectionCompleteModal.vue'
 import { 
   PhArrowLeft, PhStar, PhPiggyBank, PhSpinnerGap, PhFire, PhGift 
 } from '@phosphor-icons/vue'
@@ -132,6 +143,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const gamificationStore = useGamificationStore()
 const dreamHomeStore = useDreamHomeStore()
+const collectionStore = useCollectionStore()
 const { showSuccess, showError } = useToast()
 
 const { userDreamHome, user } = storeToRefs(authStore)
@@ -141,6 +153,8 @@ const { currentStreak } = storeToRefs(gamificationStore)
 const selectedAmount = ref(null)
 const customAmount = ref(null)
 const isSaving = ref(false)
+const isCompletionModalOpen = ref(false)
+const completionInfo = ref(null)
 
 // Money input composable
 const { displayValue: customAmountDisplay, handleInput: moneyHandleInput, handleBlur: handleCustomAmountBlur } = useMoneyInput(customAmount)
@@ -224,22 +238,48 @@ async function handleSave() {
     // 경험치/레벨 반영 (백엔드 응답에서)
     if (result?.growth) {
       gamificationStore.applyGrowthResult(result.growth)
-      if (result.growth.isLevelUp) {
-        showSuccess(`🎉 레벨업! ${result.growth.levelLabel}`)
-      } else {
-        showSuccess(`+${result.growth.expChange} XP 획득!`)
+    }
+
+    if (result?.dreamHomeStatus?.justCompleted) {
+      completionInfo.value = {
+        targetAmount: result.dreamHomeStatus.targetAmount,
+        totalSaved: result.dreamHomeStatus.currentSavedAmount,
+        completedCollectionId: result.dreamHomeStatus.completedCollectionId
       }
+      isCompletionModalOpen.value = true
+      await collectionStore.fetchCollections()
+      return
+    }
+
+    if (result?.growth?.isLevelUp) {
+      showSuccess(`🎉 레벨업! ${result.growth.levelLabel}`)
+    } else if (result?.growth) {
+      showSuccess(`+${result.growth.expChange} XP 획득!`)
     } else {
       showSuccess('저축이 기록되었습니다!')
     }
-    
-    // Navigate back or show success
+
     router.push('/')
   } catch (error) {
     showError(error.message || '저축에 실패했습니다')
   } finally {
     isSaving.value = false
   }
+}
+
+const handleCompletionClose = () => {
+  isCompletionModalOpen.value = false
+  completionInfo.value = null
+}
+
+const handleCompletionViewCollection = () => {
+  handleCompletionClose()
+  router.push('/collection')
+}
+
+const handleCompletionSetNextGoal = () => {
+  handleCompletionClose()
+  router.push('/properties')
 }
 </script>
 

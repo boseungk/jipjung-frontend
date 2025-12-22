@@ -106,6 +106,15 @@
     :level-label="stageUpInfo?.levelLabel ?? ''"
     @confirm="handleStageUpConfirm"
   />
+
+  <CollectionCompleteModal
+    :is-open="isCompletionModalOpen"
+    :target-amount="completionInfo?.targetAmount ?? 0"
+    :total-saved="completionInfo?.totalSaved ?? 0"
+    @close="handleCompletionClose"
+    @view-collection="handleCompletionViewCollection"
+    @set-next-goal="handleCompletionSetNextGoal"
+  />
 </template>
 
 <script setup>
@@ -127,12 +136,15 @@ import { storeToRefs } from 'pinia'
 import { PhX } from '@phosphor-icons/vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import StageUpgradeModal from './StageUpgradeModal.vue'
+import CollectionCompleteModal from './CollectionCompleteModal.vue'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
+import { useCollectionStore } from '@/stores/collectionStore'
 import { useToast } from '@/composables/useToast'
 import { useMoneyInput } from '@/composables/useMoneyInput'
 import { formatWon } from '@/utils/formatters'
 import { calculateEstimatedExp } from '@/constants/exp'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   isOpen: {
@@ -146,6 +158,8 @@ const emit = defineEmits(['close', 'submit'])
 // Stores & Composables
 const dreamHomeStore = useDreamHomeStore()
 const gamificationStore = useGamificationStore()
+const collectionStore = useCollectionStore()
+const router = useRouter()
 const { showSuccess, showError } = useToast()
 
 // 목표 정보 (Goal Progress Mini Display)
@@ -169,6 +183,9 @@ const formData = ref({
 // Stage Upgrade Modal State
 const isStageUpModalOpen = ref(false)
 const stageUpInfo = ref(null)
+
+const isCompletionModalOpen = ref(false)
+const completionInfo = ref(null)
 
 // 빠른 저축 금액 옵션
 const quickAmounts = [10000, 50000, 100000, 500000]
@@ -267,14 +284,23 @@ const handleSubmit = async () => {
     // 경험치/레벨 반영 및 단계 상승 정보 획득
     if (result.growth) {
       const upgradeResult = gamificationStore.applyGrowthResult(result.growth)
-
-      // 단계 상승 시 모달 표시, 그렇지 않으면 토스트
       if (upgradeResult?.isStageUp) {
         stageUpInfo.value = upgradeResult
-        isStageUpModalOpen.value = true
-      } else {
-        showSuccess(`+${result.growth.expChange} XP 획득!`)
       }
+    }
+
+    if (result?.dreamHomeStatus?.justCompleted) {
+      completionInfo.value = {
+        targetAmount: result.dreamHomeStatus.targetAmount,
+        totalSaved: result.dreamHomeStatus.currentSavedAmount,
+        completedCollectionId: result.dreamHomeStatus.completedCollectionId
+      }
+      isCompletionModalOpen.value = true
+      await collectionStore.fetchCollections()
+    } else if (stageUpInfo.value) {
+      isStageUpModalOpen.value = true
+    } else if (result?.growth) {
+      showSuccess(`+${result.growth.expChange} XP 획득!`)
     } else {
       showSuccess('저축이 기록되었습니다!')
     }
@@ -295,6 +321,21 @@ const handleSubmit = async () => {
 const handleStageUpConfirm = () => {
   isStageUpModalOpen.value = false
   stageUpInfo.value = null
+}
+
+const handleCompletionClose = () => {
+  isCompletionModalOpen.value = false
+  completionInfo.value = null
+}
+
+const handleCompletionViewCollection = () => {
+  handleCompletionClose()
+  router.push('/collection')
+}
+
+const handleCompletionSetNextGoal = () => {
+  handleCompletionClose()
+  router.push('/properties')
 }
 
 /**

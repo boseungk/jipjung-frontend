@@ -5,7 +5,7 @@
         <div class="modal-container" @click.stop>
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">🏠 완성 테마 선택</h2>
+            <h2 class="modal-title">완성 테마 선택</h2>
             <button class="close-button" @click="closeModal">✕</button>
           </div>
 
@@ -139,11 +139,17 @@ const decorateThemeForStage6 = (theme) => {
  */
 const loadThemes = async () => {
   isLoading.value = true
+  console.log('[ThemeSelectModal] loadThemes 시작')
   try {
     const fetchedThemes = await themeService.getActiveThemes()
+    console.log('[ThemeSelectModal] API 응답:', fetchedThemes)
     themes.value = (Array.isArray(fetchedThemes) ? fetchedThemes : []).map(decorateThemeForStage6)
+    console.log('[ThemeSelectModal] 데코레이트된 테마:', themes.value)
 
-    if (themes.value.length === 0) return
+    if (themes.value.length === 0) {
+      console.warn('[ThemeSelectModal] 테마 목록이 비어있습니다')
+      return
+    }
 
     // 기본/현재 테마 선택 (themeId가 0일 수 있어 truthy 체크 금지)
     const currentId = selectedThemeId.value != null ? String(selectedThemeId.value) : null
@@ -158,7 +164,8 @@ const loadThemes = async () => {
     const initialExists = initialId != null && themes.value.some((theme) => String(theme.themeId) === initialId)
     selectedThemeId.value = initialExists ? initialId : String(themes.value[0].themeId)
   } catch (error) {
-    console.error('테마 목록 로드 실패:', error)
+    console.error('[ThemeSelectModal] 테마 목록 로드 실패:', error)
+    console.error('[ThemeSelectModal] 에러 상세:', error.response?.data || error.message)
   } finally {
     isLoading.value = false
   }
