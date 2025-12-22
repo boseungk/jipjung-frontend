@@ -1,6 +1,9 @@
 <template>
   <div class="bento-grid">
-    <MainGoalCard @open-saving-modal="openSavingModal" />
+    <MainGoalCard
+      @open-saving-modal="openSavingModal"
+      @open-edit-goal="openEditGoalModal"
+    />
     <ProfileCard />
     <AssetGrowthCard @start-saving="openSavingModal" />
     <WeeklyStreakCard @open-saving-modal="openSavingModal" />
@@ -11,6 +14,23 @@
       :is-open="showSavingModal"
       @close="closeSavingModal"
       @submit="handleSavingComplete"
+    />
+
+    <ThemeSelectModal
+      :is-open="showThemeModal"
+      :initial-theme-id="selectedThemeId"
+      @close="closeAllGoalModals"
+      @next="handleThemeSelected"
+    />
+
+    <DreamHomeSetModal
+      :is-open="showDreamHomeModal"
+      :property="editProperty"
+      :selected-theme="selectedTheme"
+      :is-edit="true"
+      @close="closeAllGoalModals"
+      @back="goBackToThemeSelect"
+      @success="handleGoalUpdated"
     />
   </div>
 </template>
@@ -24,16 +44,38 @@
  * [C-1 UX 개선] 저축 모달을 이 컴포넌트에서 단일 인스턴스로 관리합니다.
  * MainGoalCard, WeeklyStreakCard, AssetGrowthCard 모두 이 모달을 공유합니다.
  */
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import ProfileCard from './bento/ProfileCard.vue'
 import MainGoalCard from './bento/MainGoalCard.vue'
 import WeeklyStreakCard from './bento/WeeklyStreakCard.vue'
 import DsrGaugeCard from './bento/DsrGaugeCard.vue'
 import AssetGrowthCard from './bento/AssetGrowthCard.vue'
 import SavingInputModal from '@/components/modals/SavingInputModal.vue'
+import ThemeSelectModal from '@/components/modals/ThemeSelectModal.vue'
+import DreamHomeSetModal from '@/components/modals/DreamHomeSetModal.vue'
 
 // 저축 모달 상태 (단일 인스턴스)
 const showSavingModal = ref(false)
+const showThemeModal = ref(false)
+const showDreamHomeModal = ref(false)
+const selectedTheme = ref(null)
+const selectedThemeId = ref(null)
+
+const dreamHomeStore = useDreamHomeStore()
+const { propertyName, linkedProperty } = storeToRefs(dreamHomeStore)
+
+const editProperty = computed(() => {
+  const linked = linkedProperty.value
+  const priceWon = Number(linked?.price)
+  const priceManwon = Number.isFinite(priceWon) ? Math.round(priceWon / 10000) : 0
+  return {
+    title: linked?.name || propertyName.value || '드림홈',
+    price: priceManwon,
+    aptSeq: linked?.aptSeq || null
+  }
+})
 
 /**
  * 저축 모달 열기
@@ -43,11 +85,34 @@ const openSavingModal = () => {
   showSavingModal.value = true
 }
 
+const openEditGoalModal = () => {
+  showDreamHomeModal.value = true
+}
+
 /**
  * 저축 모달 닫기
  */
 const closeSavingModal = () => {
   showSavingModal.value = false
+}
+
+const closeAllGoalModals = () => {
+  showThemeModal.value = false
+  showDreamHomeModal.value = false
+  selectedTheme.value = null
+  selectedThemeId.value = null
+}
+
+const goBackToThemeSelect = () => {
+  showDreamHomeModal.value = false
+  showThemeModal.value = true
+}
+
+const handleThemeSelected = ({ themeId, theme }) => {
+  selectedThemeId.value = themeId
+  selectedTheme.value = theme
+  showThemeModal.value = false
+  showDreamHomeModal.value = true
 }
 
 /**
@@ -57,6 +122,10 @@ const closeSavingModal = () => {
 const handleSavingComplete = (result) => {
   console.log('저축 완료:', result)
   closeSavingModal()
+}
+
+const handleGoalUpdated = () => {
+  closeAllGoalModals()
 }
 </script>
 

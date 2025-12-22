@@ -6,28 +6,28 @@
         <h3 class="card-title">프로필</h3>
       </div>
       <!-- M-1: Level chip with tooltip -->
-      <button 
-        type="button" 
-        class="level-chip heading-level" 
-        @click="showLevelInfo = !showLevelInfo"
-        :aria-expanded="showLevelInfo"
-        aria-label="레벨 설명 보기"
-      >
-        <AppIcon
-          :name="isFurnitureTrack ? 'confetti' : 'star'"
-          :size="14"
-          :active="true"
-          :is-major-cta="true"
-          class="level-icon"
-          aria-hidden="true"
-        />
-        <template v-if="isFurnitureTrack">
-          인테리어 {{ furnitureStage }} / {{ furnitureTotalStages }}
-        </template>
-        <template v-else>
-          Lv.{{ currentLevel }} · {{ levelTitle }}
-        </template>
-      </button>
+        <button 
+          type="button" 
+          class="level-chip heading-level" 
+          @click="showLevelInfo = !showLevelInfo"
+          :aria-expanded="showLevelInfo"
+          aria-label="레벨 설명 보기"
+        >
+          <AppIcon
+            :name="isFurnitureTrack ? 'confetti' : 'star'"
+            :size="14"
+            :active="true"
+            :is-major-cta="true"
+            class="level-icon"
+            aria-hidden="true"
+          />
+          <template v-if="isFurnitureTrack">
+            인테리어 {{ furnitureStage }} / {{ furnitureTotalStages }}
+          </template>
+          <template v-else>
+            Lv.{{ currentLevel }} · {{ levelTitle }}
+          </template>
+        </button>
       <!-- M-1: Level Info Tooltip -->
       <Transition name="fade">
         <div v-if="showLevelInfo" class="level-info-popup">
@@ -50,13 +50,12 @@
       </div>
       
       <!-- User Info -->
-      <div class="user-info">
-        <div class="user-row">
-          <div class="username">{{ userName }} 님</div>
-        </div>
-        <p class="user-note">목표를 향해 천천히, 꾸준히 가고 있어요</p>
+    <div class="user-info">
+      <div class="user-row">
+        <div class="username">{{ userName }} 님</div>
       </div>
     </div>
+  </div>
 
     <div class="progress-section">
       <div class="progress-top">
@@ -95,15 +94,36 @@
       <!-- M-6: XP 획득 방법 팝업 -->
       <Transition name="fade">
         <div v-if="showXpHelp" class="xp-help-popup">
-          <ul class="xp-help-list">
-            <li><strong>매일 접속</strong> +5 XP</li>
-            <li><strong>저축 1만원당</strong> +1 XP</li>
-            <li><strong>목표 달성</strong> +100 XP</li>
-            <li><strong>7일 연속 스트릭</strong> +50 XP</li>
-          </ul>
+          <div class="xp-help-header">
+            <span class="xp-help-title">XP 획득 방법</span>
+          </div>
+          <div class="xp-sources">
+            <div class="xp-source-item">
+              <div class="xp-source-content">
+                <span class="xp-source-label">저축</span>
+                <span class="xp-source-value">1만원당 <strong>+1 XP</strong></span>
+              </div>
+            </div>
+            <div class="xp-source-item">
+              <div class="xp-source-content">
+                <span class="xp-source-label">7일 연속 스트릭</span>
+                <span class="xp-source-value"><strong>+50 XP</strong></span>
+              </div>
+            </div>
+          </div>
+          <div class="xp-stage-block">
+            <p class="xp-stage-title">{{ stageXpTitle }}</p>
+            <div class="xp-stage-grid">
+              <div v-for="item in stageXpList" :key="item.key" class="xp-stage-item">
+                <span class="xp-stage-label">{{ item.label }}</span>
+                <span class="xp-stage-value">{{ item.value }} XP</span>
+              </div>
+            </div>
+          </div>
         </div>
       </Transition>
     </div>
+
 
   </div>
 </template>
@@ -114,6 +134,7 @@ import { storeToRefs } from 'pinia'
 import { useGamificationStore } from '../../../stores/gamificationStore'
 import { useAuthStore } from '../../../stores/authStore'
 import { SHOWROOM_TOTAL_STAGES } from '../../../constants/showroomWebp'
+import { LEVEL_THRESHOLDS } from '@/constants/user'
 
 const gamificationStore = useGamificationStore()
 const { buildTrack, furnitureStage, currentLevel, levelTitle, expProgress, currentExpInLevel, nextLevelExp, remainingExp } = storeToRefs(gamificationStore)
@@ -129,6 +150,42 @@ const userInitial = computed(() => {
   return name ? name[0] : ''
 })
 
+const houseStageXpList = computed(() => {
+  const list = []
+  for (let index = 1; index < LEVEL_THRESHOLDS.length; index += 1) {
+    const required = LEVEL_THRESHOLDS[index] - LEVEL_THRESHOLDS[index - 1]
+    list.push({
+      key: `house-${index}`,
+      label: `Lv.${index} → ${index + 1}`,
+      value: required
+    })
+  }
+  return list
+})
+
+const furnitureStageXpList = computed(() => {
+  const list = []
+  const totalStages = SHOWROOM_TOTAL_STAGES.furniture
+  const base = 180
+  const step = 25
+  for (let stage = 1; stage < totalStages; stage += 1) {
+    list.push({
+      key: `furniture-${stage}`,
+      label: `단계 ${stage} → ${stage + 1}`,
+      value: base + (stage - 1) * step
+    })
+  }
+  return list
+})
+
+const stageXpTitle = computed(() => (
+  isFurnitureTrack.value ? '인테리어 단계별 필요 XP' : '집 단계별 필요 XP'
+))
+
+const stageXpList = computed(() => (
+  isFurnitureTrack.value ? furnitureStageXpList.value : houseStageXpList.value
+))
+
 // M-6: XP 획득 방법 팝업 상태
 const showXpHelp = ref(false)
 
@@ -140,12 +197,17 @@ const showLevelInfo = ref(false)
 .profile-card {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.65rem;
   grid-area: profile;
   padding: 1.25rem;
   align-items: stretch;
   justify-content: flex-start;
   height: 100%;
+}
+
+.profile-card.bento-card {
+  height: auto;
+  align-self: start;
 }
 
 .card-heading {
@@ -174,7 +236,7 @@ const showLevelInfo = ref(false)
 .card-layout {
   display: flex;
   align-items: center;
-  gap: 1.1rem;
+  gap: 0.85rem;
 }
 
 /* Avatar */
@@ -270,13 +332,6 @@ html[data-theme="night"] .heading-level {
   margin-right: -0.05rem;
 }
 
-.user-note {
-  margin: 0.15rem 0 0;
-  font-size: 0.85rem;
-  color: var(--bento-text-muted, #6b7280);
-  line-height: 1.4;
-}
-
 .exp-row {
   display: flex;
   align-items: center;
@@ -301,7 +356,7 @@ html[data-theme="night"] .heading-level {
 /* XP Bar */
 .xp-bar-container {
   width: 100%;
-  height: 36px;
+  height: 28px;
   border-radius: 14px;
   overflow: hidden;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.02));
@@ -387,8 +442,8 @@ html[data-theme="night"] .xp-bar-container {
 .progress-section {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.9rem 1rem;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.55));
   border: 1px solid var(--border-soft, #e5e7eb);
@@ -421,10 +476,6 @@ html[data-theme="night"] .progress-section {
 
 html[data-theme="night"] .progress-value {
   color: var(--showroom-text-night, #f5f6f7);
-}
-
-html[data-theme="night"] .user-note {
-  color: var(--bento-text-muted, #9CA3AF);
 }
 
 /* M-6: XP 획득 방법 */
@@ -465,40 +516,155 @@ html[data-theme="night"] .user-note {
 
 .xp-help-popup {
   margin-top: 0.75rem;
-  padding: 0.875rem 1rem;
-  background: var(--surface-card-bg, #fff);
+  padding: 1rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(249, 250, 251, 0.9));
   border: 1px solid var(--border-soft, #e5e7eb);
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    0 12px 32px -8px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(8px);
 }
 
 html[data-theme="night"] .xp-help-popup {
-  background: var(--surface-card-bg, #1f2937);
-  border-color: var(--border-soft, #374151);
+  background: var(--showroom-card-bg-night, #20242a);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 12px 32px -8px rgba(0, 0, 0, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.xp-help-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.xp-help-header {
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--border-soft, #e5e7eb);
+}
+
+html[data-theme="night"] .xp-help-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.xp-help-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ink-base, #1f2937);
+  letter-spacing: -0.01em;
+}
+
+html[data-theme="night"] .xp-help-title {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+.xp-sources {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.625rem;
+}
+
+.xp-source-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: linear-gradient(135deg, rgba(255, 107, 61, 0.08), rgba(255, 154, 117, 0.04));
+  border: 1px solid rgba(255, 107, 61, 0.15);
+  border-radius: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.xp-source-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(255, 107, 61, 0.2);
+}
+
+html[data-theme="night"] .xp-source-item {
+  background: linear-gradient(135deg, rgba(255, 107, 61, 0.12), rgba(255, 154, 117, 0.06));
+  border-color: rgba(255, 107, 61, 0.25);
+}
+
+.xp-source-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.xp-source-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+}
+
+.xp-source-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted, #6b7280);
+}
+
+.xp-source-value {
   font-size: 0.8125rem;
   color: var(--ink-base, #1f2937);
 }
 
-html[data-theme="night"] .xp-help-list {
+.xp-source-value strong {
+  color: var(--brand-accent, #ff6b3d);
+  font-weight: 700;
+}
+
+html[data-theme="night"] .xp-source-value {
   color: var(--showroom-text-night, #f5f6f7);
 }
 
-.xp-help-list li {
-  display: flex;
-  justify-content: space-between;
+.xp-stage-block {
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px dashed var(--border-soft, #e5e7eb);
 }
 
-.xp-help-list strong {
+html[data-theme="night"] .xp-stage-block {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.xp-stage-title {
+  margin: 0 0 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--bento-text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.xp-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.xp-stage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.625rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  font-size: 0.6875rem;
+}
+
+html[data-theme="night"] .xp-stage-item {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.xp-stage-label {
   color: var(--ink-muted, #6b7280);
+  font-weight: 500;
+}
+
+.xp-stage-value {
+  color: var(--ink-base, #1f2937);
+  font-weight: 700;
+}
+
+html[data-theme="night"] .xp-stage-value {
+  color: var(--showroom-text-night, #f5f6f7);
 }
 
 /* M-1: Level Info Popup */
@@ -556,6 +722,151 @@ html[data-theme="night"] .level-info-list {
   margin: 0;
   font-size: 0.75rem;
   color: var(--bento-text-muted, #9ca3af);
+}
+
+.xp-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft, #e5e7eb);
+  background: var(--surface-card-bg, #ffffff);
+}
+
+html[data-theme="night"] .xp-summary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.xp-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.xp-summary-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-base, #1f2937);
+}
+
+html[data-theme="night"] .xp-summary-title {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+.xp-summary-caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+/* heading-actions */
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* More Menu */
+.more-menu-wrapper {
+  position: relative;
+}
+
+.more-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bento-text-muted, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.more-menu-btn:hover {
+  background: var(--surface-muted, #f3f4f6);
+  color: var(--ink-base, #1f2937);
+}
+
+html[data-theme="night"] .more-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+.more-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  min-width: 180px;
+  padding: 0.5rem;
+  background: var(--surface-elevated, #ffffff);
+  border: 1px solid var(--border-soft, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 
+    0 12px 32px -8px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+html[data-theme="night"] .more-menu-dropdown {
+  background: var(--surface-elevated, #2d3139);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 12px 32px -8px rgba(0, 0, 0, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-base, #1f2937);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.menu-item:hover:not(:disabled) {
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
+  color: var(--brand-accent, #ff6b3d);
+}
+
+.menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+html[data-theme="night"] .menu-item {
+  color: var(--showroom-text-night, #f5f6f7);
+}
+
+html[data-theme="night"] .menu-item:hover:not(:disabled) {
+  background: rgba(255, 107, 61, 0.12);
+  color: #ff9a75;
+}
+
+/* Dropdown 애니메이션 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
 }
 
 /* Fade 애니메이션 */
