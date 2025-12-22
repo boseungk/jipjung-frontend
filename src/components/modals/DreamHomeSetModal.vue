@@ -5,17 +5,22 @@
         <div class="modal-container" @click.stop>
         <!-- Header -->
         <div class="modal-header">
-          <h2 class="modal-title">🏠 드림홈 목표 설정</h2>
+          <h2 class="modal-title">
+            {{ isEditMode ? '드림홈 목표 수정' : '드림홈 목표 설정' }}
+          </h2>
           <button class="close-button" @click="closeModal" :disabled="isSubmitting">✕</button>
         </div>
 
-        <p class="step-indicator">Step 2 / 2</p>
+        <p v-if="!isEditMode" class="step-indicator">Step 2 / 2</p>
 
         <!-- Property Info -->
         <div class="property-info">
           <h3 class="property-name">{{ property?.title || '아파트' }}</h3>
           <p class="property-location">{{ property?.sido }} {{ property?.sigungu }}</p>
-          <p class="property-price">최신 거래가: {{ formatPrice(property?.price || 0) }}</p>
+          <div class="property-price-row">
+            <span class="price-label">최신 거래가</span>
+            <span class="price-value">{{ formatPrice(property?.price || 0) }}</span>
+          </div>
         </div>
 
         <!-- Selected Theme Preview -->
@@ -37,6 +42,17 @@
           </button>
         </div>
 
+        <!-- Optional Theme Change (Edit Mode) -->
+        <div v-if="isEditMode && !selectedTheme" class="theme-change-card">
+          <div class="theme-change-text">
+            <span class="theme-change-title">컨셉 변경 (선택)</span>
+            <span class="theme-change-desc">현재 컨셉을 유지하거나, 원할 때만 변경하세요.</span>
+          </div>
+          <button type="button" class="change-theme-btn ghost" @click="goBackToThemeSelect" :disabled="isSubmitting">
+            컨셉 변경하기
+          </button>
+        </div>
+
         <!-- Form -->
         <form class="modal-form" @submit.prevent="handleSubmit">
           <!-- House Name (Custom) -->
@@ -55,28 +71,52 @@
             <p class="hint">{{ houseNameHint }}</p>
           </div>
 
-          <!-- Target Amount -->
+          <!-- V2: 저축 목표 선택 -->
           <div class="form-group">
-            <label class="form-label">목표 금액 (필요 계약금)</label>
-            <div class="input-with-calc">
-              <div class="input-wrapper">
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  class="form-input"
-                  placeholder="목표 금액 입력"
-                  :value="targetAmountDisplay"
-                  :disabled="isSubmitting"
-                  @input="handleTargetAmountInput"
-                  @blur="handleTargetAmountBlur"
-                  @focus="handleTargetAmountFocus"
-                />
-                <span class="input-suffix">원</span>
-              </div>
-              <button type="button" class="calc-button" @click="calcDownPayment" :disabled="isSubmitting">
-                30% 자동계산
+            <label class="form-label">총 저축 목표 금액</label>
+            <div class="target-options">
+              <button
+                v-for="option in suggestedTargets"
+                :key="option.label"
+                type="button"
+                class="target-option-btn"
+                :class="{ active: isTargetSelected(option.value), locked: isOptionDisabled(option.value) }"
+                @click="selectTargetAmount(option.value)"
+                :disabled="isSubmitting || isOptionDisabled(option.value)"
+              >
+                {{ option.label }}
               </button>
             </div>
+            <p class="hint">이 금액을 다 모으면 컬렉션이 완성돼요!</p>
+            <div class="target-guard">
+              <AppIcon name="arrow-fat-up" :size="16" weight="fill" class="guard-icon" />
+              <div class="guard-text">
+                <span class="guard-title">{{ targetGuardTitle }}</span>
+                <span class="guard-desc">{{ targetGuardDesc }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 직접 입력 필드 (직접입력 선택 시에만 표시) -->
+          <div class="form-group" v-if="showCustomInput">
+            <label class="form-label">목표 금액 직접 입력</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                inputmode="numeric"
+                :class="['form-input', { 'input-error': isTargetBelowMin }]"
+                placeholder="목표 금액 입력"
+                :value="targetAmountDisplay"
+                :disabled="isSubmitting"
+                @input="handleTargetAmountInput"
+                @blur="handleTargetAmountBlur"
+                @focus="handleTargetAmountFocus"
+              />
+              <span class="input-suffix">원</span>
+            </div>
+            <p v-if="isTargetBelowMin" class="hint warning">
+              현재 목표 {{ formatMoney(minTargetAmount) }}원 이상으로 설정해주세요.
+            </p>
           </div>
 
           <!-- Target Date -->
@@ -90,27 +130,8 @@
               required
               :disabled="isSubmitting"
             />
-          </div>
-
-          <!-- Monthly Goal (Auto-calculated) -->
-          <div class="form-group">
-            <label class="form-label">월 목표 저축액</label>
-            <div class="input-wrapper">
-              <input
-                type="text"
-                inputmode="numeric"
-                class="form-input"
-                placeholder="월 저축 목표"
-                :value="monthlyGoalDisplay"
-                :disabled="isSubmitting"
-                @input="handleMonthlyGoalInput"
-                @blur="handleMonthlyGoalBlur"
-                @focus="handleMonthlyGoalFocus"
-              />
-              <span class="input-suffix">원</span>
-            </div>
-            <p class="hint" v-if="monthsRemaining > 0">
-              {{ monthsRemaining }}개월 동안 매달 {{ formatMoney(suggestedMonthly) }}원씩
+            <p class="hint monthly-hint" v-if="monthsRemaining > 0 && formData.targetAmount">
+              월마다 약 <strong>{{ formatMoney(suggestedMonthly) }}원</strong>씩 저축하면 달성할 수 있어요
             </p>
           </div>
 
@@ -121,7 +142,10 @@
             </button>
             <button type="submit" class="submit-button" :disabled="isSubmitting || !isFormValid">
               <span v-if="isSubmitting" class="spinner"></span>
-              {{ isSubmitting ? '설정 중...' : '드림홈 설정하기' }}
+              {{ isSubmitting
+                ? (isEditMode ? '수정 중...' : '설정 중...')
+                : (isEditMode ? '드림홈 목표 수정하기' : '드림홈 설정하기')
+              }}
             </button>
           </div>
         </form>
@@ -146,6 +170,7 @@ import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useToast } from '@/composables/useToast'
 import { resolveThemeCode } from '@/constants/showroomWebp'
 import { useMoneyInput } from '@/composables/useMoneyInput'
+import AppIcon from '@/components/common/AppIcon.vue'
 
 const props = defineProps({
   isOpen: {
@@ -155,6 +180,10 @@ const props = defineProps({
   property: {
     type: Object,
     default: () => ({})
+  },
+  isEdit: {
+    type: Boolean,
+    default: false
   },
   selectedTheme: {
     type: Object,
@@ -174,22 +203,22 @@ const isSubmitting = ref(false)
 const formData = ref({
   houseName: '',
   targetAmount: null,
-  targetDate: '',
-  monthlyGoal: null
+  targetDate: ''
 })
+
+const isEditMode = computed(() => props.isEdit)
 
 // Money input composables
 const targetAmountRef = computed({
   get: () => formData.value.targetAmount,
   set: (val) => { formData.value.targetAmount = val }
 })
-const monthlyGoalRef = computed({
-  get: () => formData.value.monthlyGoal,
-  set: (val) => { formData.value.monthlyGoal = val }
-})
-
-const { displayValue: targetAmountDisplay, handleInput: handleTargetAmountInput, handleBlur: handleTargetAmountBlur, handleFocus: handleTargetAmountFocus } = useMoneyInput(targetAmountRef)
-const { displayValue: monthlyGoalDisplay, handleInput: handleMonthlyGoalInput, handleBlur: handleMonthlyGoalBlur, handleFocus: handleMonthlyGoalFocus } = useMoneyInput(monthlyGoalRef)
+const {
+  displayValue: targetAmountDisplay,
+  handleInput: handleTargetAmountInput,
+  handleBlur: handleTargetAmountBlurBase,
+  handleFocus: handleTargetAmountFocus
+} = useMoneyInput(targetAmountRef)
 
 // 최소 날짜 (오늘)
 const minDate = computed(() => new Date().toISOString().split('T')[0])
@@ -209,11 +238,24 @@ const suggestedMonthly = computed(() => {
   return Math.ceil(formData.value.targetAmount / monthsRemaining.value)
 })
 
+const minTargetAmount = computed(() => (
+  isEditMode.value ? Number(dreamHomeStore.targetAmount) || 0 : 0
+))
+
+const isTargetBelowMin = computed(() => {
+  if (!isEditMode.value) return false
+  const min = minTargetAmount.value
+  if (!min) return false
+  const target = Number(formData.value.targetAmount)
+  if (!Number.isFinite(target) || target <= 0) return false
+  return target < min
+})
+
 // 폼 유효성
 const isFormValid = computed(() => {
   return formData.value.targetAmount > 0 && 
          formData.value.targetDate && 
-         formData.value.monthlyGoal > 0
+         !isTargetBelowMin.value
 })
 
 // 집 이름 힌트 메시지
@@ -223,6 +265,92 @@ const houseNameHint = computed(() => {
   }
   return '입력하지 않으면 아파트 이름이 사용됩니다'
 })
+
+/**
+ * V2: 권장 저축 목표 옵션
+ * - 매물이 있으면 퍼센트 옵션 포함
+ * - 항상 기본 금액 옵션 + 직접입력 제공
+ */
+const suggestedTargets = computed(() => {
+  const propertyPrice = props.property?.price || 0
+  const options = [
+    { label: '5천만원', value: 50_000_000 },
+    { label: '1억원', value: 100_000_000 },
+  ]
+
+  // 매물이 있을 때만 퍼센트 옵션 추가
+  if (propertyPrice > 0) {
+    const priceWon = propertyPrice * 10000
+    options.push(
+      { label: `30% (${formatWon(priceWon * 0.3)})`, value: Math.ceil(priceWon * 0.3) },
+      { label: `50% (${formatWon(priceWon * 0.5)})`, value: Math.ceil(priceWon * 0.5) }
+    )
+  }
+
+  options.push({ label: '직접입력', value: null })
+  return options
+})
+
+const syncTargetInputMode = (targetAmount) => {
+  if (!targetAmount) {
+    showCustomInput.value = false
+    return
+  }
+  const match = suggestedTargets.value.some((option) => option.value === targetAmount)
+  showCustomInput.value = !match
+}
+
+// 직접입력 선택 여부
+const showCustomInput = ref(false)
+
+/**
+ * 목표 금액 옵션 선택
+ */
+const selectTargetAmount = (value) => {
+  if (isOptionDisabled(value)) return
+  if (value === null) {
+    showCustomInput.value = true
+    formData.value.targetAmount = null
+  } else {
+    showCustomInput.value = false
+    formData.value.targetAmount = value
+  }
+}
+
+/**
+ * 선택된 목표 확인
+ */
+const isTargetSelected = (value) => {
+  if (value === null) return showCustomInput.value
+  return !showCustomInput.value && formData.value.targetAmount === value
+}
+
+const isOptionDisabled = (value) => {
+  if (value === null) return false
+  if (!isEditMode.value) return false
+  const min = minTargetAmount.value
+  return min > 0 && value < min
+}
+
+/**
+ * 원 단위를 억/천만원 단위로 포맷팅
+ */
+const formatWon = (won) => {
+  const manwon = won / 10000
+  const eok = Math.floor(manwon / 10000)
+  const remainder = manwon % 10000
+  const chun = Math.floor(remainder / 1000)
+
+  if (eok > 0 && chun > 0) {
+    return `${eok}억 ${chun}천`
+  } else if (eok > 0) {
+    return `${eok}억`
+  } else if (chun > 0) {
+    return `${chun}천만`
+  } else {
+    return `${manwon}만`
+  }
+}
 
 const resolveSelectedThemeCode = (theme) => {
   if (!theme) return null
@@ -240,20 +368,6 @@ const resolveSelectedThemeCode = (theme) => {
   if (!identityText) return null
   return resolveThemeCode(identityText)
 }
-
-// 목표 달성일 변경 시 월 저축액 자동 계산
-watch(() => formData.value.targetDate, () => {
-  if (formData.value.targetAmount && monthsRemaining.value > 0) {
-    formData.value.monthlyGoal = suggestedMonthly.value
-  }
-})
-
-// 목표 금액 변경 시 월 저축액 자동 계산
-watch(() => formData.value.targetAmount, () => {
-  if (monthsRemaining.value > 0) {
-    formData.value.monthlyGoal = suggestedMonthly.value
-  }
-})
 
 /**
  * 30% 계약금 자동 계산 (경계 변환: price 만원 → 원)
@@ -294,19 +408,29 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
+    const aptSeq = props.property?.aptSeq ?? props.property?.id
+    const payload = {
+      targetAmount: formData.value.targetAmount,
+      targetDate: formData.value.targetDate,
+      monthlyGoal: suggestedMonthly.value || 0,
+      houseName: formData.value.houseName?.trim() || null,
+      ...(props.selectedTheme?.themeId && { themeId: props.selectedTheme.themeId })
+    }
+
+    if (aptSeq !== null && aptSeq !== undefined && String(aptSeq).trim() !== '') {
+      payload.aptSeq = aptSeq
+    }
+
     const response = await dreamHomeStore.setDreamHome(
-      {
-        aptSeq: props.property?.aptSeq || props.property?.id,
-        targetAmount: formData.value.targetAmount,
-        targetDate: formData.value.targetDate,
-        monthlyGoal: formData.value.monthlyGoal || 0,
-        houseName: formData.value.houseName?.trim() || null,
-        ...(props.selectedTheme?.themeId && { themeId: props.selectedTheme.themeId })
-      },
+      payload,
       { themeCode: resolveSelectedThemeCode(props.selectedTheme) }
     )
 
-    showSuccess(`"${props.property?.title}"을(를) 드림홈으로 설정했습니다!`)
+    if (isEditMode.value) {
+      showSuccess('드림홈 목표를 수정했습니다!')
+    } else {
+      showSuccess(`"${props.property?.title}"을(를) 드림홈으로 설정했습니다!`)
+    }
     emit('success', response)
     closeModal()
 
@@ -326,8 +450,7 @@ const resetForm = () => {
   formData.value = {
     houseName: '',
     targetAmount: null,
-    targetDate: '',
-    monthlyGoal: null
+    targetDate: ''
   }
 }
 
@@ -366,21 +489,54 @@ const formatMoney = (value) => {
   return value.toLocaleString('ko-KR')
 }
 
+const targetGuardTitle = computed(() => {
+  if (isEditMode.value && minTargetAmount.value > 0) {
+    return `현재 목표 ${formatMoney(minTargetAmount.value)}원 이상`
+  }
+  return '목표 수정은 증가 방향만 가능'
+})
+
+const targetGuardDesc = computed(() => (
+  isEditMode.value ? '감소 방향은 선택할 수 없어요' : '목표 설정 후에는 낮출 수 없어요'
+))
+
+const clampTargetAmountToMin = () => {
+  if (!isEditMode.value) return
+  const min = minTargetAmount.value
+  const target = Number(formData.value.targetAmount)
+  if (Number.isFinite(target) && target > 0 && min > 0 && target < min) {
+    formData.value.targetAmount = min
+  }
+}
+
+const handleTargetAmountBlur = () => {
+  handleTargetAmountBlurBase()
+  clampTargetAmountToMin()
+}
+
 // 모달 열릴 때 기본값 설정 (경계 변환: price 만원 → 원)
 watch(
-  () => [props.isOpen, props.property?.price],
-  ([isOpen, price]) => {
-    console.log('[DreamHomeSetModal] watch triggered:', { isOpen, price, property: props.property })
-    if (isOpen && price) {
+  () => [props.isOpen, props.property?.price, props.isEdit],
+  ([isOpen, price, isEdit]) => {
+    if (!isOpen) return
+    if (isEdit) {
+      formData.value.targetAmount = dreamHomeStore.targetAmount
+      formData.value.targetDate = dreamHomeStore.targetDate
+      formData.value.monthlyGoal = dreamHomeStore.monthlyGoal
+      formData.value.houseName = dreamHomeStore.houseName || ''
+      syncTargetInputMode(formData.value.targetAmount)
+      return
+    }
+    if (price) {
       const priceManwon = price
       // 기본 목표 금액: 30% 계약금 (원 단위)
       formData.value.targetAmount = Math.ceil(priceManwon * 10000 * 0.3)
-      console.log('[DreamHomeSetModal] targetAmount set:', formData.value.targetAmount)
       
       // 기본 목표 날짜: 2년 후
       const twoYearsLater = new Date()
       twoYearsLater.setFullYear(twoYearsLater.getFullYear() + 2)
       formData.value.targetDate = twoYearsLater.toISOString().split('T')[0]
+      syncTargetInputMode(formData.value.targetAmount)
     }
   },
   { immediate: true }
@@ -519,6 +675,52 @@ html[data-theme="night"] .theme-preview-name {
   cursor: not-allowed;
 }
 
+.theme-change-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.06);
+  border: 1px dashed rgba(var(--brand-accent-rgb, 255, 107, 61), 0.3);
+  margin-bottom: 1.25rem;
+}
+
+.theme-change-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.theme-change-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--showroom-text-day, #5D4037);
+}
+
+.theme-change-desc {
+  font-size: 0.75rem;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+.change-theme-btn.ghost {
+  border-style: dashed;
+}
+
+html[data-theme="night"] .theme-change-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(212, 165, 116, 0.3);
+}
+
+html[data-theme="night"] .theme-change-title {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+html[data-theme="night"] .theme-change-desc {
+  color: rgba(245, 237, 227, 0.7);
+}
+
 .modal-title {
   font-family: 'Fredoka', sans-serif;
   font-size: 1.5rem;
@@ -584,14 +786,50 @@ html[data-theme="night"] .property-name {
 .property-location {
   font-size: 0.875rem;
   color: var(--bento-text-muted, #6b7280);
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.75rem 0;
 }
 
-.property-price {
-  font-size: 1rem;
-  font-weight: 600;
+/* Property Price Row - bento-card style */
+.property-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12), 
+    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.06)
+  );
+  border: 1px solid rgba(var(--brand-accent-rgb, 255, 107, 61), 0.15);
+}
+
+.price-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+.price-value {
+  font-size: 1.125rem;
+  font-weight: 800;
   color: var(--brand-accent, #ff6b3d);
-  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme="night"] .property-price-row {
+  background: linear-gradient(135deg,
+    rgba(212, 165, 116, 0.16),
+    rgba(212, 165, 116, 0.08)
+  );
+  border-color: rgba(212, 165, 116, 0.2);
+}
+
+html[data-theme="night"] .price-label {
+  color: rgba(245, 237, 227, 0.7);
+}
+
+html[data-theme="night"] .price-value {
+  color: var(--showroom-accent-night, #D4A574);
 }
 
 /* Form */
@@ -615,6 +853,18 @@ html[data-theme="night"] .property-name {
 
 html[data-theme="night"] .form-label {
   color: var(--showroom-text-night, #F5EDE3);
+}
+
+.auto-calc-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+  color: var(--brand-accent, #ff6b3d);
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
 /* Input with Calc Button */
@@ -726,6 +976,125 @@ html[data-theme="night"] .form-input:focus {
   font-size: 0.8125rem;
   color: var(--bento-text-muted, #6b7280);
   margin: 0;
+}
+
+.hint.subtle {
+  margin-top: 0.25rem;
+  opacity: 0.8;
+}
+
+.hint.warning {
+  color: var(--brand-accent, #ff6b3d);
+  font-weight: 600;
+  margin-top: 0.35rem;
+}
+
+.form-input.input-error {
+  border-color: var(--brand-accent, #ff6b3d);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+}
+
+html[data-theme="night"] .form-input.input-error {
+  border-color: var(--showroom-accent-night, #D4A574);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.16);
+}
+
+.target-guard {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--brand-accent-rgb, 255, 107, 61), 0.25);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
+  margin-top: 0.35rem;
+}
+
+.guard-icon {
+  font-size: 1rem;
+}
+
+.guard-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.guard-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--showroom-text-day, #5D4037);
+}
+
+.guard-desc {
+  font-size: 0.75rem;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+html[data-theme="night"] .target-guard {
+  border-color: rgba(212, 165, 116, 0.3);
+  background: rgba(212, 165, 116, 0.12);
+}
+
+html[data-theme="night"] .guard-title {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+html[data-theme="night"] .guard-desc {
+  color: rgba(245, 237, 227, 0.7);
+}
+
+/* V2: 저축 목표 선택 옵션 */
+.target-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.target-option-btn {
+  flex: 1 1 auto;
+  min-width: 80px;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-soft, #e5e7eb);
+  border-radius: 12px;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--showroom-text-day, #5D4037);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+html[data-theme="night"] .target-option-btn {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+.target-option-btn:hover:not(:disabled) {
+  border-color: var(--brand-accent, #ff6b3d);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08);
+}
+
+.target-option-btn.active {
+  border-color: var(--brand-accent, #ff6b3d);
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.15);
+  color: var(--brand-accent, #ff6b3d);
+}
+
+html[data-theme="night"] .target-option-btn.active {
+  border-color: var(--showroom-accent-night, #D4A574);
+  background: rgba(212, 165, 116, 0.2);
+  color: var(--showroom-accent-night, #D4A574);
+}
+
+.target-option-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.target-option-btn.locked {
+  border-style: dashed;
 }
 
 /* Theme Selection Grid */
