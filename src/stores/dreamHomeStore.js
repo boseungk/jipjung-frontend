@@ -70,6 +70,9 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
     /** 매물명 */
     const propertyName = computed(() => dreamHome.value.propertyName || DEFAULT_DREAM_HOME.propertyName)
 
+    /** 사용자 정의 집 이름 */
+    const houseName = computed(() => dreamHome.value.houseName || DEFAULT_DREAM_HOME.houseName || '')
+
     /** 위치 */
     const location = computed(() => dreamHome.value.location || DEFAULT_DREAM_HOME.location)
 
@@ -111,6 +114,14 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         return Math.max(0, targetAmount.value - currentAmount.value)
     })
 
+    /**
+     * V2: 연결된 매물 정보 (참조용)
+     * 대시보드 API 응답의 goal.linkedProperty에서 가져옴
+     */
+    const linkedProperty = computed(() => {
+        return authStore.user?._raw?.goal?.linkedProperty || null
+    })
+
     /** 드림홈 정보 객체 */
     const dreamHomeInfo = computed(() => ({
         dreamHomeId: dreamHomeId.value,
@@ -123,7 +134,8 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         currentAmount: currentAmount.value,
         achievementRate: achievementRate.value,
         daysRemaining: daysRemaining.value,
-        remainingAmount: remainingAmount.value
+        remainingAmount: remainingAmount.value,
+        linkedProperty: linkedProperty.value
     }))
 
     // ============================================
@@ -156,7 +168,8 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
                         ...authStore.userDreamHome,
                         currentAmount: response.dreamHomeStatus.currentSavedAmount,
                         targetAmount: response.dreamHomeStatus.targetAmount,
-                        achievementRate: response.dreamHomeStatus.achievementRate
+                        achievementRate: response.dreamHomeStatus.achievementRate,
+                        isCompleted: response.dreamHomeStatus.isCompleted ?? authStore.userDreamHome?.isCompleted ?? false
                     }
                 })
 
@@ -280,6 +293,7 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         error,
         dreamHomeId,
         propertyName,
+        houseName,
         location,
         price,
         targetAmount,
@@ -291,6 +305,7 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         achievementRate,
         daysRemaining,
         remainingAmount,
+        linkedProperty,
         dreamHomeInfo,
 
         // Actions

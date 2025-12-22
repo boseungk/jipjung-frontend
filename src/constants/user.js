@@ -1,6 +1,7 @@
 export const DEFAULT_DREAM_HOME = {
   dreamHomeId: null, // null = 목표 미설정
   propertyName: '목표를 설정해주세요',
+  houseName: null,
   location: '',
   price: 0,
   targetAmount: 0,

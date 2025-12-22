@@ -36,6 +36,10 @@ import { DREAM_HOME_ENDPOINTS } from '@/api/endpoints'
  * @property {number} dreamHomeStatus.currentSavedAmount - 현재 저축 금액
  * @property {number} dreamHomeStatus.targetAmount - 목표 금액
  * @property {number} dreamHomeStatus.achievementRate - 달성률
+ * @property {boolean} dreamHomeStatus.isCompleted - 목표 달성 여부
+ * @property {boolean} dreamHomeStatus.justCompleted - 이번 저축으로 달성 여부
+ * @property {number|null} dreamHomeStatus.completedCollectionId - 완성된 컬렉션 ID
+ * @property {boolean} dreamHomeStatus.nextGoalAvailable - 다음 목표 설정 가능 여부
  * @property {Object} growth - 성장 결과
  * @property {string} growth.resultType - 'SUCCESS' | 'LEVEL_UP'
  * @property {number} growth.expChange - 획득 경험치
