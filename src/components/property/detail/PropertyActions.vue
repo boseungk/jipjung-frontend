@@ -12,8 +12,9 @@
       <button
         @click="handleSetAsDreamHome"
         class="action-btn dream-home-btn"
+        :class="{ 'secondary': isEditing }"
       >
-        내 집으로 설정
+        {{ dreamHomeButtonLabel }}
       </button>
 
       <button
@@ -28,7 +29,17 @@
     <!-- 구매 가능 여부 표시 -->
     <div class="affordability-info" v-if="currentAmount">
       <div class="affordability-badge" :class="{ affordable: isAffordable }">
-        <span class="badge-icon">{{ isAffordable ? '✓' : '✗' }}</span>
+        <span class="badge-icon">
+          <!-- 체크 아이콘 (구매 가능) -->
+          <svg v-if="isAffordable" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <!-- X 아이콘 (예산 초과) -->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </span>
         <div class="badge-content">
           <p class="badge-title">
             {{ isAffordable ? '구매 가능' : '예산 초과' }}
@@ -54,6 +65,7 @@
       :is-open="showDreamHomeModal"
       :property="property"
       :selected-theme="selectedTheme"
+      :is-edit="isEditing"
       @close="closeAllModals"
       @back="goBackToThemeSelect"
       @success="handleDreamHomeSet"
@@ -92,13 +104,16 @@ const propertyStore = usePropertyStore()
 const dreamHomeStore = useDreamHomeStore()
 const { showSuccess, showError, showInfo } = useToast()
 const { savedPropertyIds } = storeToRefs(propertyStore)
-const { currentAmount } = storeToRefs(dreamHomeStore)
+const { currentAmount, dreamHomeId } = storeToRefs(dreamHomeStore)
 
 // 모달 상태
 const showThemeModal = ref(false)
 const showDreamHomeModal = ref(false)
 const selectedTheme = ref(null)
 const selectedThemeId = ref(null)
+
+const isEditing = computed(() => Boolean(dreamHomeId.value))
+const dreamHomeButtonLabel = computed(() => (isEditing.value ? '다른 집으로 변경' : '내 집으로 설정'))
 
 // 저장 여부
 const isSaved = computed(() => {
@@ -147,6 +162,10 @@ async function handleSave() {
  * 드림홈 설정 시작 - Step 1: 테마 선택 모달 열기
  */
 function handleSetAsDreamHome() {
+  if (isEditing.value) {
+    showDreamHomeModal.value = true
+    return
+  }
   showThemeModal.value = true
 }
 
@@ -174,6 +193,8 @@ function goBackToThemeSelect() {
 function closeAllModals() {
   showThemeModal.value = false
   showDreamHomeModal.value = false
+  selectedTheme.value = null
+  selectedThemeId.value = null
 }
 
 /**
@@ -181,7 +202,6 @@ function closeAllModals() {
  */
 function handleDreamHomeSet(response) {
   closeAllModals()
-  console.log('드림홈 설정 완료:', response)
 }
 
 /**
@@ -241,19 +261,33 @@ html[data-theme="night"] .property-actions {
   border-color: rgba(102, 187, 106, 0.3);
 }
 
+/* 배지 아이콘 - SVG 아이콘으로 개선 */
 .badge-icon {
-  font-size: 2rem;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(239, 83, 80, 0.2);
+  background: linear-gradient(135deg, rgba(239, 83, 80, 0.15), rgba(239, 83, 80, 0.3));
   border-radius: 50%;
+  color: #EF5350;
+  box-shadow: 
+    0 4px 12px rgba(239, 83, 80, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.badge-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .affordability-badge.affordable .badge-icon {
-  background: rgba(102, 187, 106, 0.2);
+  background: linear-gradient(135deg, rgba(102, 187, 106, 0.15), rgba(102, 187, 106, 0.3));
+  color: #66BB6A;
+  box-shadow: 
+    0 4px 12px rgba(102, 187, 106, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 .badge-content {
