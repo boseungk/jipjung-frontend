@@ -137,6 +137,8 @@ html[data-theme="night"] .modal-container {
 
 /* Success Icon */
 .success-icon {
+  display: flex;
+  justify-content: center;
   margin-bottom: 1.5rem;
   color: #4CAF50;
   animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
