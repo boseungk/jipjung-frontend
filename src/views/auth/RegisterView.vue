@@ -3,7 +3,7 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <h1 class="auth-title">집-중</h1>
+          <img src="@/assets/images/brand-name.webp" alt="집-중" class="auth-logo" />
           <p class="auth-subtitle">당신의 꿈의 집을 향한 첫 걸음</p>
         </div>
         
@@ -70,17 +70,11 @@ html[data-theme="night"] .auth-card {
   margin-bottom: 2.5rem;
 }
 
-.auth-title {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--showroom-accent-day, #D4A574);
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.5px;
-}
-
-html[data-theme="night"] .auth-title {
-  color: var(--showroom-accent-night, #D4A574);
+.auth-logo {
+  display: block;
+  height: 80px;
+  width: auto;
+  margin: 0 auto 0.75rem auto;
 }
 
 .auth-subtitle {
@@ -125,8 +119,8 @@ html[data-theme="night"] .auth-link {
     padding: 2.5rem 1.5rem;
   }
 
-  .auth-title {
-    font-size: 2.5rem;
+  .auth-logo {
+    height: 48px;
   }
 
   .auth-subtitle {
