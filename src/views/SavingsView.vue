@@ -117,6 +117,8 @@
     :is-open="isCompletionModalOpen"
     :target-amount="completionInfo?.targetAmount ?? 0"
     :total-saved="completionInfo?.totalSaved ?? 0"
+    :target-exp="completionInfo?.targetExp ?? null"
+    :total-exp="completionInfo?.totalExp ?? null"
     @close="handleCompletionClose"
     @view-collection="handleCompletionViewCollection"
     @set-next-goal="handleCompletionSetNextGoal"
@@ -135,6 +137,7 @@ import { useToast } from '@/composables/useToast'
 import { useMoneyInput } from '@/composables/useMoneyInput'
 import { calculateEstimatedExp } from '@/constants/exp'
 import CollectionCompleteModal from '@/components/modals/CollectionCompleteModal.vue'
+import { markGoalCompletionShown } from '@/utils/goalCompletion'
 import { 
   PhArrowLeft, PhStar, PhPiggyBank, PhSpinnerGap, PhFire, PhGift 
 } from '@phosphor-icons/vue'
@@ -148,6 +151,7 @@ const { showSuccess, showError } = useToast()
 
 const { userDreamHome, user } = storeToRefs(authStore)
 const { currentStreak } = storeToRefs(gamificationStore)
+const { dreamHomeId, targetExp, totalExp } = storeToRefs(dreamHomeStore)
 
 // State
 const selectedAmount = ref(null)
@@ -241,10 +245,13 @@ async function handleSave() {
     }
 
     if (result?.dreamHomeStatus?.justCompleted) {
+      markGoalCompletionShown(authStore.userId, dreamHomeId.value)
       completionInfo.value = {
         targetAmount: result.dreamHomeStatus.targetAmount,
         totalSaved: result.dreamHomeStatus.currentSavedAmount,
-        completedCollectionId: result.dreamHomeStatus.completedCollectionId
+        completedCollectionId: result.dreamHomeStatus.completedCollectionId,
+        targetExp: targetExp.value,
+        totalExp: totalExp.value
       }
       isCompletionModalOpen.value = true
       await collectionStore.fetchCollections()

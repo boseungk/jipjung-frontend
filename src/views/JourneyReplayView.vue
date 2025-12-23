@@ -708,6 +708,12 @@ const formatExpChange = (value) => {
 }
 
 const progressPercent = computed(() => {
+  const targetExp = Number(journeySummary.value?.targetExp)
+  const totalExp = Number(journeySummary.value?.totalExp)
+  if (Number.isFinite(targetExp) && targetExp > 0) {
+    const percent = (totalExp / targetExp) * 100
+    return Math.min(100, Math.max(0, percent))
+  }
   const phaseValue = progressPhase.value || 1
   if (totalPhases <= 1) return 100
   return ((phaseValue - 1) / (totalPhases - 1)) * 100

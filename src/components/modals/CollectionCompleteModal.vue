@@ -2,21 +2,20 @@
   <transition name="modal">
     <div v-if="isOpen" class="modal-overlay" @click="handleClose">
       <div class="modal-container" @click.stop>
-        <div class="badge">🎉 목표 달성</div>
-        <h2 class="modal-title">저축 목표를 완성했어요!</h2>
+        <div class="badge">{{ badgeText }}</div>
+        <h2 class="modal-title">{{ titleText }}</h2>
         <p class="modal-message">
-          {{ formatMoney(totalSaved) }}원을 모아
-          {{ formatMoney(targetAmount) }} 목표를 달성했습니다.
+          {{ messageText }}
         </p>
 
         <div class="summary">
           <div class="summary-item">
-            <span class="label">누적 저축</span>
-            <span class="value">{{ formatMoney(totalSaved) }}원</span>
+            <span class="label">{{ summaryPrimaryLabel }}</span>
+            <span class="value">{{ summaryPrimaryValue }}</span>
           </div>
           <div class="summary-item">
-            <span class="label">목표 금액</span>
-            <span class="value">{{ formatMoney(targetAmount) }}원</span>
+            <span class="label">{{ summarySecondaryLabel }}</span>
+            <span class="value">{{ summarySecondaryValue }}</span>
           </div>
         </div>
 
@@ -44,15 +43,67 @@ const props = defineProps({
   totalSaved: {
     type: Number,
     default: 0
+  },
+  targetExp: {
+    type: Number,
+    default: null
+  },
+  totalExp: {
+    type: Number,
+    default: null
   }
 })
 
 const emit = defineEmits(['close', 'viewCollection', 'setNextGoal'])
 
+const toSafeNumber = (value) => {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : 0
+}
+
+const hasExpData = computed(() => {
+  if (props.targetExp == null || props.totalExp == null) return false
+  const target = Number(props.targetExp)
+  const total = Number(props.totalExp)
+  if (!Number.isFinite(target) || !Number.isFinite(total)) return false
+  return target > 0
+})
+
 const formatMoney = (value) => {
   if (!value) return '0'
   return Number(value).toLocaleString('ko-KR')
 }
+
+const formatNumber = (value) => {
+  if (!value) return '0'
+  return Number(value).toLocaleString('ko-KR')
+}
+
+const badgeText = computed(() => (hasExpData.value ? '🎉 집 완성' : '🎉 목표 달성'))
+const titleText = computed(() => (hasExpData.value ? '집을 완성했어요!' : '저축 목표를 완성했어요!'))
+const messageText = computed(() => {
+  if (hasExpData.value) {
+    const total = formatNumber(toSafeNumber(props.totalExp))
+    const target = formatNumber(toSafeNumber(props.targetExp))
+    return `총 ${total} XP로 ${target} XP 목표를 달성했어요.`
+  }
+  return `${formatMoney(props.totalSaved)}원을 모아 ${formatMoney(props.targetAmount)} 목표를 달성했습니다.`
+})
+
+const summaryPrimaryLabel = computed(() => (hasExpData.value ? '누적 XP' : '누적 저축'))
+const summaryPrimaryValue = computed(() => {
+  if (hasExpData.value) {
+    return `${formatNumber(toSafeNumber(props.totalExp))} XP`
+  }
+  return `${formatMoney(props.totalSaved)}원`
+})
+const summarySecondaryLabel = computed(() => (hasExpData.value ? '목표 XP' : '목표 금액'))
+const summarySecondaryValue = computed(() => {
+  if (hasExpData.value) {
+    return `${formatNumber(toSafeNumber(props.targetExp))} XP`
+  }
+  return `${formatMoney(props.targetAmount)}원`
+})
 
 const handleClose = () => {
   emit('close')

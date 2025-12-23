@@ -111,6 +111,8 @@
     :is-open="isCompletionModalOpen"
     :target-amount="completionInfo?.targetAmount ?? 0"
     :total-saved="completionInfo?.totalSaved ?? 0"
+    :target-exp="completionInfo?.targetExp ?? null"
+    :total-exp="completionInfo?.totalExp ?? null"
     @close="handleCompletionClose"
     @view-collection="handleCompletionViewCollection"
     @set-next-goal="handleCompletionSetNextGoal"
@@ -137,6 +139,7 @@ import { PhX } from '@phosphor-icons/vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import StageUpgradeModal from './StageUpgradeModal.vue'
 import CollectionCompleteModal from './CollectionCompleteModal.vue'
+import { useAuthStore } from '@/stores/authStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useCollectionStore } from '@/stores/collectionStore'
@@ -145,6 +148,7 @@ import { useMoneyInput } from '@/composables/useMoneyInput'
 import { formatWon } from '@/utils/formatters'
 import { calculateEstimatedExp } from '@/constants/exp'
 import { useRouter } from 'vue-router'
+import { markGoalCompletionShown } from '@/utils/goalCompletion'
 
 const props = defineProps({
   isOpen: {
@@ -159,6 +163,7 @@ const emit = defineEmits(['close', 'submit'])
 const dreamHomeStore = useDreamHomeStore()
 const gamificationStore = useGamificationStore()
 const collectionStore = useCollectionStore()
+const authStore = useAuthStore()
 const router = useRouter()
 const { showSuccess, showError } = useToast()
 
@@ -166,7 +171,9 @@ const { showSuccess, showError } = useToast()
 const { 
   propertyName, 
   achievementRate,
-  dreamHomeId 
+  dreamHomeId,
+  targetExp,
+  totalExp
 } = storeToRefs(dreamHomeStore)
 
 // 목표 설정 여부
@@ -290,10 +297,13 @@ const handleSubmit = async () => {
     }
 
     if (result?.dreamHomeStatus?.justCompleted) {
+      markGoalCompletionShown(authStore.userId, dreamHomeId.value)
       completionInfo.value = {
         targetAmount: result.dreamHomeStatus.targetAmount,
         totalSaved: result.dreamHomeStatus.currentSavedAmount,
-        completedCollectionId: result.dreamHomeStatus.completedCollectionId
+        completedCollectionId: result.dreamHomeStatus.completedCollectionId,
+        targetExp: targetExp.value,
+        totalExp: totalExp.value
       }
       isCompletionModalOpen.value = true
       await collectionStore.fetchCollections()
