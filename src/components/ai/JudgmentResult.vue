@@ -70,7 +70,6 @@
 
 <script setup>
 import { computed } from 'vue'
-import { calculateLevelProgress } from '@/constants/user'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const props = defineProps({
@@ -93,14 +92,26 @@ const expChangeClass = computed(() => {
   return props.growth.expChange >= 0 ? 'exp-plus' : 'exp-minus'
 })
 
-const levelProgress = computed(() => {
-  if (!props.growth) return { currentInLevel: 0, requiredForLevel: 0, percent: 0 }
-  return calculateLevelProgress(props.growth.currentExp, props.growth.level)
+const progressPercent = computed(() => {
+  if (!props.growth) return 0
+  const current = Number(props.growth.currentExp) || 0
+  const maxExp = Number(props.growth.maxExp) || 0
+  if (maxExp <= 0) return 0
+  const percent = (current / maxExp) * 100
+  return Math.min(100, Math.max(0, Math.round(percent * 10) / 10))
 })
 
-const progressPercent = computed(() => levelProgress.value.percent)
-const displayCurrentExp = computed(() => levelProgress.value.currentInLevel)
-const displayMaxExp = computed(() => levelProgress.value.requiredForLevel)
+const displayCurrentExp = computed(() => {
+  if (!props.growth) return 0
+  const current = Number(props.growth.currentExp) || 0
+  return Math.max(0, Math.floor(current))
+})
+
+const displayMaxExp = computed(() => {
+  if (!props.growth) return 0
+  const maxExp = Number(props.growth.maxExp) || 0
+  return Math.max(0, Math.floor(maxExp))
+})
 </script>
 
 <style scoped>

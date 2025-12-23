@@ -58,6 +58,11 @@ import { AI_MANAGER_ENDPOINTS } from '@/api/endpoints'
  * @typedef {Object} JudgmentResponse
  * @property {Object} judgment - 판결 결과 (result, score, comment)
  * @property {Object} growth - 성장 정보 (expChange, currentExp, level 등)
+ * @property {Object|null} goalExpProgress - 목표 XP 진행 정보
+ * @property {number} goalExpProgress.targetExp - 목표 XP
+ * @property {number} goalExpProgress.totalExp - 현재 XP
+ * @property {number} goalExpProgress.expProgress - XP 진행률 (%)
+ * @property {number} goalExpProgress.currentPhase - 현재 단계 (1~11)
  * @property {Object} character - 캐릭터 반응 (mood, script, animation)
  */
 

@@ -294,6 +294,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useCollectionStore } from '@/stores/collectionStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
+import { useAuthStore } from '@/stores/authStore'
 import { BRAND_ACCENT } from '@/constants/colors'
 import {
   getExteriorStageUrl,
@@ -310,6 +311,7 @@ import {
   normalizeJourneyData,
   toPhaseNumber
 } from '@/utils/journeyReplay'
+import { normalizeGoalProgress } from '@/utils/goalProgress'
 import { useTheme } from '@/composables/useTheme'
 import gsap from 'gsap'
 import AppIcon from '@/components/common/AppIcon.vue'
@@ -319,6 +321,8 @@ const route = useRoute()
 const router = useRouter()
 const collectionStore = useCollectionStore()
 const { inProgress } = storeToRefs(collectionStore)
+const authStore = useAuthStore()
+const { userShowroom } = storeToRefs(authStore)
 const gamificationStore = useGamificationStore()
 const { buildTrack, houseStage, furnitureStage } = storeToRefs(gamificationStore)
 const { isNight, toggleTheme } = useTheme()
@@ -355,13 +359,23 @@ const isInProgress = computed(() => {
   return route.query.mode === 'active' || route.meta?.isInProgress === true
 })
 
-const dashboardPhase = computed(() => {
+const dashboardGoalPhase = computed(() => {
+  const goalProgress = normalizeGoalProgress(authStore.user?._raw?.goal)
+  return toPhaseNumber(goalProgress.currentPhase ?? null, totalPhases)
+})
+
+const showroomPhase = computed(() => {
   if (buildTrack.value === 'furniture') {
-    const stage = Math.max(1, Number(furnitureStage.value || 1))
+    const parsed = Number(furnitureStage.value || 1)
+    const safe = Number.isFinite(parsed) ? Math.trunc(parsed) : 1
+    const stage = Math.min(FURNITURE_STAGE_COUNT, Math.max(1, safe))
     return toPhaseNumber(HOUSE_STAGE_COUNT + stage, totalPhases) ?? HOUSE_STAGE_COUNT + 1
   }
 
-  const stage = Math.max(1, Number(houseStage.value || 1))
+  const rawStage = userShowroom.value?.currentStep ?? houseStage.value
+  const parsed = Number(rawStage || 1)
+  const safe = Number.isFinite(parsed) ? Math.trunc(parsed) : 1
+  const stage = Math.min(HOUSE_STAGE_COUNT, Math.max(1, safe))
   return toPhaseNumber(stage, totalPhases) ?? 1
 })
 
@@ -418,10 +432,12 @@ const maxUnlockedPhase = computed(() => {
     return 1
   }
 
-  const inProgressCandidates = []
-  if (Number.isInteger(explicit)) {
-    return Math.min(totalPhases, Math.max(1, explicit))
+  if (Number.isInteger(dashboardGoalPhase.value)) {
+    return Math.min(totalPhases, Math.max(1, dashboardGoalPhase.value))
   }
+
+  const inProgressCandidates = []
+  if (Number.isInteger(explicit)) inProgressCandidates.push(explicit)
   const inProgressPhase = toPhaseNumber(
     inProgress.value?.currentPhase
     ?? inProgress.value?.currentStage
@@ -431,7 +447,7 @@ const maxUnlockedPhase = computed(() => {
   )
   if (Number.isInteger(inProgressPhase)) inProgressCandidates.push(inProgressPhase)
 
-  const fallbackPhase = toPhaseNumber(dashboardPhase.value, totalPhases)
+  const fallbackPhase = toPhaseNumber(showroomPhase.value, totalPhases)
   if (Number.isInteger(fallbackPhase)) inProgressCandidates.push(fallbackPhase)
 
   if (inProgressCandidates.length > 0) {

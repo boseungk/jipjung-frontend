@@ -18,7 +18,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { aiManagerService } from '@/api/services/aiManagerService'
-import { useGamificationStore } from './gamificationStore'
+import { useAuthStore } from './authStore'
+import { useCollectionStore } from './collectionStore'
 
 /**
  * 상태 상수
@@ -334,10 +335,25 @@ export const useAiManagerStore = defineStore('aiManager', () => {
             status.value = AI_MANAGER_STATUS.JUDGED
             judgmentResult.value = result
 
-            // 경험치/레벨 반영 (백엔드 응답에서)
-            if (result.growth) {
-                const gamificationStore = useGamificationStore()
-                gamificationStore.applyJudgmentGrowth(result.growth)
+            if (result.goalExpProgress) {
+                const authStore = useAuthStore()
+                const collectionStore = useCollectionStore()
+                const previousRaw = authStore.user?._raw || {}
+                const previousGoal = previousRaw.goal || {}
+                authStore.updateUserData({
+                    _raw: {
+                        ...previousRaw,
+                        goal: {
+                            ...previousGoal,
+                            targetExp: result.goalExpProgress.targetExp ?? previousGoal.targetExp,
+                            totalExp: result.goalExpProgress.totalExp ?? previousGoal.totalExp,
+                            expProgress: result.goalExpProgress.expProgress ?? previousGoal.expProgress,
+                            currentPhase: result.goalExpProgress.currentPhase ?? previousGoal.currentPhase
+                        }
+                    }
+                })
+                collectionStore.fetchCollections()
+                    .catch(err => console.warn('컬렉션 갱신 실패:', err))
             }
 
             // 판결 후 character 정보를 persona로 변환
