@@ -120,8 +120,6 @@ import {
   SHOWROOM_TOTAL_STAGES 
 } from '@/constants/showroomWebp'
 import { useAuthStore } from '@/stores/authStore'
-import { storeToRefs } from 'pinia'
-import { useGamificationStore } from '@/stores/gamificationStore'
 
 // ============================================================================
 // Animation Constants
@@ -154,8 +152,6 @@ const emit = defineEmits(['confirm'])
 // ============================================================================
 
 const authStore = useAuthStore()
-const gamificationStore = useGamificationStore()
-const { remainingExp: storeRemainingExp } = storeToRefs(gamificationStore)
 
 const confirmButtonRef = ref(null)
 const effectsRef = ref(null)
@@ -226,7 +222,7 @@ const showNextGoalInfo = computed(() => {
 })
 
 const remainingExpText = computed(() => {
-  const remaining = props.remainingExp || storeRemainingExp.value || 0
+  const remaining = Number(props.remainingExp) || 0
   return `${remaining.toLocaleString()} XP`
 })
 

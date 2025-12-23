@@ -130,8 +130,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
-import { useGamificationStore } from '@/stores/gamificationStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useGamificationStore } from '@/stores/gamificationStore'
 import { useCollectionStore } from '@/stores/collectionStore'
 import { useToast } from '@/composables/useToast'
 import { useMoneyInput } from '@/composables/useMoneyInput'
@@ -144,8 +144,8 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
-const gamificationStore = useGamificationStore()
 const dreamHomeStore = useDreamHomeStore()
+const gamificationStore = useGamificationStore()
 const collectionStore = useCollectionStore()
 const { showSuccess, showError } = useToast()
 
@@ -239,23 +239,23 @@ async function handleSave() {
       ''
     )
     
-    // 경험치/레벨 반영 (백엔드 응답에서)
-    if (result?.growth) {
-      gamificationStore.applyGrowthResult(result.growth)
-    }
-
     if (result?.dreamHomeStatus?.justCompleted) {
       markGoalCompletionShown(authStore.userId, dreamHomeId.value)
+      const expProgress = result?.goalExpProgress ?? null
       completionInfo.value = {
         targetAmount: result.dreamHomeStatus.targetAmount,
         totalSaved: result.dreamHomeStatus.currentSavedAmount,
         completedCollectionId: result.dreamHomeStatus.completedCollectionId,
-        targetExp: targetExp.value,
-        totalExp: totalExp.value
+        targetExp: expProgress?.targetExp ?? targetExp.value,
+        totalExp: expProgress?.totalExp ?? totalExp.value
       }
       isCompletionModalOpen.value = true
       await collectionStore.fetchCollections()
       return
+    }
+
+    if (result?.goalExpProgress) {
+      await collectionStore.fetchCollections()
     }
 
     if (result?.growth?.isLevelUp) {

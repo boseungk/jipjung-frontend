@@ -40,6 +40,11 @@ import { DREAM_HOME_ENDPOINTS } from '@/api/endpoints'
  * @property {boolean} dreamHomeStatus.justCompleted - 이번 저축으로 달성 여부
  * @property {number|null} dreamHomeStatus.completedCollectionId - 완성된 컬렉션 ID
  * @property {boolean} dreamHomeStatus.nextGoalAvailable - 다음 목표 설정 가능 여부
+ * @property {Object|null} goalExpProgress - 목표 XP 진행 정보
+ * @property {number} goalExpProgress.targetExp - 목표 XP
+ * @property {number} goalExpProgress.totalExp - 현재 XP
+ * @property {number} goalExpProgress.expProgress - XP 진행률 (%)
+ * @property {number} goalExpProgress.currentPhase - 현재 단계 (1~11)
  * @property {Object} growth - 성장 결과
  * @property {string} growth.resultType - 'SUCCESS' | 'LEVEL_UP'
  * @property {number} growth.expChange - 획득 경험치

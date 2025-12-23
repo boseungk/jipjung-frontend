@@ -104,6 +104,7 @@
     :current-stage="stageUpInfo?.currentStage ?? 1"
     :track="stageUpInfo?.track ?? 'house'"
     :level-label="stageUpInfo?.levelLabel ?? ''"
+    :remaining-exp="stageUpInfo?.remainingExp ?? 0"
     @confirm="handleStageUpConfirm"
   />
 
@@ -141,7 +142,6 @@ import StageUpgradeModal from './StageUpgradeModal.vue'
 import CollectionCompleteModal from './CollectionCompleteModal.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
-import { useGamificationStore } from '@/stores/gamificationStore'
 import { useCollectionStore } from '@/stores/collectionStore'
 import { useToast } from '@/composables/useToast'
 import { useMoneyInput } from '@/composables/useMoneyInput'
@@ -149,6 +149,8 @@ import { formatWon } from '@/utils/formatters'
 import { calculateEstimatedExp } from '@/constants/exp'
 import { useRouter } from 'vue-router'
 import { markGoalCompletionShown } from '@/utils/goalCompletion'
+import { LEVEL_TITLES } from '@/constants/user'
+import { normalizeGoalProgress, getStageProgress, getTrackFromPhase, getStageFromPhase, getPhaseLabel } from '@/utils/goalProgress'
 
 const props = defineProps({
   isOpen: {
@@ -161,7 +163,6 @@ const emit = defineEmits(['close', 'submit'])
 
 // Stores & Composables
 const dreamHomeStore = useDreamHomeStore()
-const gamificationStore = useGamificationStore()
 const collectionStore = useCollectionStore()
 const authStore = useAuthStore()
 const router = useRouter()
@@ -193,6 +194,12 @@ const stageUpInfo = ref(null)
 
 const isCompletionModalOpen = ref(false)
 const completionInfo = ref(null)
+
+const houseStageLabels = Object.keys(LEVEL_TITLES)
+  .map(key => Number(key))
+  .sort((a, b) => a - b)
+  .map(key => LEVEL_TITLES[key])
+  .filter(Boolean)
 
 // 빠른 저축 금액 옵션
 const quickAmounts = [10000, 50000, 100000, 500000]
@@ -282,6 +289,9 @@ const handleSubmit = async () => {
 
   try {
     // 백엔드 저축 API 호출 (항상 DEPOSIT)
+    const previousGoal = normalizeGoalProgress(authStore.user?._raw?.goal)
+    const previousPhase = Number(previousGoal.currentPhase)
+
     const result = await dreamHomeStore.recordSavings(
       amount,
       'DEPOSIT',
@@ -289,21 +299,35 @@ const handleSubmit = async () => {
     )
 
     // 경험치/레벨 반영 및 단계 상승 정보 획득
-    if (result.growth) {
-      const upgradeResult = gamificationStore.applyGrowthResult(result.growth)
-      if (upgradeResult?.isStageUp) {
-        stageUpInfo.value = upgradeResult
+    const nextGoal = normalizeGoalProgress(result?.goalExpProgress ?? authStore.user?._raw?.goal)
+    const nextPhase = Number(nextGoal.currentPhase)
+    if (Number.isFinite(previousPhase) && Number.isFinite(nextPhase) && nextPhase > previousPhase) {
+      const previousTrack = getTrackFromPhase(previousPhase)
+      const nextTrack = getTrackFromPhase(nextPhase)
+      const previousStage = getStageFromPhase(previousPhase)
+      const currentStage = getStageFromPhase(nextPhase)
+      const stageProgress = getStageProgress(nextGoal.totalExp, nextGoal.targetExp, nextPhase)
+
+      if (previousTrack === nextTrack && currentStage > previousStage) {
+        stageUpInfo.value = {
+          previousStage,
+          currentStage,
+          track: nextTrack,
+          levelLabel: getPhaseLabel(nextPhase, houseStageLabels),
+          remainingExp: stageProgress ? Math.ceil(stageProgress.remainingInStage) : 0
+        }
       }
     }
 
     if (result?.dreamHomeStatus?.justCompleted) {
       markGoalCompletionShown(authStore.userId, dreamHomeId.value)
+      const expProgress = result?.goalExpProgress ?? null
       completionInfo.value = {
         targetAmount: result.dreamHomeStatus.targetAmount,
         totalSaved: result.dreamHomeStatus.currentSavedAmount,
         completedCollectionId: result.dreamHomeStatus.completedCollectionId,
-        targetExp: targetExp.value,
-        totalExp: totalExp.value
+        targetExp: expProgress?.targetExp ?? targetExp.value,
+        totalExp: expProgress?.totalExp ?? totalExp.value
       }
       isCompletionModalOpen.value = true
       await collectionStore.fetchCollections()
@@ -313,6 +337,10 @@ const handleSubmit = async () => {
       showSuccess(`+${result.growth.expChange} XP 획득!`)
     } else {
       showSuccess('저축이 기록되었습니다!')
+    }
+
+    if (result?.goalExpProgress && !result?.dreamHomeStatus?.justCompleted) {
+      await collectionStore.fetchCollections()
     }
 
     emit('submit', result)

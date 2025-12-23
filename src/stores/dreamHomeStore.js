@@ -215,6 +215,24 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
                 })
             }
 
+            if (response.goalExpProgress) {
+                const previousRaw = authStore.user?._raw || {}
+                const previousGoal = previousRaw.goal || {}
+                authStore.updateUserData({
+                    _raw: {
+                        ...previousRaw,
+                        goal: {
+                            ...previousGoal,
+                            dreamHomeId: previousGoal.dreamHomeId ?? authStore.userDreamHome?.dreamHomeId ?? null,
+                            targetExp: response.goalExpProgress.targetExp ?? previousGoal.targetExp,
+                            totalExp: response.goalExpProgress.totalExp ?? previousGoal.totalExp,
+                            expProgress: response.goalExpProgress.expProgress ?? previousGoal.expProgress,
+                            currentPhase: response.goalExpProgress.currentPhase ?? previousGoal.currentPhase
+                        }
+                    }
+                })
+            }
+
             // 스트릭 정보 반영 (활동 기반)
             const previousRaw = authStore.user?._raw || {}
             const previousRawStreak = previousRaw.streak || {}
