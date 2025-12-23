@@ -138,6 +138,25 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         linkedProperty: linkedProperty.value
     }))
 
+    /** XP 기반 진행률 (대시보드 응답에서 제공될 때만) */
+    const expProgress = computed(() => {
+        const raw = authStore.user?._raw?.goal?.expProgress
+        const numeric = Number(raw)
+        return Number.isFinite(numeric) ? numeric : null
+    })
+
+    const targetExp = computed(() => {
+        const raw = authStore.user?._raw?.goal?.targetExp
+        const numeric = Number(raw)
+        return Number.isFinite(numeric) ? numeric : null
+    })
+
+    const totalExp = computed(() => {
+        const raw = authStore.user?._raw?.goal?.totalExp
+        const numeric = Number(raw)
+        return Number.isFinite(numeric) ? numeric : null
+    })
+
     // ============================================
     // Actions
     // ============================================
@@ -306,6 +325,9 @@ export const useDreamHomeStore = defineStore('dreamHome', () => {
         daysRemaining,
         remainingAmount,
         linkedProperty,
+        expProgress,
+        targetExp,
+        totalExp,
         dreamHomeInfo,
 
         // Actions
