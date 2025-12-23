@@ -104,9 +104,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import gsap from 'gsap'
-import AppIcon from '../common/AppIcon.vue'
 import ShowroomUnlockModal from '../modals/ShowroomUnlockModal.vue'
-import { useGamificationStore } from '../../stores/gamificationStore'
 import { useAuthStore } from '../../stores/authStore'
 import {
   getExteriorStageUrl,
@@ -115,6 +113,7 @@ import {
   resolveThemeCode,
   SHOWROOM_TOTAL_STAGES
 } from '../../constants/showroomWebp'
+import { normalizeGoalProgress, getTrackFromPhase, getStageFromPhase } from '@/utils/goalProgress'
 
 // ============================================================================
 // Constants
@@ -173,14 +172,12 @@ const particlesRef = ref(null)
 // ============================================================================
 
 const router = useRouter()
-const gamificationStore = useGamificationStore()
-const { buildTrack, houseStage, furnitureStage } = storeToRefs(gamificationStore)
-
 const authStore = useAuthStore()
-const { hasDreamHomeGoal } = storeToRefs(authStore)
+const { hasDreamHomeGoal, user } = storeToRefs(authStore)
 
-const displayTrack = ref(buildTrack.value || 'house')
+const displayTrack = ref('house')
 const isUnlockModalOpen = ref(false)
+const lastGoalPhase = ref(null)
 
 // 목표 설정 여부
 const hasGoal = computed(() => hasDreamHomeGoal.value)
@@ -205,15 +202,40 @@ const resolvedThemeLabel = computed(() => {
   return '클래식'
 })
 
+const goalSnapshot = computed(() => user.value?._raw?.goal || null)
+const goalProgress = computed(() => normalizeGoalProgress(goalSnapshot.value))
+const goalTargetExp = computed(() => Number(goalProgress.value.targetExp))
+const goalPhase = computed(() => Number(goalProgress.value.currentPhase))
+const useGoalPhase = computed(() => {
+  if (!goalSnapshot.value?.dreamHomeId) return false
+  if (!Number.isFinite(goalTargetExp.value) || goalTargetExp.value <= 0) return false
+  return Number.isFinite(goalPhase.value) && goalPhase.value > 0
+})
+
+const effectiveTrack = computed(() => {
+  if (useGoalPhase.value) {
+    return getTrackFromPhase(goalPhase.value)
+  }
+  return 'house'
+})
+
 const activeStage = computed(() => {
+  if (useGoalPhase.value) {
+    const stageValue = Math.max(1, getStageFromPhase(goalPhase.value))
+    if (getTrackFromPhase(goalPhase.value) === 'house') {
+      return Math.min(stageValue, DEFAULT_TOTAL_STEPS)
+    }
+    return Math.min(stageValue, DEFAULT_FURNITURE_STEPS)
+  }
+
   if (isHouseTrack.value) {
-    const rawStage = showroom.value?.currentStep ?? houseStage.value
+    const rawStage = showroom.value?.currentStep
     const parsed = Number(rawStage)
     const safe = Number.isFinite(parsed) ? Math.trunc(parsed) : 1
     return Math.min(Math.max(safe, 1), DEFAULT_TOTAL_STEPS)
   }
 
-  const parsed = Number(furnitureStage.value || 1)
+  const parsed = 1
   const safe = Number.isFinite(parsed) ? Math.trunc(parsed) : 1
   return Math.min(Math.max(safe, 1), DEFAULT_FURNITURE_STEPS)
 })
@@ -223,17 +245,25 @@ const totalStages = computed(() => {
 })
 
 const currentStep = computed(() => {
-  if (showroom.value && isHouseTrack.value) {
-    return {
-      label: showroom.value.stepTitle || '준비 중',
-      message: showroom.value.stepDescription || ''
+  if (isHouseTrack.value) {
+    if (useGoalPhase.value) {
+      const info = HOUSE_STEPS.find(s => s.id === activeStage.value)
+      return {
+        label: info ? info.label : '준비 중',
+        message: '집을 짓는 여정이 이어지고 있어요.'
+      }
     }
+    if (showroom.value) {
+      return {
+        label: showroom.value.stepTitle || '준비 중',
+        message: showroom.value.stepDescription || ''
+      }
+    }
+    return { label: '준비 중', message: '집을 짓기 위한 준비를 하고 있어요.' }
   }
-  if (!isHouseTrack.value) {
-    const idx = Math.min(FURNITURE_STEPS.length - 1, Math.max(0, activeStage.value - 1))
-    return FURNITURE_STEPS[idx]
-  }
-  return { label: '준비 중', message: '집을 짓기 위한 준비를 하고 있어요.' }
+
+  const idx = Math.min(FURNITURE_STEPS.length - 1, Math.max(0, activeStage.value - 1))
+  return FURNITURE_STEPS[idx]
 })
 
 const houseStageUrl = computed(() => {
@@ -439,26 +469,30 @@ watch(activeStage, (newStage, oldStage) => {
 })
 
 // 집 완공(레벨 6 도달) 시 인테리어 시작 모달 표시
-watch(houseStage, (newStage, oldStage) => {
-  // 이미 furniture 트랙이면 무시
-  if (buildTrack.value === 'furniture') return
-  // house 트랙이고 레벨 6에 도달한 경우에만 모달 표시
-  if (newStage >= DEFAULT_TOTAL_STEPS && oldStage && oldStage < DEFAULT_TOTAL_STEPS) {
+watch(effectiveTrack, (track, prevTrack) => {
+  if (track === prevTrack) return
+  displayTrack.value = track
+  if (track !== 'furniture') {
+    isUnlockModalOpen.value = false
+  }
+}, { immediate: true })
+
+watch(goalPhase, (nextPhase, prevPhase) => {
+  if (!useGoalPhase.value) return
+  const nextValue = Number(nextPhase)
+  if (!Number.isFinite(nextValue) || nextValue <= 0) return
+
+  const prevValue = Number.isFinite(prevPhase) && prevPhase > 0
+    ? prevPhase
+    : lastGoalPhase.value
+
+  if (Number.isFinite(prevValue)
+    && prevValue <= DEFAULT_TOTAL_STEPS
+    && nextValue > DEFAULT_TOTAL_STEPS) {
     isUnlockModalOpen.value = true
   }
-})
 
-watch(buildTrack, (track, prevTrack) => {
-  if (track === prevTrack) return
-
-  if (track === 'house') {
-    isUnlockModalOpen.value = false
-    displayTrack.value = 'house'
-    return
-  }
-
-  isUnlockModalOpen.value = false
-  displayTrack.value = track
+  lastGoalPhase.value = nextValue
 })
 
 watch(displayTrack, async (track) => {
@@ -495,7 +529,6 @@ watch(houseStageUrl, async (newUrl, oldUrl) => {
 
 onMounted(async () => {
   try {
-    await gamificationStore.syncMilestones()
     isLoading.value = true
     if (isHouseTrack.value) {
       await transitionHouseStage(houseStageUrl.value, { isInitial: true })
@@ -522,12 +555,10 @@ onUnmounted(() => {
 
 async function handleUnlockConfirm() {
   isUnlockModalOpen.value = false
-  
-  // gamificationStore에 furniture 트랙 시작을 저장
-  // 이렇게 해야 다음에 대시보드를 로드해도 furniture 트랙이 유지됨
-  await gamificationStore.startFurnitureTrack()
-  
-  displayTrack.value = 'furniture'
+
+  if (useGoalPhase.value) {
+    return
+  }
 }
 </script>
 

@@ -60,7 +60,7 @@
     <div class="progress-section">
       <div class="progress-top">
         <span class="progress-label">{{ isFurnitureTrack ? '인테리어 진행도' : '레벨 진행도' }}</span>
-        <span class="progress-value">{{ expProgress }}%</span>
+        <span class="progress-value">{{ progressText }}%</span>
       </div>
       <div class="xp-bar-container" role="progressbar" :aria-valuenow="Number(expProgress)" aria-valuemin="0" aria-valuemax="100">
         <div class="xp-bar" :style="{ width: expProgress + '%' }">
@@ -131,33 +131,81 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useGamificationStore } from '../../../stores/gamificationStore'
 import { useAuthStore } from '../../../stores/authStore'
 import { SHOWROOM_TOTAL_STAGES } from '../../../constants/showroomWebp'
-import { LEVEL_THRESHOLDS } from '@/constants/user'
-
-const gamificationStore = useGamificationStore()
-const { buildTrack, furnitureStage, currentLevel, levelTitle, expProgress, currentExpInLevel, nextLevelExp, remainingExp } = storeToRefs(gamificationStore)
+import { LEVEL_TITLES } from '@/constants/user'
+import { normalizeGoalProgress, getStageProgress, getTrackFromPhase, getStageFromPhase, getPhaseLabel, GOAL_PROGRESS_PHASES } from '@/utils/goalProgress'
 
 const authStore = useAuthStore()
-const { userName } = storeToRefs(authStore)
+const { userName, user } = storeToRefs(authStore)
 
-const isFurnitureTrack = computed(() => buildTrack.value === 'furniture')
+const goalSnapshot = computed(() => user.value?._raw?.goal || null)
+const goalProgress = computed(() => normalizeGoalProgress(goalSnapshot.value))
+const currentPhase = computed(() => goalProgress.value.currentPhase || 1)
+const totalExp = computed(() => goalProgress.value.totalExp ?? 0)
+const targetExp = computed(() => goalProgress.value.targetExp ?? 0)
+const expProgress = computed(() => {
+  const value = Number(goalProgress.value.expProgress)
+  if (!Number.isFinite(value)) return 0
+  return Math.min(100, Math.max(0, value))
+})
+
+const isFurnitureTrack = computed(() => getTrackFromPhase(currentPhase.value) === 'furniture')
+const furnitureStage = computed(() => getStageFromPhase(currentPhase.value))
 const furnitureTotalStages = SHOWROOM_TOTAL_STAGES.furniture
+const houseStageLabels = Object.keys(LEVEL_TITLES)
+  .map(key => Number(key))
+  .sort((a, b) => a - b)
+  .map(key => LEVEL_TITLES[key])
+  .filter(Boolean)
+
+const currentLevel = computed(() => Math.min(SHOWROOM_TOTAL_STAGES.house, Math.max(1, currentPhase.value)))
+const levelTitle = computed(() => getPhaseLabel(currentPhase.value, houseStageLabels))
+
+const stageProgress = computed(() => getStageProgress(totalExp.value, targetExp.value, currentPhase.value))
+const progressText = computed(() => expProgress.value.toFixed(1))
+const currentExpInLevel = computed(() => {
+  if (!stageProgress.value) return 0
+  return Math.max(0, Math.floor(stageProgress.value.currentInStage))
+})
+const nextLevelExp = computed(() => {
+  if (!stageProgress.value) return 0
+  return Math.max(0, Math.ceil(stageProgress.value.requiredForStage))
+})
+const remainingExp = computed(() => {
+  if (!stageProgress.value) return 0
+  return Math.max(0, Math.ceil(stageProgress.value.remainingInStage))
+})
 
 const userInitial = computed(() => {
   const name = (userName.value || '').trim()
   return name ? name[0] : ''
 })
 
+const perStageExp = computed(() => {
+  const target = Number(targetExp.value)
+  if (!Number.isFinite(target) || target <= 0) return 0
+  return target / GOAL_PROGRESS_PHASES.total
+})
+
+const resolveStageExp = (phaseIndex) => {
+  const target = Number(targetExp.value)
+  if (!Number.isFinite(target) || target <= 0) return 0
+  const perStage = perStageExp.value
+  if (phaseIndex >= GOAL_PROGRESS_PHASES.total) {
+    const remainder = target - perStage * (GOAL_PROGRESS_PHASES.total - 1)
+    return Math.max(1, Math.ceil(remainder))
+  }
+  return Math.max(1, Math.ceil(perStage))
+}
+
 const houseStageXpList = computed(() => {
   const list = []
-  for (let index = 1; index < LEVEL_THRESHOLDS.length; index += 1) {
-    const required = LEVEL_THRESHOLDS[index] - LEVEL_THRESHOLDS[index - 1]
+  for (let phase = 1; phase < GOAL_PROGRESS_PHASES.house; phase += 1) {
     list.push({
-      key: `house-${index}`,
-      label: `Lv.${index} → ${index + 1}`,
-      value: required
+      key: `house-${phase}`,
+      label: `Lv.${phase} → ${phase + 1}`,
+      value: resolveStageExp(phase)
     })
   }
   return list
@@ -165,14 +213,12 @@ const houseStageXpList = computed(() => {
 
 const furnitureStageXpList = computed(() => {
   const list = []
-  const totalStages = SHOWROOM_TOTAL_STAGES.furniture
-  const base = 180
-  const step = 25
-  for (let stage = 1; stage < totalStages; stage += 1) {
+  for (let stage = 1; stage < GOAL_PROGRESS_PHASES.furniture; stage += 1) {
+    const phase = stage + GOAL_PROGRESS_PHASES.house
     list.push({
       key: `furniture-${stage}`,
       label: `단계 ${stage} → ${stage + 1}`,
-      value: base + (stage - 1) * step
+      value: resolveStageExp(phase)
     })
   }
   return list

@@ -124,6 +124,7 @@ import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useAuthStore } from '@/stores/authStore'
 import { formatWon, formatWonCompact, formatKoreanCurrency } from '@/utils/formatters'
+import { normalizeGoalProgress } from '@/utils/goalProgress'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const emit = defineEmits(['open-saving-modal', 'open-edit-goal'])
@@ -138,8 +139,7 @@ const {
   price,
   achievementRate,
   remainingAmount,
-  linkedProperty,
-  expProgress
+  linkedProperty
 } = storeToRefs(dreamHomeStore)
 
 /**
@@ -193,27 +193,13 @@ const achievementRateNumber = computed(() => {
   return Math.min(100, Math.max(0, value))
 })
 
-const progressPercent = computed(() => {
-  if (expProgress.value != null) {
-    const value = Number(expProgress.value)
-    if (Number.isFinite(value)) {
-      return Math.min(100, Math.max(0, value))
-    }
-  }
-  return achievementRateNumber.value
-})
+const progressPercent = computed(() => achievementRateNumber.value)
 
 const progressText = computed(() => progressPercent.value.toFixed(1))
 
-const progressLabel = computed(() => (
-  expProgress.value != null ? '집 성장 진행도' : '목표 달성률'
-))
+const progressLabel = computed(() => '집 성장 진행도')
 
-const zeroMessageLines = computed(() => (
-  expProgress.value != null
-    ? ['첫 활동을', '시작해보세요!']
-    : ['첫 저축을', '시작해보세요!']
-))
+const zeroMessageLines = computed(() => ['첫 저축을', '시작해보세요!'])
 
 const isZeroProgress = computed(() => progressPercent.value <= 0)
 
@@ -223,10 +209,18 @@ const showGapInfo = computed(() => {
   return Number.isFinite(gap) && gap > 0 && Number.isFinite(price) && price > 0
 })
 
-const isGoalCompleted = computed(() => (
-  authStore.userDreamHome?.isCompleted === true
-  || user.value?._raw?.goal?.isCompleted === true
-))
+const isGoalCompleted = computed(() => {
+  if (authStore.userDreamHome?.isCompleted === true) return true
+  const goalProgress = normalizeGoalProgress(user.value?._raw?.goal)
+  if (Number.isFinite(goalProgress.expProgress) && goalProgress.expProgress >= 100) return true
+  if (Number.isFinite(goalProgress.totalExp)
+    && Number.isFinite(goalProgress.targetExp)
+    && goalProgress.targetExp > 0
+    && goalProgress.totalExp >= goalProgress.targetExp) {
+    return true
+  }
+  return user.value?._raw?.goal?.isCompleted === true
+})
 
 const actionButtonLabel = computed(() => (
   isGoalCompleted.value ? '다음 목표 설정' : '저축하기'
@@ -393,7 +387,7 @@ html[data-theme="night"] .donut-ring:hover {
   width: 60%;
   height: 60%;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bento-card-bg, #ffffff);
   border: 1px solid var(--border-soft, #e5e7eb);
   display: flex;
   align-items: center;
@@ -403,7 +397,7 @@ html[data-theme="night"] .donut-ring:hover {
 }
 
 html[data-theme="night"] .donut-hole {
-  background: rgba(32, 36, 42, 0.95);
+  background: var(--bento-card-bg, #20242a);
   border-color: rgba(255, 255, 255, 0.1);
 }
 

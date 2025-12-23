@@ -39,19 +39,37 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useGamificationStore } from '../../stores/gamificationStore'
+import { useAuthStore } from '@/stores/authStore'
+import { LEVEL_TITLES } from '@/constants/user'
+import { normalizeGoalProgress, getStageProgress, getPhaseLabel } from '@/utils/goalProgress'
 
-const gamificationStore = useGamificationStore()
-const { 
-  currentLevel, 
-  levelTitle, 
-  currentExpInLevel, 
-  nextLevelExp, 
-  expProgress, 
-  currentStreak, 
-  longestStreak 
-} = storeToRefs(gamificationStore)
+const authStore = useAuthStore()
+const { user, userGamification } = storeToRefs(authStore)
+
+const goalSnapshot = computed(() => user.value?._raw?.goal || null)
+const goalProgress = computed(() => normalizeGoalProgress(goalSnapshot.value))
+const currentLevel = computed(() => Math.max(1, Math.min(6, goalProgress.value.currentPhase || 1)))
+const houseStageLabels = Object.keys(LEVEL_TITLES)
+  .map(key => Number(key))
+  .sort((a, b) => a - b)
+  .map(key => LEVEL_TITLES[key])
+  .filter(Boolean)
+const levelTitle = computed(() => getPhaseLabel(goalProgress.value.currentPhase || 1, houseStageLabels))
+
+const stageProgress = computed(() => (
+  getStageProgress(goalProgress.value.totalExp ?? 0, goalProgress.value.targetExp ?? 0, goalProgress.value.currentPhase || 1)
+))
+const currentExpInLevel = computed(() => Math.max(0, Math.floor(stageProgress.value?.currentInStage || 0)))
+const nextLevelExp = computed(() => Math.max(0, Math.ceil(stageProgress.value?.requiredForStage || 0)))
+const expProgress = computed(() => {
+  const value = Number(goalProgress.value.expProgress)
+  if (!Number.isFinite(value)) return '0.0'
+  return Math.min(100, Math.max(0, value)).toFixed(1)
+})
+const currentStreak = computed(() => userGamification.value?.currentStreak || 0)
+const longestStreak = computed(() => userGamification.value?.longestStreak || 0)
 </script>
 
 <style scoped>

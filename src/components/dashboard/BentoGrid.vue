@@ -49,6 +49,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useAuthStore } from '@/stores/authStore'
+import { normalizeGoalProgress } from '@/utils/goalProgress'
 import ProfileCard from './bento/ProfileCard.vue'
 import MainGoalCard from './bento/MainGoalCard.vue'
 import WeeklyStreakCard from './bento/WeeklyStreakCard.vue'
@@ -87,7 +88,13 @@ const editProperty = computed(() => {
  * - MainGoalCard, WeeklyStreakCard, AssetGrowthCard에서 호출
  */
 const openSavingModal = () => {
+  const goalProgress = normalizeGoalProgress(user.value?._raw?.goal)
   const isCompleted = userDreamHome.value?.isCompleted === true
+    || goalProgress.expProgress >= 100
+    || (Number.isFinite(goalProgress.totalExp)
+      && Number.isFinite(goalProgress.targetExp)
+      && goalProgress.targetExp > 0
+      && goalProgress.totalExp >= goalProgress.targetExp)
     || user.value?._raw?.goal?.isCompleted === true
   const hasActiveGoal = !isCompleted && dreamHomeId.value != null
   if (!hasActiveGoal) {

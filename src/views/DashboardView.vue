@@ -58,6 +58,7 @@ import BentoGrid from '@/components/dashboard/BentoGrid.vue'
 import GoalGuideModal from '@/components/modals/GoalGuideModal.vue'
 import CollectionCompleteModal from '@/components/modals/CollectionCompleteModal.vue'
 import { hasGoalCompletionShown, markGoalCompletionShown } from '@/utils/goalCompletion'
+import { normalizeGoalProgress } from '@/utils/goalProgress'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -78,7 +79,17 @@ const hasGoal = computed(() => authStore.hasDreamHomeGoal)
 
 const completionCandidate = computed(() => {
   const goal = authStore.user?._raw?.goal
-  if (!goal?.dreamHomeId || goal?.isCompleted !== true) {
+  if (!goal?.dreamHomeId) {
+    return null
+  }
+  const goalProgress = normalizeGoalProgress(goal)
+  const isCompleted = (Number.isFinite(goalProgress.expProgress) && goalProgress.expProgress >= 100)
+    || (Number.isFinite(goalProgress.totalExp)
+      && Number.isFinite(goalProgress.targetExp)
+      && goalProgress.targetExp > 0
+      && goalProgress.totalExp >= goalProgress.targetExp)
+    || goal?.isCompleted === true
+  if (!isCompleted) {
     return null
   }
 
@@ -86,8 +97,8 @@ const completionCandidate = computed(() => {
     dreamHomeId: goal.dreamHomeId,
     targetAmount: goal.targetAmount ?? authStore.userDreamHome?.targetAmount ?? 0,
     totalSaved: goal.savedAmount ?? authStore.userDreamHome?.currentAmount ?? 0,
-    targetExp: goal.targetExp ?? null,
-    totalExp: goal.totalExp ?? null
+    targetExp: goalProgress.targetExp ?? goal.targetExp ?? null,
+    totalExp: goalProgress.totalExp ?? goal.totalExp ?? null
   }
 })
 

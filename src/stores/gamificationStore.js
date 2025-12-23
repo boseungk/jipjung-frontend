@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { useAuthStore } from './authStore'
-import { DEFAULT_GAMIFICATION, LEVEL_TITLES, calculateLevelProgress } from '@/constants/user'
+import { DEFAULT_GAMIFICATION, LEVEL_TITLES } from '@/constants/user'
 import { updateFurnitureProgress as syncFurnitureProgressToServer } from '@/api/services/userService'
 
 const HOUSE_TOTAL_STAGES = 6
@@ -104,36 +104,29 @@ export const useGamificationStore = defineStore('gamification', () => {
     return Math.max(1, furnitureStage.value || 1)
   })
 
-  // Getters - 진행도 계산
-  const levelProgress = computed(() => calculateLevelProgress(experiencePoints.value, currentLevel.value))
-
   const nextLevelExp = computed(() => {
     if (buildTrack.value === 'furniture') {
       return calculateNextMilestoneExp('furniture', activeStage.value)
     }
-    return levelProgress.value.requiredForLevel || calculateNextMilestoneExp('house', activeStage.value)
+    return toNonNegativeNumber(gamification.value.nextLevelExp) || calculateNextMilestoneExp('house', activeStage.value)
   })
 
   const expProgress = computed(() => {
-    if (buildTrack.value === 'furniture') {
-      const denom = nextLevelExp.value || 1
-      const percent = denom > 0 ? (experiencePoints.value / denom) * 100 : 0
-      return Math.min(100, Math.max(0, percent)).toFixed(1)
-    }
-    return levelProgress.value.percent.toFixed(1)
+    const raw = toNonNegativeNumber(gamification.value.expProgress)
+    return Math.min(100, Math.max(0, raw)).toFixed(1)
   })
 
   const remainingExp = computed(() => {
     if (buildTrack.value === 'furniture') {
       return Math.max(0, nextLevelExp.value - experiencePoints.value)
     }
-    return Math.max(0, levelProgress.value.requiredForLevel - levelProgress.value.currentInLevel)
+    return Math.max(0, toNonNegativeNumber(gamification.value.remainingExp))
   })
 
   // 현재 레벨 내 경험치 (UI 표시용)
   const currentExpInLevel = computed(() => {
     if (buildTrack.value === 'furniture') return experiencePoints.value
-    return levelProgress.value.currentInLevel
+    return experiencePoints.value
   })
 
   const isHouseComplete = computed(() => houseStage.value >= HOUSE_TOTAL_STAGES)
