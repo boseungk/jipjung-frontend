@@ -14,6 +14,16 @@ const OnboardingView = () => import('../views/onboarding/OnboardingView.vue')
 
 const routes = [
     {
+        path: '/landing',
+        name: 'Landing',
+        component: () => import('../views/LandingView.vue'),
+        meta: {
+            title: '집-중 - 서비스 소개',
+            public: true,
+            hideNavbar: true
+        }
+    },
+    {
         path: '/login',
         name: 'Login',
         component: LoginView,

@@ -1,0 +1,601 @@
+/* ================================================
+   JIPJUNG - Landing Page Styles
+   Modular CSS for Landing Page Components
+   ================================================ */
+
+/* ================================================
+   1. CSS Custom Properties (Landing Scope)
+   ================================================ */
+
+:root {
+    /* Landing-specific tokens (Day defaults) */
+    --landing-bg: #F9F8F6;
+    --landing-card-bg: #FFFFFF;
+    --landing-text: #2C2420;
+    --landing-text-secondary: rgba(44, 36, 32, 0.7);
+
+    /* Animation timings */
+    --landing-transition-fast: 0.25s;
+    --landing-transition-normal: 0.45s;
+    --landing-transition-slow: 0.8s;
+
+    /* Section heights */
+    --landing-hero-height: 100vh;
+    --landing-section-padding: 6rem 2rem;
+
+    /* Card styles */
+    --landing-card-radius: 1.5rem;
+    --landing-card-blur: 20px;
+}
+
+/* Night mode overrides */
+html[data-theme="night"] {
+    --landing-bg: #3a3530;
+    --landing-card-bg: #4a453f;
+    --landing-text: #F5EDE3;
+    --landing-text-secondary: rgba(245, 237, 227, 0.7);
+}
+
+/* ================================================
+   2. Landing Container
+   ================================================ */
+
+.landing-view {
+    min-height: 100vh;
+    background-color: var(--landing-bg);
+    color: var(--landing-text);
+    transition: background-color var(--landing-transition-normal) ease,
+        color var(--landing-transition-normal) ease;
+    overflow-x: hidden;
+}
+
+/* ================================================
+   3. Hero Section
+   ================================================ */
+
+.landing-hero {
+    min-height: var(--landing-hero-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    text-align: center;
+}
+
+.landing-hero__crystal-ball {
+    margin-bottom: 2rem;
+    transform: scale(0.85);
+    animation: idle-float 4s ease-in-out infinite;
+}
+
+@keyframes idle-float {
+
+    0%,
+    100% {
+        transform: scale(0.85) translateY(0);
+    }
+
+    50% {
+        transform: scale(0.85) translateY(-10px);
+    }
+}
+
+.landing-hero__content {
+    max-width: 600px;
+    animation: slide-in-up 0.8s ease-out;
+}
+
+.landing-hero__headline {
+    font-family: var(--font-family-display, 'Pretendard', sans-serif);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+}
+
+.landing-hero__subheadline {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--landing-text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.landing-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    background: var(--brand-accent, #FF6B3D);
+    color: #fff;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 3rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-hero__cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 107, 61, 0.4);
+}
+
+.landing-hero__cta:active {
+    transform: translateY(0);
+}
+
+/* CTA Glow Animation (Night mode) */
+html[data-theme="night"] .landing-hero__cta--glow {
+    animation: cta-glow 2s ease-in-out infinite;
+}
+
+@keyframes cta-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 107, 61, 0.4),
+            0 0 40px rgba(255, 107, 61, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(255, 107, 61, 0.6),
+            0 0 60px rgba(255, 107, 61, 0.3);
+    }
+}
+
+/* Scroll Hint */
+.landing-hero__scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--landing-text-secondary);
+    font-size: 0.875rem;
+    animation: bounce-hint 2s ease-in-out infinite;
+}
+
+.landing-hero__scroll-hint-icon {
+    font-size: 1.5rem;
+}
+
+@keyframes bounce-hint {
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(8px);
+    }
+}
+
+/* ================================================
+   4. Features Section
+   ================================================ */
+
+.landing-features {
+    padding: var(--landing-section-padding);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.landing-features__title {
+    text-align: center;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 700;
+    margin-bottom: 3rem;
+}
+
+.landing-features__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .landing-features__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.landing-feature-card {
+    background: var(--landing-card-bg);
+    backdrop-filter: blur(var(--landing-card-blur));
+    border-radius: var(--landing-card-radius);
+    padding: 2rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.6s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    /* Initial state for intersection animation */
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.landing-feature-card.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.landing-feature-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+html[data-theme="night"] .landing-feature-card {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="night"] .landing-feature-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.landing-feature-card__icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.landing-feature-card__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.landing-feature-card__description {
+    font-size: 0.95rem;
+    color: var(--landing-text-secondary);
+    line-height: 1.6;
+}
+
+/* ================================================
+   5. Journey Preview Section
+   ================================================ */
+
+.landing-journey {
+    min-height: 100vh;
+    position: relative;
+}
+
+.landing-journey__sticky {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.landing-journey__title {
+    position: absolute;
+    top: 2rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--landing-text-secondary);
+}
+
+.landing-journey__image-container {
+    position: relative;
+    width: min(400px, 90vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--landing-card-bg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.landing-journey__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.landing-journey__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.landing-journey__layer.is-visible {
+    opacity: 1;
+}
+
+.landing-journey__night-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--landing-transition-normal) ease;
+}
+
+.landing-journey__night-overlay.is-visible {
+    opacity: 1;
+}
+
+/* Progress UI */
+.landing-journey__progress {
+    position: absolute;
+    bottom: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    z-index: 5;
+}
+
+.landing-journey__phase-badge {
+    padding: 0.5rem 1.25rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2C2420;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="night"] .landing-journey__phase-badge {
+    background: rgba(74, 69, 63, 0.9);
+    color: #F5EDE3;
+}
+
+.landing-journey__dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.landing-journey__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.landing-journey__dot.is-active {
+    background: var(--brand-accent, #FF6B3D);
+    transform: scale(1.3);
+}
+
+html[data-theme="night"] .landing-journey__dot {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+html[data-theme="night"] .landing-journey__dot.is-active {
+    background: var(--brand-accent, #FF6B3D);
+}
+
+/* Dark Mode Toggle */
+.landing-journey__theme-toggle {
+    position: absolute;
+    right: 10rem;
+    bottom: 17rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 107, 61, 0.85);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: var(--brand-accent, #FF6B3D);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 8px 24px rgba(255, 107, 61, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    z-index: 10;
+}
+
+.landing-journey__theme-toggle[aria-pressed="false"] {
+    animation: theme-toggle-pulse 2.2s ease-in-out infinite;
+}
+
+.landing-journey__theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow:
+        0 12px 30px rgba(255, 107, 61, 0.28),
+        0 6px 20px rgba(0, 0, 0, 0.16);
+}
+
+.landing-journey__theme-toggle:focus-visible {
+    outline: 3px solid rgba(255, 107, 61, 0.45);
+    outline-offset: 3px;
+}
+
+html[data-theme="night"] .landing-journey__theme-toggle {
+    background: rgba(74, 69, 63, 0.92);
+}
+
+.landing-journey__theme-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+@keyframes theme-toggle-pulse {
+
+    0%,
+    100% {
+        box-shadow:
+            0 8px 24px rgba(255, 107, 61, 0.2),
+            0 0 0 0 rgba(255, 107, 61, 0.22);
+    }
+
+    50% {
+        box-shadow:
+            0 12px 32px rgba(255, 107, 61, 0.3),
+            0 0 0 12px rgba(255, 107, 61, 0.18);
+    }
+}
+
+/* ================================================
+   6. AI Demo Section
+   ================================================ */
+
+.landing-ai-demo {
+    min-height: 100vh;
+    position: relative;
+}
+
+.landing-ai-demo__sticky {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 2rem;
+}
+
+.landing-ai-demo__title {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-weight: 600;
+    text-align: center;
+}
+
+.landing-ai-demo__character-wrapper {
+    position: relative;
+}
+
+.landing-ai-demo__character {
+    width: min(280px, 70vw);
+    height: auto;
+    border-radius: 1.5rem;
+    border: 4px solid transparent;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.landing-ai-demo__character.is-mood-changed {
+    border-color: var(--brand-accent, #FF6B3D);
+    box-shadow: 0 0 20px rgba(255, 107, 61, 0.5),
+        0 0 40px rgba(255, 107, 61, 0.3);
+}
+
+.landing-ai-demo__speech-bubble {
+    max-width: 300px;
+    padding: 1rem 1.5rem;
+    background: var(--landing-card-bg);
+    border-radius: 1.25rem;
+    text-align: center;
+    font-size: 1rem;
+    line-height: 1.5;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.landing-ai-demo__speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 10px solid transparent;
+    border-bottom-color: var(--landing-card-bg);
+    border-top: none;
+}
+
+.landing-ai-demo__mood-dots {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.landing-ai-demo__mood-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.landing-ai-demo__mood-dot.is-active {
+    background: var(--brand-accent, #FF6B3D);
+    transform: scale(1.4);
+}
+
+html[data-theme="night"] .landing-ai-demo__mood-dot {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+html[data-theme="night"] .landing-ai-demo__mood-dot.is-active {
+    background: var(--brand-accent, #FF6B3D);
+}
+
+/* Final CTA in AI Demo */
+.landing-ai-demo__cta {
+    margin-top: 2rem;
+}
+
+/* ================================================
+   7. Transitions (Vue)
+   ================================================ */
+
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+.night-fade-enter-active,
+.night-fade-leave-active {
+    transition: opacity var(--landing-transition-normal) ease;
+}
+
+.night-fade-enter-from,
+.night-fade-leave-to {
+    opacity: 0;
+}
+
+/* ================================================
+   8. Responsive Adjustments
+   ================================================ */
+
+@media (max-width: 480px) {
+    .landing-hero {
+        padding: 1.5rem;
+    }
+
+    .landing-hero__cta {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+    }
+
+    .landing-features {
+        padding: 4rem 1.5rem;
+    }
+
+    .landing-feature-card {
+        padding: 1.5rem;
+    }
+
+    .landing-journey__sticky,
+    .landing-ai-demo__sticky {
+        padding: 1.5rem;
+    }
+}
