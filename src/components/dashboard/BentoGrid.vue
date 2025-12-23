@@ -46,7 +46,9 @@
  */
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
+import { useAuthStore } from '@/stores/authStore'
 import ProfileCard from './bento/ProfileCard.vue'
 import MainGoalCard from './bento/MainGoalCard.vue'
 import WeeklyStreakCard from './bento/WeeklyStreakCard.vue'
@@ -63,8 +65,11 @@ const showDreamHomeModal = ref(false)
 const selectedTheme = ref(null)
 const selectedThemeId = ref(null)
 
+const router = useRouter()
 const dreamHomeStore = useDreamHomeStore()
-const { propertyName, linkedProperty } = storeToRefs(dreamHomeStore)
+const authStore = useAuthStore()
+const { propertyName, linkedProperty, dreamHomeId } = storeToRefs(dreamHomeStore)
+const { userDreamHome, user } = storeToRefs(authStore)
 
 const editProperty = computed(() => {
   const linked = linkedProperty.value
@@ -82,6 +87,13 @@ const editProperty = computed(() => {
  * - MainGoalCard, WeeklyStreakCard, AssetGrowthCard에서 호출
  */
 const openSavingModal = () => {
+  const isCompleted = userDreamHome.value?.isCompleted === true
+    || user.value?._raw?.goal?.isCompleted === true
+  const hasActiveGoal = !isCompleted && dreamHomeId.value != null
+  if (!hasActiveGoal) {
+    router.push('/properties')
+    return
+  }
   showSavingModal.value = true
 }
 

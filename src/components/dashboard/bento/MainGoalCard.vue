@@ -22,7 +22,7 @@
         <!-- LEFT: CSS Donut Chart -->
         <div class="chart-column">
           <div class="card-heading">
-            <h3 class="card-title">목표 달성률</h3>
+            <h3 class="card-title">{{ progressLabel }}</h3>
             <button 
               type="button" 
               class="settings-btn" 
@@ -36,17 +36,19 @@
             <div 
               class="donut-ring" 
               :class="{ 'is-zero': isZeroProgress }"
-              :style="{ '--progress': achievementRateNumber + '%' }"
+              :style="{ '--progress': progressPercent + '%' }"
             >
               <div class="donut-hole">
                 <template v-if="isZeroProgress">
                   <!-- L-2: 0% 상태 피드백 -->
                   <AppIcon name="sparkles" :size="20" class="zero-icon" />
-                  <div class="donut-text zero-text">첫 저축을<br>시작해보세요!</div>
+                  <div class="donut-text zero-text">
+                    {{ zeroMessageLines[0] }}<br>{{ zeroMessageLines[1] }}
+                  </div>
                 </template>
                 <template v-else>
                   <div class="donut-label">진행도</div>
-                  <div class="donut-text">{{ achievementRate }}%</div>
+                  <div class="donut-text">{{ progressText }}%</div>
                 </template>
               </div>
             </div>
@@ -60,20 +62,26 @@
             <div class="amount-row">
               <div class="amount-huge">{{ formatWon(remainingAmount) }}</div>
             </div>
-            <div class="subtitle-info">
-              저축 목표: {{ formatWonCompact(targetAmount) }}
-            </div>
-            
-            <!-- V2: 최신 거래가 정보 -->
-            <div class="latest-price-card" v-if="linkedProperty?.price" :title="gapTooltip">
-              <span class="latest-price-label">최신 거래가</span>
-              <span class="latest-price-value">{{ formatWonCompact(linkedProperty.price) }}</span>
+            <!-- V2: 목표 & 실거래가 정보 -->
+            <div class="goal-info-stack">
+              <div class="goal-info-row">
+                <span class="goal-info-label">저축 목표</span>
+                <span class="goal-info-value">
+                  <span class="value-text">{{ formatWonCompact(targetAmount) }}</span>
+                </span>
+              </div>
+              <div class="goal-info-row muted" v-if="propertyPriceManwon">
+                <span class="goal-info-label">실거래가</span>
+                <span class="goal-info-value">
+                  <span class="value-text">{{ formatKoreanCurrency(propertyPriceManwon) }}</span>
+                </span>
+              </div>
             </div>
           </div>
           
           <!-- Full-Width Button -->
           <button class="savings-button" @click="handleSavingClick">
-            <span class="btn-text">저축하기</span>
+            <span class="btn-text">{{ actionButtonLabel }}</span>
           </button>
         </div>
       </div>
@@ -115,7 +123,7 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDreamHomeStore } from '@/stores/dreamHomeStore'
 import { useAuthStore } from '@/stores/authStore'
-import { formatWon, formatWonCompact } from '@/utils/formatters'
+import { formatWon, formatWonCompact, formatKoreanCurrency } from '@/utils/formatters'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const emit = defineEmits(['open-saving-modal', 'open-edit-goal'])
@@ -127,10 +135,25 @@ const {
   dreamHomeId,
   targetAmount,
   propertyName,
+  price,
   achievementRate,
   remainingAmount,
-  linkedProperty
+  linkedProperty,
+  expProgress
 } = storeToRefs(dreamHomeStore)
+
+/**
+ * 매물 가격 정보 (만원 단위)
+ * - linkedProperty.price (원 단위) → 만원 변환
+ * - 백엔드에서 linkedProperty가 내려올 때만 표시
+ */
+const propertyPriceManwon = computed(() => {
+  const linkedPrice = linkedProperty.value?.price
+  if (linkedPrice && linkedPrice > 0) {
+    return Math.round(linkedPrice / 10000)
+  }
+  return null
+})
 const { hasDreamHomeGoal, isDashboardLoading, user } = storeToRefs(authStore)
 
 /**
@@ -170,13 +193,44 @@ const achievementRateNumber = computed(() => {
   return Math.min(100, Math.max(0, value))
 })
 
-const isZeroProgress = computed(() => achievementRateNumber.value <= 0)
+const progressPercent = computed(() => {
+  if (expProgress.value != null) {
+    const value = Number(expProgress.value)
+    if (Number.isFinite(value)) {
+      return Math.min(100, Math.max(0, value))
+    }
+  }
+  return achievementRateNumber.value
+})
+
+const progressText = computed(() => progressPercent.value.toFixed(1))
+
+const progressLabel = computed(() => (
+  expProgress.value != null ? '집 성장 진행도' : '목표 달성률'
+))
+
+const zeroMessageLines = computed(() => (
+  expProgress.value != null
+    ? ['첫 활동을', '시작해보세요!']
+    : ['첫 저축을', '시작해보세요!']
+))
+
+const isZeroProgress = computed(() => progressPercent.value <= 0)
 
 const showGapInfo = computed(() => {
   const gap = Number(linkedProperty.value?.gap)
   const price = Number(linkedProperty.value?.price)
   return Number.isFinite(gap) && gap > 0 && Number.isFinite(price) && price > 0
 })
+
+const isGoalCompleted = computed(() => (
+  authStore.userDreamHome?.isCompleted === true
+  || user.value?._raw?.goal?.isCompleted === true
+))
+
+const actionButtonLabel = computed(() => (
+  isGoalCompleted.value ? '다음 목표 설정' : '저축하기'
+))
 
 const gapTooltip = computed(() => {
   const linked = linkedProperty.value
@@ -190,6 +244,10 @@ const gapTooltip = computed(() => {
  * 부모 컴포넌트(BentoGrid)에 모달 열기 요청
  */
 const handleSavingClick = () => {
+  if (isGoalCompleted.value) {
+    router.push('/properties')
+    return
+  }
   emit('open-saving-modal')
 }
 
@@ -461,49 +519,157 @@ html[data-theme="night"] .subtitle-info {
   color: var(--bento-text-muted, #6b7280);
 }
 
-/* V2: 최신 거래가 카드 */
-.latest-price-card {
+/* V2: 목표 & 실거래가 정보 - 미니멀 디자인 */
+.goal-info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0.65rem;
+  padding: 0.5rem 0;
+  border-top: 1px dashed var(--border-soft, #e0e2e5);
+}
+
+.goal-info-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg,
-    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.1),
-    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.04)
-  );
-  border: 1px solid rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
-  cursor: default;
+  padding: 0.35rem 0;
 }
 
-.latest-price-label {
+.goal-info-row.muted .goal-info-label {
+  color: var(--bento-text-muted, #9ca3af);
+}
+
+.goal-info-label {
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--bento-text-muted, #6b7280);
 }
 
-.latest-price-value {
+.goal-info-value {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.goal-info-value .value-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-base, #1f2937);
+  letter-spacing: -0.01em;
+}
+
+.goal-info-row:first-child .goal-info-value .value-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--brand-accent, #ff6b3d);
+}
+
+.goal-info-row.muted .goal-info-value .value-text {
+  color: var(--ink-muted, #6b7280);
+}
+
+/* Night Mode */
+html[data-theme="night"] .goal-info-stack {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="night"] .goal-info-label {
+  color: rgba(245, 237, 227, 0.5);
+}
+
+html[data-theme="night"] .goal-info-value .value-text {
+  color: var(--showroom-text-night, #F5EDE3);
+}
+
+html[data-theme="night"] .goal-info-row:first-child .goal-info-value .value-text {
+  color: var(--showroom-accent-night, #D4A574);
+}
+
+/* V2: 매물 시세 정보 - 프리미엄 디자인 */
+.property-price-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg,
+    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.08) 0%,
+    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.02) 100%
+  );
+  border: 1px solid rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+  transition: all 0.2s ease;
+}
+
+.property-price-info:hover {
+  background: linear-gradient(135deg,
+    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12) 0%,
+    rgba(var(--brand-accent-rgb, 255, 107, 61), 0.04) 100%
+  );
+  border-color: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.2);
+}
+
+.price-info-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(var(--brand-accent-rgb, 255, 107, 61), 0.12);
+  color: var(--brand-accent, #ff6b3d);
+  flex-shrink: 0;
+}
+
+.price-info-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 0.5rem;
+}
+
+.price-info-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--bento-text-muted, #6b7280);
+}
+
+.price-info-value {
   font-size: 1rem;
   font-weight: 800;
   color: var(--brand-accent, #ff6b3d);
   letter-spacing: -0.02em;
 }
 
-html[data-theme="night"] .latest-price-card {
+/* Night Mode */
+html[data-theme="night"] .property-price-info {
   background: linear-gradient(135deg,
-    rgba(212, 165, 116, 0.14),
-    rgba(212, 165, 116, 0.06)
+    rgba(212, 165, 116, 0.12) 0%,
+    rgba(212, 165, 116, 0.04) 100%
   );
   border-color: rgba(212, 165, 116, 0.18);
 }
 
-html[data-theme="night"] .latest-price-label {
-  color: rgba(245, 237, 227, 0.65);
+html[data-theme="night"] .property-price-info:hover {
+  background: linear-gradient(135deg,
+    rgba(212, 165, 116, 0.18) 0%,
+    rgba(212, 165, 116, 0.08) 100%
+  );
+  border-color: rgba(212, 165, 116, 0.25);
 }
 
-html[data-theme="night"] .latest-price-value {
+html[data-theme="night"] .price-info-icon {
+  background: rgba(212, 165, 116, 0.18);
+  color: var(--showroom-accent-night, #D4A574);
+}
+
+html[data-theme="night"] .price-info-label {
+  color: rgba(245, 237, 227, 0.6);
+}
+
+html[data-theme="night"] .price-info-value {
   color: var(--showroom-accent-night, #D4A574);
 }
 

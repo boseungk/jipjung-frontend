@@ -28,6 +28,17 @@
       @primary="handleGoToProperties"
       @secondary="handleDismissGoalGuide"
     />
+
+    <CollectionCompleteModal
+      :is-open="isCompletionModalOpen"
+      :target-amount="completionInfo?.targetAmount ?? 0"
+      :total-saved="completionInfo?.totalSaved ?? 0"
+      :target-exp="completionInfo?.targetExp ?? null"
+      :total-exp="completionInfo?.totalExp ?? null"
+      @close="handleCompletionClose"
+      @view-collection="handleCompletionViewCollection"
+      @set-next-goal="handleCompletionSetNextGoal"
+    />
   </div>
 </template>
 
@@ -42,10 +53,11 @@ import { onMounted, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
 import IsometricRoomHero from '@/components/dashboard/IsometricRoomHero.vue'
 import BentoGrid from '@/components/dashboard/BentoGrid.vue'
 import GoalGuideModal from '@/components/modals/GoalGuideModal.vue'
+import CollectionCompleteModal from '@/components/modals/CollectionCompleteModal.vue'
+import { hasGoalCompletionShown, markGoalCompletionShown } from '@/utils/goalCompletion'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -54,6 +66,8 @@ const { showError } = useToast()
 /** @type {import('vue').Ref<boolean>} 목표 안내 모달 표시 여부 */
 const showGoalGuideModal = ref(false)
 const dashboardReady = ref(false)
+const isCompletionModalOpen = ref(false)
+const completionInfo = ref(null)
 
 const dismissalKey = computed(() => {
   const id = authStore.userId
@@ -62,8 +76,32 @@ const dismissalKey = computed(() => {
 
 const hasGoal = computed(() => authStore.hasDreamHomeGoal)
 
+const completionCandidate = computed(() => {
+  const goal = authStore.user?._raw?.goal
+  if (!goal?.dreamHomeId || goal?.isCompleted !== true) {
+    return null
+  }
+
+  return {
+    dreamHomeId: goal.dreamHomeId,
+    targetAmount: goal.targetAmount ?? authStore.userDreamHome?.targetAmount ?? 0,
+    totalSaved: goal.savedAmount ?? authStore.userDreamHome?.currentAmount ?? 0,
+    targetExp: goal.targetExp ?? null,
+    totalExp: goal.totalExp ?? null
+  }
+})
+
+const hasUnseenCompletion = computed(() => {
+  if (!completionCandidate.value || !authStore.userId) return false
+  return !hasGoalCompletionShown(authStore.userId, completionCandidate.value.dreamHomeId)
+})
+
 function syncGoalGuideVisibility() {
   if (!dashboardReady.value) return
+  if (isCompletionModalOpen.value || hasUnseenCompletion.value) {
+    showGoalGuideModal.value = false
+    return
+  }
   if (hasGoal.value) {
     showGoalGuideModal.value = false
     return
@@ -111,7 +149,33 @@ function handleDismissGoalGuide() {
   sessionStorage.setItem(dismissalKey.value, 'true')
 }
 
-watch([hasGoal, dismissalKey, dashboardReady], syncGoalGuideVisibility, { immediate: true })
+const handleCompletionClose = () => {
+  isCompletionModalOpen.value = false
+  completionInfo.value = null
+  syncGoalGuideVisibility()
+}
+
+const handleCompletionViewCollection = () => {
+  handleCompletionClose()
+  router.push('/collection')
+}
+
+const handleCompletionSetNextGoal = () => {
+  handleCompletionClose()
+  router.push('/properties')
+}
+
+watch([hasGoal, dismissalKey, dashboardReady, hasUnseenCompletion, isCompletionModalOpen], syncGoalGuideVisibility, { immediate: true })
+
+watch(
+  () => [dashboardReady.value, hasUnseenCompletion.value, completionCandidate.value, authStore.userId],
+  ([ready, unseen, candidate, userId]) => {
+    if (!ready || !unseen || !candidate || !userId) return
+    completionInfo.value = { ...candidate }
+    isCompletionModalOpen.value = true
+    markGoalCompletionShown(userId, candidate.dreamHomeId)
+  }
+)
 
 onMounted(() => {
   // 인증된 사용자만 대시보드 데이터 로드
