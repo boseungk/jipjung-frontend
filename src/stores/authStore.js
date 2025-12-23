@@ -14,7 +14,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/api/services/authService'
 import { dashboardService } from '@/api/services/dashboardService'
-import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION, LEVEL_THRESHOLDS, MAX_LEVEL } from '@/constants/user'
+import { DEFAULT_DREAM_HOME, DEFAULT_GAMIFICATION } from '@/constants/user'
 import { SHOWROOM_TOTAL_STAGES } from '@/constants/showroomWebp'
 import { VALIDATION } from '@/constants/onboardingConstants'
 
@@ -100,6 +100,14 @@ export const useAuthStore = defineStore('auth', () => {
             && dreamHome.propertyName === DEFAULT_DREAM_HOME.propertyName
             && !dreamHome.targetAmount
             && !dreamHome.currentAmount
+        const rawGoal = user.value?._raw?.goal
+        const targetExp = Number(rawGoal?.targetExp)
+        const totalExp = Number(rawGoal?.totalExp)
+        const expProgress = Number(rawGoal?.expProgress)
+        const isCompletedByExp = (Number.isFinite(expProgress) && expProgress >= 100)
+            || (Number.isFinite(targetExp) && targetExp > 0 && Number.isFinite(totalExp) && totalExp >= targetExp)
+            || rawGoal?.isCompleted === true
+            || dreamHome?.isCompleted === true
         const derivedHasGoal = (() => {
             if (!dreamHome) return false
             if (dreamHome.dreamHomeId != null) return true
@@ -108,6 +116,7 @@ export const useAuthStore = defineStore('auth', () => {
         })()
 
         const rawHasTarget = user.value?._raw?.gapAnalysis?.hasTarget
+        if (isCompletedByExp) return false
         if (rawHasTarget === true && !isDefaultDreamHome) return true
         return derivedHasGoal
     })
@@ -603,7 +612,13 @@ export const useAuthStore = defineStore('auth', () => {
 
             const rawShowroomStep = Number(response.showroom?.currentStep ?? response.profile?.level ?? 1)
             const showroomStep = Number.isFinite(rawShowroomStep) ? Math.max(1, Math.trunc(rawShowroomStep)) : 1
-            const isHouseCompleted = showroomStep >= HOUSE_TOTAL_STAGES
+            const rawGoalPhase = Number(response.goal?.currentPhase)
+            const goalPhase = Number.isFinite(rawGoalPhase) ? Math.max(1, Math.trunc(rawGoalPhase)) : null
+            const goalHouseCompleted = goalPhase != null && goalPhase >= HOUSE_TOTAL_STAGES
+            const isHouseCompleted = showroomStep >= HOUSE_TOTAL_STAGES || goalHouseCompleted
+            const goalFurnitureStage = goalPhase != null && goalPhase > HOUSE_TOTAL_STAGES
+                ? Math.min(FURNITURE_TOTAL_STAGES, goalPhase - HOUSE_TOTAL_STAGES)
+                : null
 
             if (!isHouseCompleted) {
                 clearFurnitureProgress({ userId: response.profile?.userId })
@@ -634,7 +649,9 @@ export const useAuthStore = defineStore('auth', () => {
                 : null
 
             let derivedTrack = 'house'
-            if (isHouseCompleted) {
+            if (goalFurnitureStage != null) {
+                derivedTrack = 'furniture'
+            } else if (isHouseCompleted) {
                 if (backendBuildTrack === 'furniture') {
                     derivedTrack = 'furniture'
                 } else if (existingTrack === 'furniture') {
@@ -652,6 +669,7 @@ export const useAuthStore = defineStore('auth', () => {
                     FURNITURE_TOTAL_STAGES,
                     Math.max(
                         1,
+                        goalFurnitureStage ?? 0,
                         backendFurnitureStage,
                         existingFurnitureStage,
                         storedFurnitureProgress?.furnitureStage || 0,
@@ -669,15 +687,11 @@ export const useAuthStore = defineStore('auth', () => {
             const currentLevelValue = Number.isFinite(rawLevelValue)
                 ? Math.max(1, Math.trunc(rawLevelValue))
                 : DEFAULT_GAMIFICATION.currentLevel
-            const levelForProgress = Math.min(MAX_LEVEL, currentLevelValue)
-            const levelStartExp = LEVEL_THRESHOLDS[levelForProgress - 1] || 0
             const rawCurrentExp = Number(response.profile?.levelProgress?.currentExp)
             const safeCurrentExp = Number.isFinite(rawCurrentExp)
                 ? Math.max(0, rawCurrentExp)
                 : (Number.isFinite(existingExperiencePoints) ? Math.max(0, existingExperiencePoints) : 0)
-            const derivedHouseExp = safeCurrentExp < levelStartExp
-                ? levelStartExp + safeCurrentExp
-                : safeCurrentExp
+            const derivedHouseExp = safeCurrentExp
 
             const mappedGamification = {
                 currentLevel: currentLevelValue,

@@ -14,6 +14,22 @@ import { Property } from '@/models/Property'
 import { SEOUL_CENTER, MAP_ZOOM_LEVELS } from '@/constants/properties'
 import { validateCoordinates } from '@/utils/kakaoMapHelpers'
 
+// 아파트 이미지 총 개수 (apartments_01.webp ~ apartments_24.webp)
+const APARTMENT_IMAGE_COUNT = 24
+
+/**
+ * aptSeq 기반으로 일관된 아파트 이미지 경로를 반환
+ * @param {string|number} aptId - 아파트 ID
+ * @returns {string} - 이미지 경로
+ */
+function getRandomApartmentImage(aptId) {
+    // aptId를 기반으로 일관된 이미지 인덱스를 생성 (같은 ID면 항상 같은 이미지)
+    const hash = String(aptId).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const imageIndex = (hash % APARTMENT_IMAGE_COUNT) + 1
+    const paddedIndex = String(imageIndex).padStart(2, '0')
+    return `/apartments/apartments_${paddedIndex}.webp`
+}
+
 export const usePropertyStore = defineStore('property', () => {
     // State
     const properties = ref([]) // 전체 매물 목록
@@ -308,17 +324,17 @@ export const usePropertyStore = defineStore('property', () => {
             bathrooms: (apt.bathrooms ?? apt.bathCnt ?? 0) > 0 ? (apt.bathrooms ?? apt.bathCnt) : null,
             floor: cleanFloor(apt.floor),
             buildYear: apt.buildYear,
-            sido: '서울특별시',
-            sigungu: apt.umdNm || '',
+            sido: apt.sido || apt.sidoName || '',
+            sigungu: apt.sigungu || apt.umdNm || '',
             address: `${apt.umdNm || ''} ${apt.roadNm || ''}`.trim(),
             coordinates,
-            images: [{ url: null, alt: aptName }],
+            images: [{ url: getRandomApartmentImage(aptId), alt: aptName }],
             features: buildFeatures(apt, areaPyeong),
             description: apt.description || '',
             agentInfo:
                 apt.agentInfo &&
-                typeof apt.agentInfo === 'object' &&
-                Object.keys(apt.agentInfo).length > 0
+                    typeof apt.agentInfo === 'object' &&
+                    Object.keys(apt.agentInfo).length > 0
                     ? apt.agentInfo
                     : null,
             createdAt: apt.dealDate || apt.createdAt || new Date().toISOString()
@@ -444,11 +460,11 @@ export const usePropertyStore = defineStore('property', () => {
         const latestDeal = deals && deals.length > 0 ? deals[0] : null
         const price = parsePriceManwon(
             latestDeal?.dealAmount ??
-                latestDeal?.dealAmountNum ??
-                info?.recentPrice ??
-                info?.dealAmount ??
-                info?.price ??
-                0
+            latestDeal?.dealAmountNum ??
+            info?.recentPrice ??
+            info?.dealAmount ??
+            info?.price ??
+            0
         )
         const exclusiveArea =
             Number(latestDeal?.exclusiveArea ?? info?.area ?? info?.exclusiveArea) || 0
@@ -469,19 +485,19 @@ export const usePropertyStore = defineStore('property', () => {
             bathrooms: bathrooms > 0 ? bathrooms : null,
             floor: cleanFloor(latestDeal?.floor || info?.floor),
             buildYear: info?.buildYear,
-            sido: '서울특별시',
-            sigungu: info?.umdNm || '',
+            sido: info?.sido || info?.sidoName || '',
+            sigungu: info?.sigungu || info?.umdNm || '',
             address: info?.jibun || `${info?.umdNm || ''} ${info?.roadNm || ''}`.trim(),
             coordinates,
             images: apt.images?.length
                 ? apt.images
-                : [{ url: null, alt: info?.aptNm || '아파트' }],
+                : [{ url: getRandomApartmentImage(info?.aptSeq), alt: info?.aptNm || '아파트' }],
             features: buildFeatures(info || apt, areaPyeong),
             description: apt.description || '',
             agentInfo:
                 apt.agentInfo &&
-                typeof apt.agentInfo === 'object' &&
-                Object.keys(apt.agentInfo).length > 0
+                    typeof apt.agentInfo === 'object' &&
+                    Object.keys(apt.agentInfo).length > 0
                     ? apt.agentInfo
                     : null,
             createdAt:

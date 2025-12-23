@@ -33,38 +33,7 @@ export const LEVEL_TITLES = {
   6: '완공'
 }
 
-/**
- * 레벨별 누적 경험치 임계값 (백엔드 LevelPolicy.java와 동기화)
- * - 인덱스 = 레벨 - 1
- * - 예: 레벨 3 시작점 = LEVEL_THRESHOLDS[2] = 300
- */
-export const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500]
 export const MAX_LEVEL = 6
-
-/**
- * 현재 레벨 내에서의 진행도 계산
- * @param {number} currentExp - 현재 누적 경험치
- * @param {number} level - 현재 레벨 (1~6)
- * @returns {{ currentInLevel: number, requiredForLevel: number, percent: number }}
- */
-export function calculateLevelProgress(currentExp, level) {
-  const safeLevel = Math.max(1, Math.min(MAX_LEVEL, level || 1))
-  const levelStartExp = LEVEL_THRESHOLDS[safeLevel - 1] || 0
-
-  // 최대 레벨인 경우
-  if (safeLevel >= MAX_LEVEL) {
-    return { currentInLevel: 0, requiredForLevel: 0, percent: 100 }
-  }
-
-  const nextLevelExp = LEVEL_THRESHOLDS[safeLevel] || LEVEL_THRESHOLDS[MAX_LEVEL - 1]
-  const requiredForLevel = nextLevelExp - levelStartExp
-  const currentInLevel = Math.max(0, (currentExp || 0) - levelStartExp)
-  const percent = requiredForLevel > 0
-    ? Math.min(100, Math.max(0, (currentInLevel / requiredForLevel) * 100))
-    : 100
-
-  return { currentInLevel, requiredForLevel, percent }
-}
 
 /**
  * 활동 기반 스트릭 마일스톤
