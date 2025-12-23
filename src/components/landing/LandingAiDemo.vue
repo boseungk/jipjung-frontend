@@ -3,7 +3,7 @@
     <div class="landing-ai-demo__sticky" ref="stickyRef">
       <!-- Section Title -->
       <h2 class="landing-ai-demo__title">
-        AI 관리사 레제를 만나보세요
+        지출 AI 관리사 레제를 만나보세요
       </h2>
 
       <!-- Character Display -->
@@ -71,31 +71,31 @@ const MOODS = [
     id: 'NORMAL',
     label: '일반',
     image: normalImg,
-    speech: '안녕하세요! 오늘 지출을 확인해볼까요?'
+    speech: '어, 왔어? 오늘 지출 좀 보여줘 봐.'
   },
   {
     id: 'CURIOUS',
     label: '궁금',
     image: curiousImg,
-    speech: '흠, 이 지출은 뭔가요? 자세히 볼게요.'
+    speech: '흠... 이거 뭐야? 좀 자세히 볼게.'
   },
   {
     id: 'STRICT',
     label: '엄격',
     image: strictImg,
-    speech: '이 지출은 좀 과한 것 같아요...'
+    speech: '잠깐, 이 지출 좀 과한데? 설명해 봐.'
   },
   {
     id: 'CONFUSED',
     label: '혼란',
     image: confuseImg,
-    speech: '잠깐, 이게 맞나요? 다시 확인해볼게요.'
+    speech: '뭐야 이건... 내가 잘못 본 거 맞지?'
   },
   {
     id: 'UPSET',
     label: '놀람',
     image: upsetImg,
-    speech: '50,000원 커피라니요?! 저축 목표를 다시 생각해봐요!'
+    speech: '커피에 5만 원? 너 진짜 대단하다.'
   }
 ]
 

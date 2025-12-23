@@ -2,12 +2,13 @@
   <section class="landing-journey" ref="sectionRef">
     <div class="landing-journey__sticky" ref="stickyRef">
       <!-- Section Title -->
-      <h2 class="landing-journey__title">
-        저축 여정 미리보기
-      </h2>
+      <span class="landing-journey__tagline">저축할수록 집이 자라나요</span>
 
       <!-- Image Container -->
-      <div class="landing-journey__image-container">
+      <div
+        class="landing-journey__image-container"
+        :class="{ 'has-progress': currentPhase > 1 }"
+      >
         <!-- Exterior Images (Phase 1-6) -->
         <template v-if="!isInteriorPhase">
           <img
@@ -39,9 +40,9 @@
           <!-- Night Overlay -->
           <transition name="night-fade">
             <img
-              v-if="isNight && isAtFinalPhase"
+              v-if="isAtFinalPhase"
               :src="nightImageUrl"
-              class="landing-journey__night-overlay is-visible"
+              class="landing-journey__night-overlay"
               alt="Night mode interior"
             />
           </transition>
