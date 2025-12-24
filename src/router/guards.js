@@ -48,8 +48,8 @@ export function setupRouterGuards(router) {
             }
         }
 
-        // 3. 이미 로그인한 사용자가 로그인/회원가입 페이지 접근 시
-        if ((to.name === 'Login' || to.name === 'Register') && authStore.isAuthenticated) {
+        // 3. 이미 로그인한 사용자가 로그인/회원가입/랜딩 페이지 접근 시
+        if ((to.name === 'Login' || to.name === 'Register' || to.name === 'Landing') && authStore.isAuthenticated) {
             if (authStore.onboardingCompleted) {
                 next({ name: 'Dashboard' })
             } else {

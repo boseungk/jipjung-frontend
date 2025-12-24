@@ -14,7 +14,7 @@ const OnboardingView = () => import('../views/onboarding/OnboardingView.vue')
 
 const routes = [
     {
-        path: '/landing',
+        path: '/',
         name: 'Landing',
         component: () => import('../views/LandingView.vue'),
         meta: {
@@ -54,7 +54,7 @@ const routes = [
         }
     },
     {
-        path: '/',
+        path: '/dashboard',
         name: 'Dashboard',
         component: DashboardView,
         meta: {

@@ -114,6 +114,59 @@
         @save="handleSave"
       />
     </div>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1 && !loading" class="pagination">
+      <button 
+        class="page-btn" 
+        :disabled="currentPage === 1"
+        @click="goToPage(1)"
+        aria-label="First page"
+      >
+        <PhCaretDoubleLeft :size="16" />
+      </button>
+      <button 
+        class="page-btn" 
+        :disabled="currentPage === 1"
+        @click="goToPage(currentPage - 1)"
+        aria-label="Previous page"
+      >
+        <PhCaretLeft :size="16" />
+      </button>
+      
+      <div class="page-numbers">
+        <button
+          v-for="page in visiblePages"
+          :key="page"
+          class="page-num"
+          :class="{ active: page === currentPage }"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+      </div>
+
+      <button 
+        class="page-btn" 
+        :disabled="currentPage === totalPages"
+        @click="goToPage(currentPage + 1)"
+        aria-label="Next page"
+      >
+        <PhCaretRight :size="16" />
+      </button>
+      <button 
+        class="page-btn" 
+        :disabled="currentPage === totalPages"
+        @click="goToPage(totalPages)"
+        aria-label="Last page"
+      >
+        <PhCaretDoubleRight :size="16" />
+      </button>
+
+      <span class="page-info">
+        {{ currentPage }} / {{ totalPages }} 페이지 (총 {{ totalProperties }}개)
+      </span>
+    </div>
   </div>
 </template>
 
@@ -131,7 +184,11 @@ import {
   PhCurrencyKrw,
   PhCaretDown,
   PhWallet,
-  PhHeart
+  PhHeart,
+  PhCaretLeft,
+  PhCaretRight,
+  PhCaretDoubleLeft,
+  PhCaretDoubleRight
 } from '@phosphor-icons/vue'
 import PropertyCard from './PropertyCard.vue'
 import SkeletonCard from './SkeletonCard.vue'
@@ -140,7 +197,7 @@ const emit = defineEmits(['openFilters'])
 
 const propertyStore = usePropertyStore()
 const dsrStore = useDsrStore()
-const { filteredProperties, loading, filters } = storeToRefs(propertyStore)
+const { filteredProperties, loading, filters, currentPage, totalPages, totalProperties } = storeToRefs(propertyStore)
 const { maxLoanAmount, gapAnalysis } = storeToRefs(dsrStore)
 
 // Composable에서 필터 관련 computed/methods 가져오기
@@ -261,6 +318,39 @@ function clearSearch() {
   searchKeyword.value = ''
   if (searchTimer) clearTimeout(searchTimer)
   propertyStore.searchProperties('')
+}
+
+/**
+ * 페이지네이션: 표시할 페이지 번호 목록
+ */
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const maxVisible = 5
+  
+  if (total <= maxVisible) {
+    return Array.from({ length: total }, (_, i) => i + 1)
+  }
+  
+  let start = Math.max(1, current - Math.floor(maxVisible / 2))
+  let end = start + maxVisible - 1
+  
+  if (end > total) {
+    end = total
+    start = Math.max(1, end - maxVisible + 1)
+  }
+  
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+})
+
+/**
+ * 페이지 이동
+ */
+async function goToPage(page) {
+  if (page < 1 || page > totalPages.value || page === currentPage.value) return
+  await propertyStore.changePage(page)
+  // 페이지 상단으로 스크롤
+  document.querySelector('.property-list-mode')?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>
 
@@ -680,5 +770,125 @@ html[data-theme="night"] .empty-state p {
 .reset-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(255, 127, 80, 0.4);
+}
+
+/* ========================================
+   Pagination
+   ======================================== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .pagination {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.page-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--showroom-text-day);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+html[data-theme="night"] .page-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--showroom-text-night);
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--brand-accent);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-num {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--showroom-text-day);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+html[data-theme="night"] .page-num {
+  color: var(--showroom-text-night);
+}
+
+.page-num:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="night"] .page-num:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.page-num.active {
+  background: var(--brand-accent);
+  color: white;
+  font-weight: 700;
+}
+
+.page-info {
+  margin-left: 1rem;
+  font-size: 0.8rem;
+  color: var(--showroom-text-day);
+  opacity: 0.6;
+}
+
+html[data-theme="night"] .page-info {
+  color: var(--showroom-text-night);
+}
+
+@media (max-width: 767px) {
+  .pagination {
+    padding: 1rem;
+    gap: 0.375rem;
+  }
+
+  .page-btn,
+  .page-num {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+  }
+
+  .page-info {
+    width: 100%;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
 }
 </style>
