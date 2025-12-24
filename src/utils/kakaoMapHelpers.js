@@ -227,47 +227,36 @@ export function loadKakaoSdk(appKey, libraries = 'services') {
             return
         }
 
-        const buildSrc = (protocol) =>
-            `${protocol}://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=${libraries}&autoload=false`
-
-        const appendWithFallback = (useHttp = false) => {
-            const script = document.createElement('script')
-            script.type = 'text/javascript'
-            script.dataset.kakaoSdk = 'true'
-            script.src = useHttp ? buildSrc('http') : buildSrc('https')
-            script.onload = () => {
-                if (!(window.kakao && kakao.maps && kakao.maps.load)) {
-                    kakaoScriptLoading = null
-                    reject(
-                        new Error(
-                            'Kakao Maps SDK 로드에 실패했습니다. API 키 또는 네트워크 상태를 확인하세요.'
-                        )
+        const script = document.createElement('script')
+        script.type = 'text/javascript'
+        script.dataset.kakaoSdk = 'true'
+        // 항상 HTTPS 사용 (Mixed Content 정책으로 인해 HTTP는 HTTPS 페이지에서 차단됨)
+        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=${libraries}&autoload=false`
+        script.onload = () => {
+            if (!(window.kakao && kakao.maps && kakao.maps.load)) {
+                kakaoScriptLoading = null
+                reject(
+                    new Error(
+                        'Kakao Maps SDK 로드에 실패했습니다. API 키 또는 네트워크 상태를 확인하세요.'
                     )
-                    return
-                }
-
-                // autoload=false 이므로 명시적으로 로드
-                kakao.maps.load(() => resolve())
-            }
-            script.onerror = () => {
-                script.remove()
-                if (!useHttp) {
-                    // HTTPS 실패 시 HTTP로 한 번 더 시도
-                    appendWithFallback(true)
-                } else {
-                    kakaoScriptLoading = null
-                    reject(
-                        new Error(
-                            `Kakao Maps SDK 로드에 실패했습니다. API 키 유효성 및 허용 도메인(${window.location.origin}) 등록을 확인하세요.`
-                        )
-                    )
-                }
+                )
+                return
             }
 
-            document.head.appendChild(script)
+            // autoload=false 이므로 명시적으로 로드
+            kakao.maps.load(() => resolve())
+        }
+        script.onerror = () => {
+            script.remove()
+            kakaoScriptLoading = null
+            reject(
+                new Error(
+                    `Kakao Maps SDK 로드에 실패했습니다. API 키 유효성 및 허용 도메인(${window.location.origin}) 등록을 확인하세요.`
+                )
+            )
         }
 
-        appendWithFallback(false)
+        document.head.appendChild(script)
     })
 
     return kakaoScriptLoading
