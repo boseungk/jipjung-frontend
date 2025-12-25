@@ -120,32 +120,6 @@
               />
             </section>
 
-            <!-- 매물 유형 섹션 -->
-            <section class="filter-section">
-              <h3 class="section-title">
-                <PhBuildings :size="18" />
-                <span>매물 유형</span>
-              </h3>
-              <div class="segmented-control">
-                <button
-                  class="segment"
-                  :class="{ active: localFilters.propertyType === null }"
-                  @click="localFilters.propertyType = null"
-                >
-                  전체
-                </button>
-                <button
-                  v-for="type in PROPERTY_TYPES"
-                  :key="type"
-                  class="segment"
-                  :class="{ active: localFilters.propertyType === type }"
-                  @click="localFilters.propertyType = type"
-                >
-                  {{ type }}
-                </button>
-              </div>
-            </section>
-
             <!-- 관심 매물 토글 -->
             <section class="filter-section toggle-section">
               <label class="toggle-label">
@@ -209,7 +183,6 @@ import {
   PhMapPin,
   PhCurrencyKrw,
   PhRuler,
-  PhBuildings,
   PhHeart,
   PhSortAscending,
   PhArrowCounterClockwise
@@ -217,7 +190,7 @@ import {
 import RangeSlider from '@/components/common/RangeSlider.vue'
 import { usePropertyFilters } from '@/composables/usePropertyFilters'
 import { SLIDER_CONFIG, SORT_OPTIONS, SORT_ORDER_OPTIONS, formatPriceLabel, formatAreaLabel } from '@/constants/filterPresets'
-import { PROPERTY_TYPES } from '@/constants/properties'
+// PROPERTY_TYPES removed - only apartments in DB
 import { SIDO_LIST } from '@/constants/regions'
 
 const props = defineProps({
