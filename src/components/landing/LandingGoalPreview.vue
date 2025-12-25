@@ -4,7 +4,8 @@
     <div class="landing-goal-preview__header">
       <h2 class="landing-goal-preview__title">나만의 저축 목표 설정</h2>
       <p class="landing-goal-preview__subtitle">
-        실거래가 기반으로 목표를 설정하고, 저축 여정을 시작하세요
+        <span>실거래가 기반으로 목표를 설정하고,</span>
+        <span>저축 여정을 시작하세요</span>
       </p>
     </div>
 
@@ -31,9 +32,7 @@
           <span class="landing-goal-preview__caption-step">
             {{ currentIndex + 1 }}/{{ screenshots.length }}
           </span>
-          <p class="landing-goal-preview__caption-text">
-            {{ screenshots[currentIndex].caption }}
-          </p>
+          <p class="landing-goal-preview__caption-text" v-html="screenshots[currentIndex].caption"></p>
         </div>
       </transition>
 
@@ -68,14 +67,14 @@ const screenshots = [
   {
     src: new URL('@/assets/screenshots/goal_setting1.png', import.meta.url).href,
     alt: '목표 설정 화면 1',
-    caption: '꿈꾸는 집의 실거래가를 확인하고 목표 금액을 설정해요',
-    maxWidth: '550px' // 첫번째 이미지 크게
+    caption: '꿈꾸는 집의 실거래가를 확인하고<br>목표 금액을 설정해요',
+    maxWidth: '550px'
   },
   {
     src: new URL('@/assets/screenshots/goal_setting2.png', import.meta.url).href,
     alt: '목표 설정 화면 2',
-    caption: '월 저축 금액을 설정하고 나만의 저축 계획을 세워요',
-    maxWidth: '400px' // 두번째 이미지 원래 크기
+    caption: '월 저축 금액을 설정하고<br>나만의 저축 계획을 세워요',
+    maxWidth: '400px'
   }
 ]
 
@@ -157,8 +156,12 @@ onBeforeUnmount(() => {
   font-size: clamp(1rem, 2vw, 1.125rem);
   color: var(--landing-text-secondary, rgba(44, 36, 32, 0.7));
   line-height: 1.7;
-  max-width: 400px;
+  max-width: 600px;
   margin: 0 auto;
+}
+
+.landing-goal-preview__subtitle span {
+  display: block;
 }
 
 /* Carousel Container */

@@ -46,22 +46,7 @@
       </button>
     </div>
 
-    <!-- Scroll Hint -->
-    <div class="landing-hero__scroll-hint" aria-hidden="true">
-      <svg
-        class="landing-hero__scroll-hint-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 5v14" />
-        <path d="m19 12-7 7-7-7" />
-      </svg>
-      <span>스크롤하여 둘러보기</span>
-    </div>
+
   </section>
 </template>
 
