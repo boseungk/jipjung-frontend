@@ -232,7 +232,7 @@ html[data-theme="night"] .scroll-nav__btn:hover {
 /* Mobile - Slightly smaller */
 @media (max-width: 640px) {
   .scroll-nav {
-    left: 1rem;
+    right: 1rem;
     bottom: 1.5rem;
     gap: 0.5rem;
   }
