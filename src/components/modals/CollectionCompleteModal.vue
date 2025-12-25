@@ -238,37 +238,14 @@ html[data-theme="night"] .summary-item .value {
   color: var(--showroom-text-night, #F5EDE3);
 }
 
+/* Button Group */
 .actions {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.primary-button,
-.secondary-button {
-  width: 100%;
-  padding: 0.9rem 1rem;
-  border-radius: 999px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-}
-
-.primary-button {
-  background: #ffb74d;
-  color: #4e342e;
-}
-
-.secondary-button {
-  background: transparent;
-  border: 1px solid rgba(141, 110, 99, 0.4);
-  color: var(--showroom-text-day, #5D4037);
-}
-
-html[data-theme="night"] .secondary-button {
-  border-color: rgba(215, 204, 200, 0.4);
-  color: var(--showroom-text-night, #F5EDE3);
-}
+/* Buttons (.primary-button / .secondary-button) styles live in src/assets/css/components/buttons.css */
 
 .modal-enter-active,
 .modal-leave-active {
