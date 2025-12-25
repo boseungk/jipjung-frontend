@@ -54,6 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     /** @type {import('vue').Ref<boolean>} 대시보드 데이터 로딩 상태 */
     const isDashboardLoading = ref(false)
+    let dashboardLoadPromise = null
 
     // ============================================
     // Getters (Computed)
@@ -565,13 +566,12 @@ export const useAuthStore = defineStore('auth', () => {
      * @returns {Promise<Object>} 대시보드 데이터
      */
     async function loadDashboard() {
-        if (isDashboardLoading.value) {
-            return
+        if (dashboardLoadPromise) {
+            return dashboardLoadPromise
         }
 
-        isDashboardLoading.value = true
-
-        try {
+        dashboardLoadPromise = (async () => {
+            isDashboardLoading.value = true
             const dashboardResponse = await dashboardService.getDashboard()
 
             // 백엔드 응답 구조: { code, status, message, data: { profile, goal, streak, dsr, assets, showroom, gapAnalysis } }
@@ -739,8 +739,13 @@ export const useAuthStore = defineStore('auth', () => {
             }
 
             return response
+        })()
+
+        try {
+            return await dashboardLoadPromise
         } finally {
             isDashboardLoading.value = false
+            dashboardLoadPromise = null
         }
     }
 

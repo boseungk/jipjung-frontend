@@ -136,13 +136,19 @@ function syncGoalGuideVisibility() {
  * (Graceful Degradation)
  */
 async function loadDashboardData() {
+  if (authStore.user?._raw) {
+    dashboardReady.value = true
+  }
+
   try {
     await authStore.loadDashboard()
   } catch (err) {
     console.error('Failed to load dashboard:', err)
     showError('데이터를 불러오는 중 오류가 발생했습니다. 일부 정보가 최신이 아닐 수 있습니다.')
   } finally {
-    dashboardReady.value = true
+    if (!dashboardReady.value) {
+      dashboardReady.value = true
+    }
     syncGoalGuideVisibility()
   }
 }
