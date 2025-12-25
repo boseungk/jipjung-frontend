@@ -272,16 +272,22 @@
         <div class="confetti-container"></div>
         <div class="completion-card">
           <button class="completion-close-btn" @click="dismissCompletion" aria-label="닫기">
-            ✕
+            <PhX :size="16" weight="bold" />
           </button>
-          <h2 class="completion-title">🎉 축하해요!</h2>
+          <div class="completion-icon">
+            <PhConfetti :size="48" weight="fill" />
+          </div>
+          <h2 class="completion-title">축하해요!</h2>
           <p class="completion-message">
             {{ journeySummary.totalDays }}일간의 여정을 완주했어요!
           </p>
           <p class="completion-amount">
             총 {{ formatExp(journeySummary.totalExp) }} 달성
           </p>
-          <button class="share-btn" @click="shareJourney">📤 공유하기</button>
+          <button class="share-btn" @click="shareJourney">
+            <PhExport :size="18" weight="bold" />
+            공유하기
+          </button>
         </div>
       </div>
     </template>
@@ -316,6 +322,7 @@ import { useTheme } from '@/composables/useTheme'
 import gsap from 'gsap'
 import AppIcon from '@/components/common/AppIcon.vue'
 import SnowCanvas from '@/components/SnowCanvas.vue'
+import { PhX, PhConfetti, PhExport } from '@phosphor-icons/vue'
 
 const route = useRoute()
 const router = useRouter()
