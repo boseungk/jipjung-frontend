@@ -203,6 +203,39 @@ function handleThemeToggle() {
 
 let scrollTrigger = null
 let resizeTimer = null
+let viewportWidth = 0
+let viewportHeight = 0
+let hasConfiguredScrollTrigger = false
+
+function getViewportSize() {
+  const visualViewport = window.visualViewport
+  return {
+    width: visualViewport?.width || window.innerWidth,
+    height: visualViewport?.height || window.innerHeight
+  }
+}
+
+function syncViewportSize() {
+  const { width, height } = getViewportSize()
+  viewportWidth = width
+  viewportHeight = height
+}
+
+function getLengths() {
+  const height = viewportHeight || window.innerHeight
+  const baseLength = height * (TOTAL_PHASES - 1)
+  const holdLength = height * FINAL_HOLD_RATIO
+  return {
+    baseLength,
+    totalLength: baseLength + holdLength
+  }
+}
+
+function ensureScrollTriggerConfig() {
+  if (hasConfiguredScrollTrigger) return
+  ScrollTrigger.config({ ignoreMobileResize: true })
+  hasConfiguredScrollTrigger = true
+}
 
 function initScrollTrigger() {
   if (typeof window === 'undefined') return
@@ -212,28 +245,29 @@ function initScrollTrigger() {
     gsap.registerPlugin(ScrollTrigger)
   }
 
-  scrollTrigger?.kill()
+  ensureScrollTriggerConfig()
+  syncViewportSize()
 
-  const baseLength = window.innerHeight * (TOTAL_PHASES - 1)
-  const holdLength = window.innerHeight * FINAL_HOLD_RATIO
-  const totalLength = baseLength + holdLength
+  scrollTrigger?.kill()
 
   scrollTrigger = ScrollTrigger.create({
     trigger: sectionRef.value,
     start: 'top top',
-    end: `+=${totalLength}`,
+    end: () => `+=${getLengths().totalLength}`,
     pin: stickyRef.value,
     pinSpacing: true,
     scrub: true,
     invalidateOnRefresh: true,
     onUpdate: (self) => {
-      const phaseProgress = Math.min(1, (self.progress * totalLength) / baseLength)
+      const { baseLength, totalLength } = getLengths()
+      const phaseProgress = baseLength
+        ? Math.min(1, (self.progress * totalLength) / baseLength)
+        : 0
       updatePhase(phaseProgress)
     }
   })
 
   updatePhase(scrollTrigger.progress || 0)
-  ScrollTrigger.refresh()
 }
 
 function handleResize() {
@@ -242,7 +276,13 @@ function handleResize() {
   }
 
   resizeTimer = window.setTimeout(() => {
-    initScrollTrigger()
+    if (!scrollTrigger) return
+    const { width, height } = getViewportSize()
+    const widthChanged = Math.abs(width - viewportWidth) > 1
+    if (!widthChanged) return
+    viewportWidth = width
+    viewportHeight = height
+    ScrollTrigger.refresh()
   }, 150)
 }
 
